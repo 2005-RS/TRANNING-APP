@@ -1,0 +1,66 @@
+import { clientNutritionCopySource } from '@/features/client-nutrition/copy';
+import type { LooseCopy } from '@/i18n/live-copy';
+
+export const esClientNutrition: LooseCopy<typeof clientNutritionCopySource> = {
+  title: 'Nutrición',
+  description: 'Tu plan asignado actual. Estos son objetivos prescritos, no alimentos que hayas comido.',
+  loadingLabel: 'Cargando el plan de nutrición',
+  emptyTitle: 'Todavía no tienes un plan de nutrición asignado.',
+  emptyBody: 'Tu entrenador te asignará un plan. Aquí aparecerán las comidas y los objetivos diarios.',
+  prescribedHint: 'Este es un plan prescrito, no un registro de lo que comiste.',
+  plan: {
+    eyebrow: 'Plan actual',
+    statusActive: 'Activo',
+    statusArchived: 'Archivado',
+    statusDraft: 'Borrador',
+    from: 'Desde',
+    until: 'Hasta',
+  },
+  targets: {
+    title: 'Objetivos diarios',
+    description: 'Cantidades prescritas para este plan. No son calorías restantes ni consumidas.',
+    calories: 'Calorías',
+    protein: 'Proteína',
+    carbs: 'Carbohidratos',
+    fat: 'Grasas',
+    none: 'Este plan no tiene objetivos diarios definidos.',
+    macroChart: 'Proporción de los objetivos prescritos de proteína, carbohidratos y grasas',
+  },
+  totals: {
+    title: 'Información del plan',
+    dailyTarget: 'Objetivo diario',
+    mealTotal: 'Total planificado de comidas',
+    difference: 'Diferencia',
+    differenceHint:
+      'Total planificado de comidas menos el objetivo diario. Esto no es calorías restantes ni ingesta.',
+    meals: 'Comidas',
+    meal: 'Comida',
+  },
+  meals: {
+    title: 'Comidas',
+    description: 'Alimentos y porciones del plan asignado.',
+    empty: 'Este plan todavía no tiene comidas.',
+    noFoods: 'No hay alimentos listados.',
+    notes: 'Notas',
+    calories: 'Calorías',
+    protein: 'Proteína',
+    carbs: 'Carbohidratos',
+    fat: 'Grasas',
+    fiber: 'Fibra',
+  },
+  foods: {
+    quantity: 'Cantidad',
+  },
+  mealType: {
+    BREAKFAST: 'Desayuno',
+    LUNCH: 'Almuerzo',
+    DINNER: 'Cena',
+    SNACK: 'Merienda',
+    OTHER: 'Otro',
+  },
+  error: {
+    retry: 'Intentar de nuevo',
+    retrying: 'Intentando de nuevo…',
+    network: 'No se pudo cargar el plan de nutrición. Revisa tu conexión e inténtalo de nuevo.',
+  },
+};

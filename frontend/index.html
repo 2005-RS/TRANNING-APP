@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta name="color-scheme" content="dark light" />
+    <meta name="app-id" content="training-app" />
+    <title>Training Platform</title>
+    <script>
+      (function () {
+        try {
+          var themeStored = localStorage.getItem('training-platform-theme');
+          var theme = themeStored === 'light' || themeStored === 'dark' || themeStored === 'system' ? themeStored : 'dark';
+          var resolved =
+            theme === 'system'
+              ? window.matchMedia('(prefers-color-scheme: dark)').matches
+                ? 'dark'
+                : 'light'
+              : theme;
+          document.documentElement.classList.add(resolved);
+          document.documentElement.style.colorScheme = resolved;
+          var language = localStorage.getItem('UI_LANGUAGE');
+          document.documentElement.lang = language === 'es' ? 'es' : 'en';
+        } catch {
+          document.documentElement.classList.add('dark');
+        }
+      })();
+    </script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

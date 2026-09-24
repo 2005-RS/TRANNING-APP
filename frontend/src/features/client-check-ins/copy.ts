@@ -1,0 +1,111 @@
+import { createLiveCopy, registerEnglishNamespace } from '@/i18n/live-copy';
+import { useLiveCopy } from '@/i18n/use-live-copy';
+
+export const clientCheckInsCopySource = {
+  title: 'Check-ins',
+  description: 'Share how the period went. Your Trainer can review after you submit.',
+  loadingLabel: 'Loading check-ins',
+  detailTitle: 'Check-in',
+  back: 'All check-ins',
+  current: {
+    title: 'Latest check-in',
+    emptyTitle: 'No check-in yet',
+    emptyBody: 'Start a check-in for a date range. Your Trainer sees it after you submit.',
+    continue: 'Continue check-in',
+    view: 'Open check-in',
+    viewFeedback: 'View feedback',
+    start: 'Start a check-in',
+    period: 'Period',
+  },
+  history: {
+    title: 'Earlier check-ins',
+    empty: 'No earlier check-ins.',
+    page: 'Page',
+    previous: 'Previous',
+    next: 'Next',
+  },
+  status: {
+    draft: 'Draft in progress',
+    submitted: 'Submitted',
+    waitingReview: 'Waiting for review',
+    reviewed: 'Reviewed',
+  },
+  create: {
+    title: 'Start a check-in',
+    description: 'Choose the inclusive dates this check-in covers. The period can be at most 31 days.',
+    periodStart: 'Period start',
+    periodEnd: 'Period end',
+    submit: 'Create draft',
+    submitting: 'Creating…',
+    cancel: 'Cancel',
+    periodRequired: 'Enter a start and end date.',
+    periodOrder: 'End date must be on or after the start date.',
+    periodSpan: 'The period can be at most 31 days.',
+  },
+  form: {
+    ratingsTitle: 'How the period felt',
+    ratingsHint: '1 is a lower self-rating, 5 is higher. Not a medical assessment.',
+    sleepQuality: 'Sleep',
+    energyLevel: 'Energy',
+    stressLevel: 'Stress',
+    hungerLevel: 'Hunger',
+    recoveryLevel: 'Recovery',
+    adherenceTitle: 'Adherence',
+    adherenceHint: 'Self-reported. Not calculated from workouts or meals.',
+    trainingAdherencePct: 'Training adherence',
+    nutritionAdherencePct: 'Nutrition adherence',
+    percent: '%',
+    notesTitle: 'Notes',
+    wins: 'Wins',
+    challenges: 'Challenges',
+    generalNotes: 'Notes',
+    textHint: 'Optional. Up to 2,000 characters.',
+    saveDraft: 'Save draft',
+    saving: 'Saving…',
+    saved: 'Draft saved.',
+    submit: 'Submit check-in',
+    submitting: 'Submitting…',
+    submitted: 'Check-in submitted',
+    discard: 'Discard draft',
+    needResponse: 'Add a rating, an adherence percentage (including 0), or a note before submitting.',
+    ratingRange: 'Choose a rating from 1 to 5, or leave it blank.',
+    adherenceRange: 'Enter a number from 0 to 100, or leave it blank.',
+    textLength: 'Keep this under 2,000 characters.',
+  },
+  readOnly: {
+    ratingsTitle: 'How the period felt',
+    adherenceTitle: 'Adherence',
+    notesTitle: 'Notes',
+    notProvided: 'Not provided',
+    submittedAt: 'Submitted',
+  },
+  review: {
+    title: 'Trainer feedback',
+    waiting: 'Waiting for review',
+    waitingBody: 'Your Trainer can add feedback after reviewing this check-in.',
+    actionItems: 'Action items',
+    reviewedAt: 'Reviewed',
+  },
+  discard: {
+    title: 'Discard this draft?',
+    description: 'The draft will be removed. Submitted check-ins cannot be discarded.',
+    confirm: 'Discard draft',
+    cancel: 'Keep draft',
+    discarded: 'Draft discarded.',
+  },
+  error: {
+    retry: 'Try again',
+    retrying: 'Trying again…',
+    network: 'Check-ins could not be loaded. Check your connection and try again.',
+    conflict: 'This check-in could not be changed. The latest status is shown.',
+    notFound: 'This check-in is not available.',
+    forbidden: 'You cannot perform this action.',
+  },
+} as const;
+
+registerEnglishNamespace('clientCheckIns', clientCheckInsCopySource);
+export const clientCheckInsCopy = createLiveCopy<typeof clientCheckInsCopySource>('clientCheckIns');
+
+export function useClientCheckInsCopy() {
+  return useLiveCopy<typeof clientCheckInsCopySource>('clientCheckIns');
+}

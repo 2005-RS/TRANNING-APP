@@ -1,0 +1,35 @@
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+node_modules
+dist
+dist-ssr
+coverage
+*.local
+
+# env
+.env
+.env.local
+.env.*.local
+
+# Orval output in src/generated/ is committed so builds are deterministic
+# without a live backend. Regenerate with npm run api:generate — never edit.
+# The guarded generator stages output here and swaps it in; never commit it.
+src/.generated-staging
+
+# editor
+.vscode/*
+!.vscode/extensions.json
+.idea
+.DS_Store
+Thumbs.db
+
+# tests
+test-results
+playwright-report

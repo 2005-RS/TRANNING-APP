@@ -1,0 +1,286 @@
+@import '@fontsource-variable/geist';
+@import '@fontsource-variable/geist-mono';
+@import 'tailwindcss';
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  --font-sans: 'Geist Variable', ui-sans-serif, system-ui, sans-serif;
+  --font-mono: 'Geist Mono Variable', ui-monospace, monospace;
+  --radius-sm: 0.25rem;
+  --radius-md: 0.375rem;
+  --radius-lg: 0.75rem;
+  --radius-xl: 1rem;
+  --radius-2xl: 1.25rem;
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-border: var(--border);
+  --color-ring: var(--ring);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-success: var(--success);
+  --color-success-foreground: var(--success-foreground);
+  --color-warning: var(--warning);
+  --color-warning-foreground: var(--warning-foreground);
+  --color-danger: var(--danger);
+  --color-danger-foreground: var(--danger-foreground);
+  --color-info: var(--info);
+  --color-info-foreground: var(--info-foreground);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+}
+
+:root {
+  color-scheme: light;
+  --background: #f4f4f5;
+  --foreground: #18181b;
+  --card: #ffffff;
+  --card-foreground: #18181b;
+  --muted: #e4e4e7;
+  --muted-foreground: #52525b;
+  --border: #d4d4d8;
+  --ring: #3f3f46;
+  --primary: #2563eb;
+  --primary-foreground: #f8fafc;
+  --secondary: #e4e4e7;
+  --secondary-foreground: #18181b;
+  --accent: #e4e4e7;
+  --accent-foreground: #18181b;
+  --success: #15803d;
+  --success-foreground: #f0fdf4;
+  --warning: #b45309;
+  --warning-foreground: #fffbeb;
+  --danger: #b91c1c;
+  --danger-foreground: #fef2f2;
+  --info: #1d4ed8;
+  --info-foreground: #eff6ff;
+  --chart-1: #2563eb;
+  --chart-2: #0f766e;
+  --chart-3: #a16207;
+  --chart-4: #7c3aed;
+  --radius-sm: 0.25rem;
+  --radius-md: 0.375rem;
+  --radius-lg: 0.75rem;
+  --radius-xl: 1rem;
+  --radius-2xl: 1.25rem;
+  --text-display: 2.75rem;
+  --text-h1: 1.875rem;
+  --text-h2: 1.5rem;
+  --text-h3: 1.125rem;
+  --text-body: 1rem;
+  --text-body-small: 0.875rem;
+  --text-label: 0.75rem;
+  --text-caption: 0.75rem;
+  --text-numeric-display: 3rem;
+  --motion-instant: 120ms;
+  --motion-fast: 180ms;
+  --motion-panel: 260ms;
+  --z-base: 0;
+  --z-dropdown: 20;
+  --z-sticky: 30;
+  --z-overlay: 40;
+  --z-modal: 50;
+  --z-toast: 60;
+  --z-workout-focus: 70;
+  --sidebar-width: 16rem;
+  --container-client: 100%;
+  --container-md: 48rem;
+  --container-lg: 64rem;
+  --container-xl: 80rem;
+  --container-wide: 90rem;
+}
+
+.dark {
+  color-scheme: dark;
+  --background: #0c0c0e;
+  --foreground: #f4f4f5;
+  --card: #161618;
+  --card-foreground: #f4f4f5;
+  --muted: #1f1f23;
+  --muted-foreground: #a1a1aa;
+  --border: #2a2a2e;
+  --ring: #d4d4d8;
+  --primary: #3b82f6;
+  --primary-foreground: #0b1220;
+  --secondary: #1f1f23;
+  --secondary-foreground: #f4f4f5;
+  --accent: #1f1f23;
+  --accent-foreground: #f4f4f5;
+  --success: #22c55e;
+  --success-foreground: #052e16;
+  --warning: #f59e0b;
+  --warning-foreground: #1c1403;
+  --danger: #f87171;
+  --danger-foreground: #1f0a0a;
+  --info: #60a5fa;
+  --info-foreground: #0b1220;
+  --chart-1: #60a5fa;
+  --chart-2: #2dd4bf;
+  --chart-3: #fbbf24;
+  --chart-4: #c4b5fd;
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  html {
+    @apply bg-background text-foreground;
+  }
+
+  body {
+    @apply min-h-svh font-sans text-base antialiased;
+  }
+
+  :focus-visible {
+    @apply outline-none ring-2 ring-ring ring-offset-2 ring-offset-background;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+}
+
+.client-app-shell {
+  background: color-mix(in oklab, var(--card) 16%, var(--background));
+}
+
+html:has(.client-workout-focus) {
+  scroll-padding-top: calc(3.5rem + env(safe-area-inset-top, 0px));
+}
+
+.client-app-chrome {
+  background: color-mix(in oklab, var(--card) 32%, var(--background) 68%);
+}
+
+.client-surface-card {
+  border-radius: var(--radius-xl);
+  border: 1px solid color-mix(in oklab, var(--border) 88%, transparent);
+  background: var(--card);
+  padding: 1.25rem;
+}
+
+.client-surface-card.client-surface-card--flush {
+  padding: 0;
+}
+
+.workspace-surface {
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border);
+  background: var(--card);
+  padding: 1rem;
+}
+
+@media (min-width: 640px) {
+  .workspace-surface {
+    padding: 1.25rem;
+  }
+}
+
+.client-app-shell .client-surface-card {
+  box-shadow: 0 1px 0 color-mix(in oklab, var(--foreground) 6%, transparent);
+}
+
+@media (min-width: 640px) {
+  .client-surface-card {
+    padding: 1.5rem;
+  }
+}
+
+.dashboard-hero-card {
+  position: relative;
+  overflow: hidden;
+}
+
+.dashboard-hero-card--action {
+  background:
+    linear-gradient(
+      160deg,
+      color-mix(in oklab, var(--primary) 16%, var(--card)) 0%,
+      var(--card) 62%
+    );
+  box-shadow: 0 1px 0 color-mix(in oklab, var(--primary) 22%, transparent);
+}
+
+.client-app-shell .dashboard-hero-card--action {
+  box-shadow: 0 1px 0 color-mix(in oklab, var(--primary) 22%, transparent);
+}
+
+.dashboard-hero-card--calm {
+  background:
+    linear-gradient(
+      165deg,
+      color-mix(in oklab, var(--foreground) 4%, var(--card)) 0%,
+      var(--card) 70%
+    );
+}
+
+.login-hero-atmosphere {
+  background:
+    radial-gradient(ellipse 80% 50% at 10% 20%, color-mix(in oklab, var(--primary) 18%, transparent), transparent 55%),
+    radial-gradient(ellipse 60% 40% at 90% 80%, color-mix(in oklab, var(--foreground) 8%, transparent), transparent 50%),
+    linear-gradient(165deg, var(--background) 0%, var(--card) 52%, var(--background) 100%);
+}
+
+.login-hero-atmosphere::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(to right, color-mix(in oklab, var(--border) 70%, transparent) 1px, transparent 1px),
+    linear-gradient(to bottom, color-mix(in oklab, var(--border) 70%, transparent) 1px, transparent 1px);
+  background-size: 4.5rem 4.5rem;
+  mask-image: radial-gradient(ellipse 70% 70% at 30% 40%, black 20%, transparent 75%);
+  opacity: 0.45;
+}
+
+.boot-bar {
+  animation: boot-slide 1.1s ease-in-out infinite;
+}
+
+@keyframes boot-slide {
+  0% {
+    transform: translateX(-120%);
+  }
+  100% {
+    transform: translateX(320%);
+  }
+}
+
+@utility text-display {
+  font-size: var(--text-display);
+  line-height: 1.1;
+  font-weight: 600;
+  letter-spacing: -0.03em;
+}
+
+@utility text-numeric {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+}
+
+@utility text-numeric-display {
+  font-family: var(--font-mono);
+  font-size: var(--text-numeric-display);
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+  letter-spacing: -0.04em;
+}
