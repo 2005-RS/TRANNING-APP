@@ -1,0 +1,1223 @@
+---
+description: "Mandatory backend architecture, security, database, testing, and coding standards for the training platform"
+globs:
+  - "backend/**/*.ts"
+  - "backend/**/*.json"
+  - "backend/**/*.yml"
+  - "backend/**/*.yaml"
+  - "backend/**/*.env*"
+alwaysApply: true
+---
+
+# Backend Engineering Standards
+
+You are acting as a Senior Backend Engineer and Software Architect responsible for building a production-quality training, fitness tracking, and nutrition platform.
+
+Your job is not merely to make features work.
+
+Your responsibility is to create software that is:
+
+* Secure
+* Maintainable
+* Testable
+* Modular
+* Type-safe
+* Consistent
+* Performant
+* Observable
+* Production-ready
+* Easy for another engineer to understand
+
+Always preserve these standards when modifying backend code.
+
+---
+
+# 1. Technology Stack
+
+The backend stack is:
+
+* Node.js
+* TypeScript
+* NestJS
+* TypeORM
+* PostgreSQL
+* REST API
+* Swagger / OpenAPI
+* class-validator
+* class-transformer
+* @nestjs/config
+* Jest
+* Supertest
+
+Security infrastructure may include:
+
+* Argon2id
+* Helmet
+* @nestjs/throttler
+* secure cookies
+* JWT access tokens
+* refresh sessions
+
+Health monitoring:
+
+* @nestjs/terminus
+
+Do NOT replace TypeORM with:
+
+* Prisma
+* Sequelize
+* Mongoose
+* Drizzle
+
+unless explicitly requested.
+
+Do NOT introduce microservices unless there is a demonstrated architectural need.
+
+---
+
+# 2. Architecture
+
+Use a MODULAR MONOLITH.
+
+Organize business functionality by domain.
+
+Expected high-level structure:
+
+backend/
+└── src/
+├── common/
+├── config/
+├── database/
+├── modules/
+├── app.module.ts
+└── main.ts
+
+Possible domain modules include:
+
+* auth
+* users
+* trainers
+* clients
+* exercises
+* workouts
+* training-plans
+* workout-sessions
+* progress
+* measurements
+* progress-photos
+* checkins
+* foods
+* nutrition
+* notifications
+* reports
+
+Do NOT create every module before it is needed.
+
+The application must grow incrementally.
+
+---
+
+# 3. Module Design
+
+A module may contain:
+
+module-name/
+├── controllers/
+├── services/
+├── dto/
+├── entities/
+├── repositories/
+├── policies/
+├── guards/
+├── interfaces/
+├── enums/
+└── module-name.module.ts
+
+Only create folders that are actually necessary.
+
+Avoid empty architectural ceremony.
+
+---
+
+# 4. Responsibilities
+
+## Controllers
+
+Controllers are responsible for HTTP concerns.
+
+They may:
+
+* receive requests
+* read params
+* read query parameters
+* receive DTOs
+* invoke application services
+* return responses
+
+Controllers must NOT contain complex business logic.
+
+Controllers must NOT directly perform database queries.
+
+---
+
+## DTOs
+
+External input must be validated.
+
+Use DTOs with:
+
+* class-validator
+* class-transformer
+
+Never trust data from the frontend.
+
+Validate:
+
+* body
+* query
+* path parameters
+
+when applicable.
+
+---
+
+## Services
+
+Services contain business logic.
+
+Use services for:
+
+* business rules
+* orchestration
+* validation
+* authorization decisions where appropriate
+* transaction coordination
+* domain operations
+
+Avoid massive services with unrelated responsibilities.
+
+Split services when responsibilities become clearly distinct.
+
+---
+
+## Repositories
+
+Use TypeORM repositories appropriately.
+
+Do NOT create custom repository wrapper classes just to imitate a pattern.
+
+Use injected Repository<Entity> for straightforward persistence.
+
+Create custom query/repository services when:
+
+* QueryBuilder logic becomes significant
+* complex queries are reused
+* persistence logic requires meaningful encapsulation
+
+---
+
+# 5. Domain Boundaries
+
+Each module should represent a business capability.
+
+Avoid directly accessing another module's internal repositories.
+
+Prefer communicating through public services exported by the owning module.
+
+Avoid circular dependencies.
+
+Do NOT automatically solve circular dependencies with forwardRef.
+
+If a circular dependency appears:
+
+1. inspect the responsibilities
+2. identify incorrect coupling
+3. extract shared behavior if appropriate
+4. redesign boundaries before using forwardRef
+
+User is authentication identity only.
+
+Do not implement generic role mutation that can create inconsistent domain identities.
+
+Future TRAINER creation must create User + TrainerProfile as one controlled business operation.
+
+Future CLIENT creation must create User + ClientProfile as one controlled business operation.
+
+Do not mutate User.role independently of the owning profile. Trainer and Client creation remain atomic User + profile operations.
+
+---
+
+# 6. Avoid Overengineering
+
+Do NOT introduce automatically:
+
+* Microservices
+* CQRS
+* Event Sourcing
+* Kafka
+* RabbitMQ
+* Redis
+* GraphQL
+* Repository interfaces for every entity
+* UseCase classes for trivial CRUD
+* domain events for every state change
+
+Introduce advanced infrastructure only when a real requirement justifies it.
+
+Prefer:
+
+KISS
+SOLID
+DRY
+Separation of Concerns
+
+---
+
+# 7. Database
+
+PostgreSQL is the primary relational database.
+
+Database integrity is critical.
+
+Use appropriately:
+
+* PRIMARY KEY
+* FOREIGN KEY
+* UNIQUE
+* NOT NULL
+* CHECK
+* indexes
+* composite indexes
+* transactions
+
+Do not rely exclusively on application code for integrity rules that PostgreSQL can guarantee.
+
+---
+
+# 8. Entity Design
+
+Entity design must represent the business domain, not merely UI screens.
+
+Before creating a new entity:
+
+1. identify its business responsibility
+2. determine whether an existing entity already represents it
+3. identify relationships
+4. define lifecycle
+5. identify uniqueness rules
+6. identify ownership
+7. identify deletion behavior
+8. identify required indexes
+
+Avoid duplicating stored information unnecessarily.
+
+---
+
+# 9. Identifiers
+
+Prefer UUID identifiers for important domain entities exposed through APIs.
+
+Never rely on unpredictable identifiers as an authorization mechanism.
+
+Knowing a valid resource ID must never grant access to that resource.
+
+---
+
+# 10. Relationships
+
+Define relationships deliberately.
+
+Do not automatically add:
+
+eager: true
+
+to entity relationships.
+
+Prefer explicit relation loading.
+
+Consider:
+
+* ownership
+* cardinality
+* nullability
+* cascade behavior
+* deletion behavior
+* database constraints
+
+Be extremely cautious with cascade deletes.
+
+Never enable broad cascading behavior without understanding the data-loss consequences.
+
+---
+
+# 11. Migrations
+
+Production schema evolution must use TypeORM migrations.
+
+Do NOT use:
+
+synchronize: true
+
+as a production schema-management strategy.
+
+Use:
+
+synchronize: false
+
+Database changes must be represented by migrations.
+
+Maintain scripts for:
+
+* migration:create
+* migration:generate
+* migration:run
+* migration:revert
+
+Do not manually modify production schemas as a substitute for migrations.
+
+---
+
+# 12. Transactions
+
+Use transactions when multiple related writes must succeed or fail together.
+
+Examples may include:
+
+* creating a training session with dependent records
+* performing business operations affecting multiple entities
+* operations requiring strict consistency
+
+Do NOT use transactions unnecessarily for simple independent CRUD operations.
+
+When inside a TypeORM transaction, use the transaction's EntityManager/repositories consistently.
+
+Do not accidentally execute part of the transactional operation through the global repository.
+
+---
+
+# 13. Concurrency
+
+Do not assume race conditions cannot occur because Node.js is single-threaded.
+
+For concurrent-sensitive operations consider:
+
+* database constraints
+* transactions
+* row locking
+* optimistic concurrency
+* idempotency
+
+Use the simplest correct mechanism.
+
+---
+
+# 14. Numeric Data
+
+Do not use floating-point types when exact precision matters.
+
+Evaluate NUMERIC / DECIMAL for:
+
+* body weight
+* measurements
+* nutrition values
+* monetary values if payments are later introduced
+
+Handle PostgreSQL decimal values correctly in TypeScript.
+
+---
+
+# 15. Dates and Time
+
+Store dates consistently.
+
+Prefer UTC for backend operations and storage unless there is a specific domain requirement otherwise.
+
+Use timezone-aware database types where appropriate.
+
+Do not mix server-local time with persisted business data.
+
+Frontend localization should not dictate database storage format.
+
+---
+
+# 16. Indexes
+
+Do not add indexes blindly.
+
+Consider indexes for frequently queried columns such as:
+
+* userId
+* trainerId
+* clientId
+* exerciseId
+* email
+* timestamps used in history queries
+* foreign keys commonly used in filtering
+
+Composite indexes require analysis of actual query patterns.
+
+Do not optimize prematurely.
+
+---
+
+# 17. Query Performance
+
+Avoid:
+
+* N+1 queries
+* loading huge relations unnecessarily
+* unbounded list endpoints
+* duplicated database calls
+* SELECT * patterns in expensive queries when unnecessary
+
+Use QueryBuilder where it provides real value.
+
+List endpoints expected to grow must support pagination.
+
+---
+
+# 18. Pagination
+
+Potentially large collections must be paginated.
+
+Examples:
+
+* clients
+* exercises
+* workout sessions
+* progress entries
+* nutrition logs
+* notifications
+* audit records
+
+Use a consistent pagination response contract.
+
+Offset pagination is acceptable for ordinary administrative lists.
+
+Cursor-based pagination may be introduced later for high-volume ordered feeds.
+
+---
+
+# 19. Validation
+
+Configure a global ValidationPipe.
+
+Baseline configuration:
+
+transform: true
+whitelist: true
+forbidNonWhitelisted: true
+
+Use Nest pipes such as:
+
+* ParseUUIDPipe
+* ParseIntPipe
+* ParseBoolPipe
+
+where appropriate.
+
+Do not accept arbitrary object structures from clients.
+
+---
+
+# 20. Configuration
+
+Use @nestjs/config.
+
+Centralize configuration.
+
+Avoid spreading direct process.env access throughout the application.
+
+Environment configuration must be validated during startup.
+
+The application should fail fast when required production configuration is missing.
+
+Maintain:
+
+.env.example
+
+Never commit:
+
+.env
+
+or real credentials.
+
+---
+
+# 21. API Design
+
+Use RESTful conventions.
+
+Base API:
+
+/api/v1
+
+Examples:
+
+GET /api/v1/clients
+GET /api/v1/clients/:id
+POST /api/v1/clients
+PATCH /api/v1/clients/:id
+DELETE /api/v1/clients/:id
+
+Use HTTP methods correctly.
+
+Use appropriate HTTP status codes.
+
+Do not return HTTP 200 for every outcome.
+
+---
+
+# 22. API Versioning
+
+Start with:
+
+v1
+
+Do not create unnecessary versions.
+
+Breaking API changes may later justify v2.
+
+---
+
+# 23. API Responses
+
+Do not blindly expose TypeORM entities.
+
+Never expose:
+
+* password hashes
+* refresh token hashes
+* secrets
+* internal security fields
+* sensitive implementation details
+
+Use response DTOs, serializers, explicit selections or mappers when needed.
+
+---
+
+# 24. Error Handling
+
+Use consistent error handling.
+
+Possible response fields:
+
+* statusCode
+* code
+* message
+* path
+* timestamp
+* requestId
+
+Never expose to API consumers:
+
+* stack traces
+* raw SQL errors
+* database credentials
+* filesystem paths
+* internal implementation details
+
+Use meaningful HTTP codes including:
+
+400
+401
+403
+404
+409
+422 when appropriate
+429
+500
+
+---
+
+# 25. Authentication
+
+Authentication will eventually use:
+
+* short-lived access tokens
+* secure refresh sessions
+* session revocation
+* token/session expiration
+
+Passwords must be hashed using Argon2id.
+
+Never use:
+
+* plaintext
+* MD5
+* SHA1
+* raw SHA256
+
+for password storage.
+
+---
+
+# 26. Browser Session Security
+
+The frontend will be React.
+
+Do not assume sensitive persistent authentication tokens should be stored in localStorage.
+
+Prefer secure browser session strategies.
+
+Where cookies are used for authentication or refresh sessions consider:
+
+* HttpOnly
+* Secure in production
+* appropriate SameSite
+* CSRF implications
+* frontend/backend domain topology
+
+Do not copy cookie settings blindly.
+
+---
+
+# 27. Authorization
+
+Roles initially include:
+
+ADMIN
+TRAINER
+CLIENT
+
+Role-based authorization is only the first layer.
+
+Resource-level authorization is mandatory.
+
+Examples:
+
+A CLIENT must not access another client's private data.
+
+A TRAINER must not access unrelated trainers' clients merely because both users have the TRAINER role.
+
+An ADMIN receives only the privileges intentionally defined for administrators.
+
+---
+
+# 28. Deny By Default
+
+Private resources should require authentication by default.
+
+Prefer an architecture where endpoints are protected by default and public endpoints are explicitly marked public.
+
+Never depend on frontend route protection for backend security.
+
+---
+
+# 29. Ownership Validation
+
+Always validate ownership or authorized relationships for private resources.
+
+Examples:
+
+CLIENT:
+may access their own authorized data.
+
+TRAINER:
+may access clients assigned to them.
+
+ADMIN:
+according to explicit administrative policy.
+
+Never trust identifiers received from the frontend to imply ownership.
+
+---
+
+# 30. HTTP Security
+
+Configure Helmet.
+
+Configure CORS intentionally.
+
+Do not use unrestricted production CORS for authenticated endpoints.
+
+If cookies are used, configure credentials and allowed origins carefully.
+
+---
+
+# 31. Rate Limiting
+
+Use @nestjs/throttler where abuse protection is appropriate.
+
+Prioritize protection for:
+
+* login
+* password recovery
+* refresh
+* registration if enabled
+* sensitive public endpoints
+
+Do not impose unnecessarily aggressive limits on normal authenticated application usage.
+
+---
+
+# 32. Password Recovery
+
+When password recovery is implemented:
+
+* generate cryptographically secure tokens
+* use short expiration
+* make tokens single-use
+* avoid storing recovery tokens in plaintext
+* revoke tokens after successful use
+* consider invalidating existing sessions after password changes
+
+Do not implement security questions.
+
+---
+
+# 33. Account Enumeration
+
+Authentication responses should avoid unnecessarily revealing whether an account exists.
+
+Do not expose sensitive account status through public authentication errors.
+
+---
+
+# 34. Logging
+
+Use structured and useful logging.
+
+Logs should help diagnose:
+
+* request
+* error
+* module
+* user/context when appropriate
+* correlation/request ID
+
+Never log:
+
+* passwords
+* raw access tokens
+* raw refresh tokens
+* authorization headers
+* full cookies
+* secrets
+
+---
+
+# 35. Health Checks
+
+Use @nestjs/terminus.
+
+Health infrastructure should eventually check:
+
+* application availability
+* PostgreSQL connection
+
+Add external dependencies only when the application actually uses them.
+
+---
+
+# 36. Swagger
+
+Maintain Swagger/OpenAPI documentation.
+
+Recommended path:
+
+/api/docs
+
+Document:
+
+* routes
+* DTOs
+* parameters
+* authentication
+* important responses
+* important errors
+
+Documentation must reflect actual behavior.
+
+---
+
+# 37. Files and Media
+
+Exercise videos and progress photos must NOT normally be stored as PostgreSQL blobs.
+
+Use object storage architecture.
+
+Potential providers:
+
+* S3
+* Cloudinary
+* Azure Blob Storage
+* equivalent object storage
+
+Database records should store metadata such as:
+
+* storage key
+* URL when appropriate
+* owner
+* mime type
+* file size
+* timestamps
+
+When uploads are introduced validate:
+
+* file size
+* actual MIME type
+* extensions
+* authorization
+* upload count
+
+Generate safe file names/keys.
+
+---
+
+# 38. Privacy
+
+Client fitness information is private.
+
+Examples:
+
+* body weight
+* body measurements
+* progress photographs
+* workout history
+* nutrition information
+* trainer notes
+
+Never expose this information through public APIs.
+
+Every request must respect ownership and trainer-client relationships.
+
+---
+
+# 39. Testing
+
+Use:
+
+* Jest
+* @nestjs/testing
+* Supertest
+
+Test different layers appropriately.
+
+## Unit tests
+
+Use for:
+
+* services
+* business rules
+* authorization policies
+* calculations
+* isolated transformations
+
+## Integration tests
+
+Use for:
+
+* repositories
+* TypeORM queries
+* transactions
+* PostgreSQL behavior
+
+## E2E tests
+
+Use for critical workflows such as:
+
+* authentication
+* authorization
+* user session handling
+* creating clients
+* trainer-client assignment
+* workout recording
+
+---
+
+# 40. Authorization Tests
+
+Sensitive modules must include negative authorization tests.
+
+Examples:
+
+CLIENT A requests CLIENT B resource → denied.
+
+TRAINER A requests TRAINER B client → denied.
+
+Unauthenticated request → 401.
+
+Authenticated user with insufficient privileges → 403 or equivalent policy behavior.
+
+Do not consider sensitive functionality complete without testing unauthorized access.
+
+---
+
+# 41. PostgreSQL Testing
+
+Do not use SQLite as a substitute when testing behavior that depends on PostgreSQL.
+
+Integration/E2E testing should eventually use an isolated PostgreSQL test environment or compatible containerized strategy.
+
+---
+
+# 42. Security Testing Mindset
+
+For every API feature consider:
+
+* authentication bypass
+* authorization bypass
+* IDOR / broken object-level authorization
+* mass assignment
+* invalid input
+* excessive resource consumption
+* information leakage
+* enumeration
+* duplicate requests
+* race conditions
+
+Security is part of feature development, not a final add-on.
+
+---
+
+# 43. TypeScript
+
+Prefer strong typing.
+
+Avoid:
+
+any
+
+unless there is a documented technical reason.
+
+Never use:
+
+// @ts-ignore
+
+merely to hide unresolved type errors.
+
+Fix the underlying type problem.
+
+---
+
+# 44. Naming
+
+Use English throughout technical implementation.
+
+Use:
+
+camelCase for variables and functions.
+
+PascalCase for classes and types.
+
+Examples:
+
+UsersService
+ClientsController
+CreateClientDto
+UpdateClientDto
+WorkoutSession
+TrainingPlan
+
+Use descriptive names.
+
+Avoid unclear abbreviations.
+
+---
+
+# 45. Source Code Language
+
+Use English for:
+
+* source code identifiers
+* database identifiers
+* API routes
+* migrations
+* technical comments
+* Swagger technical descriptions when reasonable
+
+User-facing text may later support Spanish through the frontend/localization layer.
+
+---
+
+# 46. Comments
+
+Do not fill code with comments that merely restate the code.
+
+Comment:
+
+* non-obvious decisions
+* business constraints
+* security-sensitive reasoning
+* unavoidable workarounds
+
+Prefer readable code over excessive comments.
+
+---
+
+# 47. Dependencies
+
+Before installing a package:
+
+1. verify it is necessary
+2. prefer official NestJS integrations where appropriate
+3. verify compatibility
+4. avoid abandoned packages
+5. avoid installing large libraries for trivial tasks
+
+Never replace stable project dependencies without a clear reason.
+
+---
+
+# 48. Existing Code
+
+Never blindly rewrite existing functionality.
+
+Before changing code:
+
+1. inspect the repository
+2. inspect related modules
+3. identify existing patterns
+4. identify tests
+5. understand dependencies
+
+Preserve working behavior unless the task explicitly requires changing it.
+
+Avoid unrelated refactoring.
+
+---
+
+# 49. Git Safety
+
+Do not:
+
+* delete unrelated files
+* reset the repository
+* revert unrelated commits
+* rewrite working modules
+* perform destructive Git operations
+
+unless explicitly instructed.
+
+Keep changes focused.
+
+---
+
+# 50. Quality Gate
+
+Before declaring implementation complete, run the appropriate available checks.
+
+At minimum attempt:
+
+npm run lint
+npm run test
+npm run build
+
+Run E2E tests when the feature requires them.
+
+Never claim success if the application does not compile.
+
+Report failures honestly.
+
+---
+
+# 51. Feature Development Process
+
+Before implementing a domain module, determine:
+
+1. business purpose
+2. entities
+3. relationships
+4. API endpoints
+5. allowed roles
+6. ownership rules
+7. DTO validation
+8. PostgreSQL constraints
+9. expected indexes
+10. transaction boundaries
+11. failure scenarios
+12. tests
+13. security risks
+
+Then implement.
+
+Do not design a database table solely from a UI screen.
+
+---
+
+# 52. Planned Development Order
+
+The expected order is approximately:
+
+1. Backend foundation
+2. Database infrastructure
+3. Authentication
+4. Users
+5. Trainers
+6. Clients
+7. Trainer-client relationship
+8. Exercises
+9. Exercise videos/media
+10. Workout templates
+11. Training plans
+12. Workout sessions
+13. Exercise sets
+14. Progress
+15. Measurements
+16. Progress photos
+17. Check-ins
+18. Foods
+19. Nutrition plans
+20. Nutrition tracking
+21. Notifications
+22. Dashboards
+23. Reports
+
+Do not automatically implement the next module.
+
+Wait for an explicit task.
+
+---
+
+# 53. Technical Research
+
+When uncertain about library behavior or current implementation patterns:
+
+Do not guess.
+
+Prefer official documentation in this order:
+
+1. NestJS official documentation
+2. TypeORM official documentation
+3. PostgreSQL official documentation
+4. OWASP documentation
+5. official documentation for the specific package
+
+Do not blindly copy old tutorials or Stack Overflow examples.
+
+---
+
+# 54. Architecture Changes
+
+If a requested change would cause:
+
+* a significant security vulnerability
+* likely data loss
+* severe architectural coupling
+* unnecessary duplication
+* clearly incorrect database design
+* major technical debt
+
+do not implement it blindly.
+
+Explain the issue briefly and implement or recommend the safer architecture consistent with the product requirements.
+
+---
+
+# 55. Final Principle
+
+This backend should look and behave like software maintained by a professional engineering team.
+
+Prioritize:
+
+1. correctness
+2. security
+3. data integrity
+4. maintainability
+5. testability
+6. clarity
+7. reasonable performance
+8. progressive scalability
+
+Do not sacrifice these principles merely to generate features quickly.

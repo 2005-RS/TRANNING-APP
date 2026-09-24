@@ -1,0 +1,89 @@
+---
+description: Mandatory frontend architecture, UX, accessibility, and API-contract standards for the training platform
+alwaysApply: true
+---
+
+# Frontend Engineering Standards
+
+You are acting as a Senior Frontend Architect for a production fitness / personal-training platform.
+
+Backend V1 is complete. Frontend adapts to the OpenAPI contract. Do not change backend business logic, migrations, or entities unless a later task explicitly requires it.
+
+When editing `backend/**`, follow `.cursor/rules/backend-standards.mdc`. This rule governs `frontend/**` and `docs/frontend/**`.
+
+Read `docs/frontend/` before inventing structure, tokens, routes, or dependencies.
+
+## Stack (do not substitute)
+
+- React 19 + TypeScript strict + Vite + React Compiler
+- Tailwind CSS 4 + CSS variables (semantic tokens)
+- shadcn/ui on Base UI primitives
+- TanStack Router, Query, Form, Table
+- Zod (UX validation only; backend remains authority)
+- Orval from `/api/docs-json` → `frontend/src/generated/`
+- Recharts, Motion, Lucide, Sonner, date-fns
+- Vitest, Testing Library, Playwright, MSW
+
+Do not add Redux or Zustand unless a later task proves a cross-feature client-state need.
+
+Do not install Rive, Three.js, R3F, Drei, or Spline until the feature task that needs them.
+
+## TypeScript / React
+
+- Functional components only.
+- No `any`. No `// @ts-ignore`.
+- Prefer explicit generated OpenAPI types over hand-written DTOs.
+- Never hand-edit `src/generated/`.
+
+## Architecture
+
+Feature-first. Shared UI is generic primitives only.
+
+```
+frontend/src/features/<domain>/   # screens, feature components, feature hooks
+frontend/src/shared/ui/           # Button, Card, Dialog, DataTable shell, …
+frontend/src/shared/lib/          # auth memory store, query client, fetch mutator
+```
+
+`SetRow`, `RestTimer`, `MealCard`, and similar belong in features, not `shared/ui`.
+
+## Data and API
+
+- Server state: TanStack Query via Orval-generated clients/hooks.
+- Route/search state: TanStack Router.
+- Form state: TanStack Form + Zod.
+- Local UI state: React state.
+- No scattered `fetch` / Axios in feature components.
+- Use a single fetch mutator: `credentials: 'include'`, `Authorization: Bearer` from **memory**.
+
+## Auth (non-negotiable)
+
+- Access token: memory only. Never `localStorage`, `sessionStorage`, or IndexedDB.
+- Refresh: HttpOnly cookie on `POST /api/v1/auth/refresh` with single-flight retry.
+- UI route guards are UX only. Backend authorizes.
+- Never log tokens, cookies, signed URLs, or Check-In text.
+
+`VITE_*` is public. Only `VITE_API_URL` / `VITE_APP_ENV` (and similar non-secrets).
+
+## UX by role
+
+- CLIENT: mobile-first, large targets, workout focus mode, no dense tables.
+- TRAINER / ADMIN: desktop-first productivity; responsive, not 3D-decorated.
+- Dark-first, token-driven, Geist Sans + Geist Mono (numbers only).
+- Neutral metrics. Do not invent GOOD/BAD/HEALTHY labels.
+- Toasts for transient success; dialogs for destructive confirm; inline errors for fields.
+- Respect `prefers-reduced-motion`. Lazy-load charts/3D. App must work without WebGL.
+
+## Accessibility
+
+Target WCAG 2.2 AA: semantic HTML, keyboard, focus-visible, labels, contrast, 44px-class touch targets on Client workout controls, accessible errors, no color-only status.
+
+## Testing
+
+Critical paths (auth refresh, role routing, workout set submit, IDOR-facing UI) need tests. Do not treat UI hiding as security.
+
+## Scope
+
+Do not add chat, payments, AI, email, push, or new backend capabilities.
+Do not clone Nike / Hevy / WHOOP / Muscle & Motion screens or assets.
+Do not implement the next frontend task until asked.

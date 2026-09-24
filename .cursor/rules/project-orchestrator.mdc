@@ -1,0 +1,149 @@
+---
+description: Master orchestration for F05–F14 — roadmap state, phase protocol, quality gates, and STOP behavior. Always apply.
+alwaysApply: true
+---
+
+# Project Orchestrator
+
+Permanent workflow for this repository. Do not duplicate `.cursor/rules/frontend-standards.mdc` or `.cursor/rules/backend-standards.mdc`; those remain the coding-standard authorities.
+
+Canonical docs:
+
+- `docs/frontend/frontend-roadmap.md`
+- `docs/frontend/current-task.md`
+- `docs/frontend/quality-gates.md`
+- `docs/frontend/engineering-guardrails.md`
+- `docs/frontend/task-report-template.md`
+- `docs/frontend/frontend-architecture.md`
+
+If documentation and source conflict, **source wins**. Report the conflict before destructive changes.
+
+## Architecture
+
+```
+/backend   NestJS V1 COMPLETE — production-ready. Contract authority.
+/frontend  React SPA. Adapts to OpenAPI. Does not own business rules.
+/docs      Architecture and roadmap.
+/.cursor   Agent rules.
+```
+
+```
+NestJS → OpenAPI → Orval → frontend/src/generated
+```
+
+Never import `backend/src`, NestJS DTO source, or TypeORM entities into frontend.
+
+Backend: NestJS, TypeORM, PostgreSQL, REST, Swagger, private S3-compatible storage, migrations only, `synchronize: false`.
+
+Frontend stack, auth, UX, and a11y: follow `frontend-standards.mdc` and `engineering-guardrails.md`.
+
+## Product priority
+
+Primary end-user panels: **CLIENT** then **TRAINER**. Both must reach a complete, production-quality experience before the frontend roadmap is considered complete. ADMIN remains required but is not the primary athlete/coach product.
+
+Trainer complements Client (manage/review assigned Clients). Do not duplicate Client gym UX in Trainer. Do not implement F10 Trainer domain features during Client phases; record the Client↔Trainer pairing in docs instead.
+
+F10 is the **complete Trainer Workspace**, not “Trainer Dashboard” only. Trainer capabilities are constrained by generated OpenAPI; document gaps instead of inventing frontend-only management.
+
+## Verified roadmap
+
+| Phase | Status |
+| --- | --- |
+| F00 Architecture, Design System & UX Foundation | VERIFIED |
+| F01 Frontend Foundation | VERIFIED |
+| F02 Authentication & Session Experience | VERIFIED |
+| F03 App Shell, Role Navigation & Protected Routes | VERIFIED |
+| F04 Client Dashboard | VERIFIED |
+| F05 Workout Experience | VERIFIED |
+| F06 Progress Analytics, Body Trends & Exercise Visualization | VERIFIED |
+| F07 CLIENT Nutrition | VERIFIED |
+| F08 CLIENT Body Progress & Photos | VERIFIED |
+| F09 CLIENT Check-ins | VERIFIED |
+| F10 TRAINER Workspace (complete, not dashboard-only) | VERIFIED |
+| F11 Admin Workspace (complete, not dashboard-only) | VERIFIED |
+| **F12 Notifications** | **CURRENT — NOT STARTED** |
+| F13–F14 | PLANNED |
+
+Do not implement a phase unless the user explicitly commands it.
+
+Client, Trainer, or Admin UI polish after a verified phase does **not** advance the roadmap. Current phase remains F12.
+
+Local environment safety (ports, guarded `api:generate`, Playwright server ownership): `docs/frontend/local-environment.md`.
+
+## No scope creep
+
+- Implement **only** the current phase in `docs/frontend/current-task.md`.
+- Do not start the next phase after a verified report.
+- Do not modify backend unless the task explicitly authorizes it.
+- Do not invent endpoints, DTO fields, fake fitness data, or unsupported CTAs.
+- Do not add chat, payments, AI, email, push, register, or password-reset unless a later task authorizes them.
+- Visual polish must not silently implement future business features.
+
+## Generated code
+
+Never hand-edit `frontend/src/generated/**`. Regenerate with `npm run api:generate`.
+
+## Security
+
+- Access token: memory only. Refresh: HttpOnly cookie.
+- Never persist auth tokens in `localStorage`, `sessionStorage`, IndexedDB, or JS-written cookies.
+- Theme preference MAY use `localStorage`.
+- Never log tokens, cookies, signed URLs, or Check-In text.
+- Never commit credentials, `.env`, or hardcoded JWTs.
+
+Preserve verified auth (F02): `AuthSessionProvider`, `BOOTSTRAPPING` / `AUTHENTICATED` / `UNAUTHENTICATED`, single-flight refresh, query-cache clear on logout/user change.
+
+## Quality gates
+
+See `docs/frontend/quality-gates.md`. Default frontend gate:
+
+```
+npm run api:generate
+npm test
+npm run lint
+npm run build
+```
+
+Browser behavior: `npx playwright test` with Playwright `channel: 'chrome'`.
+
+Do not mark a phase VERIFIED because the UI looks done. Verification requires required functionality, tests, lint, build, justified E2E, and security review.
+
+## Reporting
+
+Use `docs/frontend/task-report-template.md`. Decision line must be exactly:
+
+`FRONTEND FXX VERIFIED — READY FOR FYY`
+
+or:
+
+`FRONTEND FXX NOT VERIFIED`
+
+Then **STOP**.
+
+The human decides whether to advance `current-task.md` and the roadmap.
+
+## Phase execution protocol
+
+When asked to execute a roadmap phase:
+
+1. Read this rule, `current-task.md`, `frontend-roadmap.md`, `engineering-guardrails.md`, and relevant architecture docs.
+2. Inspect current source. Do not trust docs over code if they conflict.
+3. Inspect the generated OpenAPI contract for the phase. Do not invent fields.
+4. Implement **only** the current phase.
+5. Run phase tests.
+6. Run the global quality gate.
+7. Security / regression review.
+8. Return the phase report.
+9. **STOP.** Do not start the next phase.
+
+## Short command
+
+This command is sufficient:
+
+> Execute the current frontend roadmap phase according to the project orchestrator. Run its full quality gate, return the required report, and do not start the next phase.
+
+Resolve current phase from `docs/frontend/current-task.md`.
+
+## STOP
+
+Do not automatically continue the roadmap. Presence of F05–F14 is not permission to implement them sequentially.
