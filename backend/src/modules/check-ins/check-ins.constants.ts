@@ -1,0 +1,11 @@
+export const CHECK_IN_LIST_DEFAULT_PAGE = 1;
+export const CHECK_IN_LIST_DEFAULT_LIMIT = 20;
+export const CHECK_IN_LIST_MAX_LIMIT = 100;
+export const CHECK_IN_RATING_MIN = 1;
+export const CHECK_IN_RATING_MAX = 5;
+export const CHECK_IN_ADHERENCE_MIN = 0;
+export const CHECK_IN_ADHERENCE_MAX = 100;
+export const CHECK_IN_RESPONSE_TEXT_MAX_LENGTH = 2_000;
+export const CHECK_IN_FEEDBACK_MAX_LENGTH = 4_000;
+export const CHECK_IN_ACTION_ITEMS_MAX_LENGTH = 2_000;
+export const CHECK_IN_MAX_PERIOD_DAYS = 31;

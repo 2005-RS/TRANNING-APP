@@ -1,0 +1,14 @@
+export const API_GLOBAL_PREFIX = 'api';
+export const API_DEFAULT_VERSION = '1';
+export const REQUEST_ID_HEADER = 'x-request-id';
+
+export const THROTTLE_TTL_MS = 60_000;
+export const THROTTLE_LIMIT = 120;
+
+export const UPLOAD_REQUEST_THROTTLE_TTL_MS = 60_000;
+export const UPLOAD_REQUEST_THROTTLE_LIMIT = 20;
+
+export const HTTP_JSON_BODY_LIMIT_BYTES_DEFAULT = 262_144;
+export const DATABASE_POOL_MAX_DEFAULT = 10;
+export const DATABASE_CONNECT_TIMEOUT_MS_DEFAULT = 10_000;
+export const DATABASE_IDLE_TIMEOUT_MS_DEFAULT = 10_000;

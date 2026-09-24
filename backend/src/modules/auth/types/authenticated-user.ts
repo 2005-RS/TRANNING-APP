@@ -1,0 +1,12 @@
+import { UserRole } from '../../users/enums/user-role.enum';
+import { UserStatus } from '../../users/enums/user-status.enum';
+
+export interface AuthenticatedUser {
+  id: string;
+  email: string;
+  firstName: string;
+  lastName: string;
+  role: UserRole;
+  status: UserStatus;
+  sessionId: string;
+}

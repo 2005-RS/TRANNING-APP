@@ -1,0 +1,16 @@
+{
+  "moduleFileExtensions": ["js", "json", "ts"],
+  "rootDir": ".",
+  "testEnvironment": "node",
+  "testRegex": "\\.e2e-spec\\.ts$",
+  "transform": {
+    "^.+\\.ts$": "ts-jest"
+  },
+  "setupFiles": ["reflect-metadata", "<rootDir>/e2e-env.ts"],
+  "globalSetup": "<rootDir>/global-setup.js",
+  "testTimeout": 60000,
+  "testPathIgnorePatterns": [
+    "progress-photos-minio.e2e-spec.ts",
+    "exercise-media-minio.e2e-spec.ts"
+  ]
+}

@@ -1,0 +1,11 @@
+{
+  "moduleFileExtensions": ["js", "json", "ts"],
+  "rootDir": ".",
+  "testEnvironment": "node",
+  "testRegex": "(progress-photos-minio|exercise-media-minio)\\.e2e-spec\\.ts$",
+  "transform": {
+    "^.+\\.ts$": "ts-jest"
+  },
+  "setupFiles": ["reflect-metadata", "<rootDir>/e2e-minio-env.ts"],
+  "globalSetup": "<rootDir>/global-setup.js"
+}

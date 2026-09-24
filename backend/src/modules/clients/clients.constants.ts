@@ -1,0 +1,6 @@
+export const CLIENT_PHONE_MAX_LENGTH = 32;
+export const CLIENT_GOAL_NOTES_MAX_LENGTH = 2_000;
+export const CLIENT_SEARCH_MAX_LENGTH = 100;
+export const CLIENT_LIST_DEFAULT_PAGE = 1;
+export const CLIENT_LIST_DEFAULT_LIMIT = 20;
+export const CLIENT_LIST_MAX_LIMIT = 100;
