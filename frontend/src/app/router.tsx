@@ -5,15 +5,15 @@ import {
 } from '@tanstack/react-router';
 import { idleAuthContext } from '@/app/router-context';
 import { rootRoute } from '@/routes/__root';
-import { indexRoute } from '@/routes/index';
 import { loginRoute } from '@/routes/login';
+import { publicSiteRouteTree } from '@/routes/public-site';
 import { clientRouteTree } from '@/routes/client/route';
 import { trainerRouteTree } from '@/routes/trainer/route';
 import { adminRouteTree } from '@/routes/admin/route';
 import { ContentSkeleton } from '@/shared/ui/page';
 
 const routeTree = rootRoute.addChildren([
-  indexRoute,
+  publicSiteRouteTree,
   loginRoute,
   clientRouteTree,
   trainerRouteTree,

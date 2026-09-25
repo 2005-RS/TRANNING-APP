@@ -1,3 +1,4 @@
+import { Link } from '@tanstack/react-router';
 import { useAuthCopy } from '@/features/auth/copy';
 import { BrandMark } from '@/features/auth/components/brand-mark';
 import { LoginForm } from '@/features/auth/components/login-form';
@@ -23,9 +24,9 @@ export function LoginPage() {
         className="flex min-h-svh flex-col bg-background px-5 py-6 sm:px-8 lg:border-l lg:border-border lg:px-10 lg:py-10"
       >
         <div className="mb-8 flex items-center justify-between gap-3 lg:mb-0">
-          <div className="lg:hidden">
+          <Link to="/" className="rounded-md lg:hidden" aria-label={authCopy.backToSite}>
             <BrandMark compact />
-          </div>
+          </Link>
           <div className="ml-auto flex items-center gap-1">
             <LanguageSwitcher />
             <ThemeCycleButton />

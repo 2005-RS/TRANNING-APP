@@ -8,6 +8,7 @@ import { useClientNavCopy, useNavigationCopy } from '@/features/navigation/copy'
 import { isClientWorkoutFocusPath } from '@/features/navigation/route-meta';
 import { useCurrentRouteMeta } from '@/features/navigation/use-current-route-meta';
 import { UserMenu } from '@/app/shells/user-menu';
+import { TrainingAssistant } from '@/features/training-assistant/components/training-assistant';
 import { ThemeCycleButton } from '@/features/auth/components/theme-cycle-button';
 import { LanguageSwitcher } from '@/i18n/language-switcher';
 import { useCommonCopy } from '@/i18n/locales/common-live';
@@ -89,6 +90,7 @@ export function ClientAppShell({ children }: { children: ReactNode }) {
       {focusMode ? null : (
         <ClientBottomNav onMorePress={() => setMoreOpen(true)} />
       )}
+      <TrainingAssistant placement="client" hidden={focusMode} />
       {focusMode ? null : (
         <Sheet open={moreOpen} onOpenChange={setMoreOpen}>
           <SheetContent side="bottom">

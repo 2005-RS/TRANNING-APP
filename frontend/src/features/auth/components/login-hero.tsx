@@ -1,3 +1,4 @@
+import { Link } from '@tanstack/react-router';
 import { useAuthCopy } from '@/features/auth/copy';
 import { BrandMark } from '@/features/auth/components/brand-mark';
 
@@ -13,7 +14,9 @@ export function LoginHero() {
         className="login-hero-atmosphere pointer-events-none absolute inset-0"
       />
       <div className="relative z-10 flex w-full max-w-xl flex-col justify-between px-12 py-12 xl:px-16">
-        <BrandMark />
+        <Link to="/" className="self-start rounded-md" aria-label={authCopy.backToSite}>
+          <BrandMark />
+        </Link>
         <div className="space-y-5">
           <p className="text-xs font-medium uppercase tracking-[0.22em] text-muted-foreground">
             {authCopy.hero.eyebrow}

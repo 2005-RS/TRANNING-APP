@@ -4,6 +4,7 @@ import {
   parseCorsOriginsForRuntime,
   validateEnv,
 } from './env.validation';
+import { AiProviderName } from '../modules/chat/ai/ai-provider-name.enum';
 import { AUTH_TEST_ENV } from '../../test/auth-test-env';
 import { STORAGE_TEST_ENV } from '../../test/storage-test-env';
 
@@ -40,6 +41,10 @@ function productionEnv(
     OBJECT_STORAGE_BUCKET: 'training-exercise-media',
     OBJECT_STORAGE_ACCESS_KEY_ID: 'prod-access-key',
     OBJECT_STORAGE_SECRET_ACCESS_KEY: 'prod-secret-access-key',
+    AI_PROVIDER: 'deepseek',
+    DEEPSEEK_API_KEY: 'unit-test-deepseek-key-not-real',
+    DEEPSEEK_BASE_URL: 'https://api.deepseek.com',
+    DEEPSEEK_MODEL: 'deepseek-flash',
     ...overrides,
   });
 }
@@ -154,6 +159,93 @@ describe('validateEnv', () => {
     expect(isSwaggerEnabled(NodeEnvironment.Production, true)).toBe(true);
     expect(isSwaggerEnabled(NodeEnvironment.Development)).toBe(true);
     expect(isSwaggerEnabled(NodeEnvironment.Test, false)).toBe(false);
+  });
+
+  describe('AI provider', () => {
+    it('defaults to the mock provider outside production', () => {
+      const env = validateEnv(validEnv());
+      expect(env.AI_PROVIDER).toBe(AiProviderName.Mock);
+      expect(env.AI_REQUEST_TIMEOUT_MS).toBe(30_000);
+      expect(env.AI_MAX_HISTORY_MESSAGES).toBe(20);
+      expect(env.AI_RATE_LIMIT_PER_MINUTE).toBe(12);
+      expect(env.AI_PUBLIC_CHAT_ENABLED).toBe(true);
+      expect(env.AI_PUBLIC_RATE_LIMIT_PER_MINUTE).toBe(4);
+      expect(env.AI_PUBLIC_DAILY_MESSAGE_LIMIT).toBe(300);
+    });
+
+    it('can disable the public assistant', () => {
+      expect(
+        validateEnv(validEnv({ AI_PUBLIC_CHAT_ENABLED: 'false' }))
+          .AI_PUBLIC_CHAT_ENABLED,
+      ).toBe(false);
+    });
+
+    it.each([
+      ['AI_PUBLIC_RATE_LIMIT_PER_MINUTE', '0'],
+      ['AI_PUBLIC_RATE_LIMIT_PER_MINUTE', '61'],
+      ['AI_PUBLIC_DAILY_MESSAGE_LIMIT', '0'],
+      ['AI_PUBLIC_CHAT_ENABLED', 'maybe'],
+    ])('rejects %s=%s', (key, value) => {
+      expect(() => validateEnv(validEnv({ [key]: value }))).toThrow(
+        new RegExp(key),
+      );
+    });
+
+    it('treats blank AI values as unset', () => {
+      const env = validateEnv(
+        validEnv({
+          AI_PROVIDER: '',
+          DEEPSEEK_API_KEY: '',
+          DEEPSEEK_BASE_URL: '',
+          DEEPSEEK_MODEL: '',
+        }),
+      );
+      expect(env.AI_PROVIDER).toBe(AiProviderName.Mock);
+      expect(env.DEEPSEEK_API_KEY).toBeUndefined();
+    });
+
+    it('never silently uses mock in production', () => {
+      expect(() =>
+        validateEnv(productionEnv({ AI_PROVIDER: undefined })),
+      ).toThrow(/AI_PROVIDER/);
+      expect(() => validateEnv(productionEnv({ AI_PROVIDER: 'mock' }))).toThrow(
+        /AI_PROVIDER: mock is not allowed in production/,
+      );
+    });
+
+    it.each(['DEEPSEEK_API_KEY', 'DEEPSEEK_BASE_URL', 'DEEPSEEK_MODEL'])(
+      'requires %s when AI_PROVIDER=deepseek',
+      (key) => {
+        expect(() =>
+          validateEnv(
+            validEnv({
+              AI_PROVIDER: 'deepseek',
+              DEEPSEEK_API_KEY: 'unit-test-deepseek-key-not-real',
+              DEEPSEEK_BASE_URL: 'https://api.deepseek.com',
+              DEEPSEEK_MODEL: 'deepseek-flash',
+              [key]: '',
+            }),
+          ),
+        ).toThrow(new RegExp(key));
+      },
+    );
+
+    it('requires an https DeepSeek base URL in production', () => {
+      expect(() =>
+        validateEnv(
+          productionEnv({ DEEPSEEK_BASE_URL: 'http://api.deepseek.com' }),
+        ),
+      ).toThrow(/DEEPSEEK_BASE_URL: must use https/);
+    });
+
+    it('rejects an unknown provider and out-of-range limits', () => {
+      expect(() => validateEnv(validEnv({ AI_PROVIDER: 'openai' }))).toThrow(
+        /AI_PROVIDER/,
+      );
+      expect(() =>
+        validateEnv(validEnv({ AI_MAX_HISTORY_MESSAGES: '500' })),
+      ).toThrow(/AI_MAX_HISTORY_MESSAGES/);
+    });
   });
 
   it('rejects non-local S3 endpoints and production-looking buckets in tests', () => {

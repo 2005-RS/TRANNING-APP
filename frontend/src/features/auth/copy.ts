@@ -4,6 +4,7 @@ import { useLiveCopy } from '@/i18n/use-live-copy';
 export const authCopySource = {
   productName: 'Training Platform',
   brandSlotLabel: 'Training Platform',
+  backToSite: 'Training Platform — back to the website',
   boot: {
     status: 'Restoring your session',
   },

@@ -38,6 +38,7 @@ Legend: **FOUNDATION** (F01) · **FEATURE-DEPENDENT** · **DEFERRED** · **OPTIO
 | Redux | REJECTED | No global event bus needed | — | — | Duplicates Query/Router |
 | Zustand | REJECTED for F01–F03 | Memory token is a tiny module, not a store library | Reconsider only with proof | Context for token is enough | Extra abstraction |
 | Axios | REJECTED | fetch is enough | — | — | Dual HTTP stacks |
+| socket.io-client | FEATURE-DEPENDENT | Training Assistant real-time chat against the NestJS socket.io gateway (reconnection, handshake auth) | Training Assistant (user-authorized, outside F-phases); lazy-loaded with the panel only | Native WebSocket — would re-implement reconnection/ack framing and not match the Nest socket.io adapter | Bundle size — kept out of the initial chunk via `React.lazy` |
 | i18next + react-i18next | FOUNDATION | en/es UI copy, live switch, `UI_LANGUAGE` only | Global i18n (post-F10) | Hand ternaries / one JSON blob | Keep namespaces small; no date-fns locale packs |
 | PWA / service worker | DEFERRED | Gym offline is product work | not V1 frontend F-series | — | Cache vs signed URLs |
 

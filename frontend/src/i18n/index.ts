@@ -14,6 +14,8 @@ import { clientBodyCopySource } from '@/features/client-body/copy';
 import { clientCheckInsCopySource } from '@/features/client-check-ins/copy';
 import { trainerWorkspaceCopySource } from '@/features/trainer-workspace/copy';
 import { adminWorkspaceCopySource } from '@/features/admin-workspace/copy';
+import { trainingAssistantCopySource } from '@/features/training-assistant/copy';
+import { publicSiteCopySource } from '@/features/public-site/copy';
 import { commonCopySource } from '@/i18n/locales/en/common';
 import { esCommon } from '@/i18n/locales/es/common';
 import { esAuth } from '@/i18n/locales/es/auth';
@@ -26,6 +28,8 @@ import { esClientBody } from '@/i18n/locales/es/client-body';
 import { esClientCheckIns } from '@/i18n/locales/es/client-check-ins';
 import { esTrainerWorkspace } from '@/i18n/locales/es/trainer';
 import { esAdminWorkspace } from '@/i18n/locales/es/admin';
+import { esTrainingAssistant } from '@/i18n/locales/es/training-assistant';
+import { esPublicSite } from '@/i18n/locales/es/public-site';
 import {
   DEFAULT_LANGUAGE,
   isAppLanguage,
@@ -57,6 +61,8 @@ void i18nInstance.use(initReactI18next).init({
       clientCheckIns: clientCheckInsCopySource,
       trainerWorkspace: trainerWorkspaceCopySource,
       adminWorkspace: adminWorkspaceCopySource,
+      trainingAssistant: trainingAssistantCopySource,
+      publicSite: publicSiteCopySource,
     },
     es: {
       common: esCommon,
@@ -73,6 +79,8 @@ void i18nInstance.use(initReactI18next).init({
       clientCheckIns: esClientCheckIns,
       trainerWorkspace: esTrainerWorkspace,
       adminWorkspace: esAdminWorkspace,
+      trainingAssistant: esTrainingAssistant,
+      publicSite: esPublicSite,
     },
   },
 });

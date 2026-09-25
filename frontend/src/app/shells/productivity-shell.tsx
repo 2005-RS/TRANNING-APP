@@ -5,6 +5,7 @@ import type { NavItem } from '@/features/navigation/nav-config';
 import { ProductivitySidebarNav } from '@/features/navigation/productivity-sidebar';
 import { useCurrentRouteMeta } from '@/features/navigation/use-current-route-meta';
 import { ShellHeader } from '@/app/shells/shell-header';
+import { TrainingAssistant } from '@/features/training-assistant/components/training-assistant';
 import {
   Sheet,
   SheetContent,
@@ -74,6 +75,7 @@ export function ProductivityShell({
           />
         </SheetContent>
       </Sheet>
+      <TrainingAssistant placement="productivity" />
     </div>
   );
 }

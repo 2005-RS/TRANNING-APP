@@ -87,5 +87,32 @@ export function readEnvironment(
     PROGRESS_PHOTO_MAX_BYTES: config.getOrThrow('PROGRESS_PHOTO_MAX_BYTES', {
       infer: true,
     }),
+    AI_PROVIDER: config.getOrThrow('AI_PROVIDER', { infer: true }),
+    DEEPSEEK_API_KEY: config.get('DEEPSEEK_API_KEY', { infer: true }),
+    DEEPSEEK_BASE_URL: config.get('DEEPSEEK_BASE_URL', { infer: true }),
+    DEEPSEEK_MODEL: config.get('DEEPSEEK_MODEL', { infer: true }),
+    AI_REQUEST_TIMEOUT_MS: config.getOrThrow('AI_REQUEST_TIMEOUT_MS', {
+      infer: true,
+    }),
+    AI_MAX_HISTORY_MESSAGES: config.getOrThrow('AI_MAX_HISTORY_MESSAGES', {
+      infer: true,
+    }),
+    AI_MAX_OUTPUT_TOKENS: config.getOrThrow('AI_MAX_OUTPUT_TOKENS', {
+      infer: true,
+    }),
+    AI_RATE_LIMIT_PER_MINUTE: config.getOrThrow('AI_RATE_LIMIT_PER_MINUTE', {
+      infer: true,
+    }),
+    AI_PUBLIC_CHAT_ENABLED: config.getOrThrow('AI_PUBLIC_CHAT_ENABLED', {
+      infer: true,
+    }),
+    AI_PUBLIC_RATE_LIMIT_PER_MINUTE: config.getOrThrow(
+      'AI_PUBLIC_RATE_LIMIT_PER_MINUTE',
+      { infer: true },
+    ),
+    AI_PUBLIC_DAILY_MESSAGE_LIMIT: config.getOrThrow(
+      'AI_PUBLIC_DAILY_MESSAGE_LIMIT',
+      { infer: true },
+    ),
   };
 }

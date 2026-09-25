@@ -81,17 +81,3 @@ export function RedirectIfAuthenticated({
 
   return children;
 }
-
-export function HomeRedirect() {
-  const { status, user } = useAuthSession();
-
-  if (isAuthUnresolved(status)) {
-    return null;
-  }
-
-  if (status === 'AUTHENTICATED' && user) {
-    return <Navigate to={homeForRole(user.role)} replace />;
-  }
-
-  return <Navigate to="/login" replace />;
-}

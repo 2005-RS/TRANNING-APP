@@ -4,6 +4,7 @@ import type { LooseCopy } from '@/i18n/live-copy';
 export const esAuth: LooseCopy<typeof authCopySource> = {
   productName: 'Training Platform',
   brandSlotLabel: 'Training Platform',
+  backToSite: 'Training Platform — volver al sitio web',
   boot: {
     status: 'Restaurando tu sesión',
   },

@@ -17,6 +17,7 @@ import {
   NodeEnvironment,
   parseCorsOriginsForRuntime,
 } from './env.validation';
+import { ConfiguredSocketIoAdapter } from './socket-io.adapter';
 import { setupSwagger } from './swagger.setup';
 
 function isSwaggerUiPath(path: string): boolean {
@@ -72,8 +73,11 @@ export function configureApp(app: INestApplication): void {
   app.use(requestIdMiddleware);
   app.use(cookieParser());
 
+  const allowedOrigins = parseCorsOriginsForRuntime(corsOrigin, nodeEnv);
+  app.useWebSocketAdapter(new ConfiguredSocketIoAdapter(app, allowedOrigins));
+
   app.enableCors({
-    origin: parseCorsOriginsForRuntime(corsOrigin, nodeEnv),
+    origin: allowedOrigins,
     credentials: true,
     methods: ['GET', 'HEAD', 'PUT', 'PATCH', 'POST', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization', 'X-Request-Id'],

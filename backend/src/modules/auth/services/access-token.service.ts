@@ -8,6 +8,7 @@ export interface AccessTokenPayload {
   sub: string;
   role: UserRole;
   sid: string;
+  exp?: number;
 }
 
 @Injectable()

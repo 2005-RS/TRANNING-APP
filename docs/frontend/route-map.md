@@ -10,10 +10,14 @@ Unsupported capabilities are omitted: registration, password reset, chat, paymen
 
 | Path | Purpose | API |
 | --- | --- | --- |
+| `/` | Public site home: roles and how the platform works | none |
+| `/platform` | Public site: platform modules | none |
+| `/training` | Public site: training plans and workout recording | none |
+| `/progress` | Public site: progress, measurements, photos, check-ins | none |
+| `/about` | Public site: privacy, access, assistant, languages | none |
 | `/login` | Sign in | `POST /api/v1/auth/login` |
-| `/` | Redirect: login or role home | `GET /api/v1/auth/me` when session memory/refresh exists |
 
-No public marketing site in V1.
+The public site (`features/public-site`, layout route `public-site`) reads no private data and renders during session restore. Signed-in visitors stay on the page; the header CTA becomes "Go to my workspace" → role home. Copy describes only shipped capabilities: no prices, sign-up, testimonials, or statistics. Adding a public path requires updating `PUBLIC_SITE_PATHS`.
 
 ## Client (`role === CLIENT`)
 
@@ -97,4 +101,11 @@ Not implemented as Admin routes: `/admin/clients/$clientId/assignment` (assignme
 - `/client/exercises` library
 - `/client/templates`
 - `/trainer/clients/new` (Admin creates clients)
-- Chat, billing, email settings
+- Person-to-person chat (Trainer ↔ Client), billing, email settings
+
+## Training Assistant (no route)
+
+- Members: floating launcher in the Client shell (hidden in Focus Mode) and in the Trainer/Admin ProductivityShell, over the socket.io namespace `/chat` with the in-memory access token.
+- Visitors: the same launcher on every public-site page and on `/login` (`placement="public"`), over the anonymous namespace `/public-chat`. It sends no token, offers platform-only suggested questions, and is capped at 500 characters per message.
+
+Not REST, not in OpenAPI. User-authorized side feature outside the F-phase roadmap; see `backend/docs/training-assistant.md`.

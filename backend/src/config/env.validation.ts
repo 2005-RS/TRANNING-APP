@@ -8,6 +8,7 @@ import {
   IsNotEmpty,
   IsOptional,
   IsString,
+  IsUrl,
   Max,
   MaxLength,
   Min,
@@ -19,12 +20,19 @@ import {
   ValidationOptions,
 } from 'class-validator';
 import {
+  AI_MAX_HISTORY_MESSAGES_DEFAULT,
+  AI_MAX_OUTPUT_TOKENS_DEFAULT,
+  AI_PUBLIC_DAILY_MESSAGE_LIMIT_DEFAULT,
+  AI_PUBLIC_RATE_LIMIT_PER_MINUTE_DEFAULT,
+  AI_RATE_LIMIT_PER_MINUTE_DEFAULT,
+  AI_REQUEST_TIMEOUT_MS_DEFAULT,
   DATABASE_CONNECT_TIMEOUT_MS_DEFAULT,
   DATABASE_IDLE_TIMEOUT_MS_DEFAULT,
   DATABASE_POOL_MAX_DEFAULT,
   HTTP_JSON_BODY_LIMIT_BYTES_DEFAULT,
 } from './app.constants';
 import { ObjectStorageDriver } from '../storage/object-storage-driver.enum';
+import { AiProviderName } from '../modules/chat/ai/ai-provider-name.enum';
 
 export enum NodeEnvironment {
   Development = 'development',
@@ -377,6 +385,78 @@ export class EnvironmentVariables {
   @IsInt()
   @Min(1)
   PROGRESS_PHOTO_MAX_BYTES!: number;
+
+  @IsEnum(AiProviderName)
+  AI_PROVIDER!: AiProviderName;
+
+  @ValidateIf(
+    (env: EnvironmentVariables) => env.AI_PROVIDER === AiProviderName.DeepSeek,
+  )
+  @IsString()
+  @IsNotEmpty()
+  DEEPSEEK_API_KEY?: string;
+
+  @ValidateIf(
+    (env: EnvironmentVariables) => env.AI_PROVIDER === AiProviderName.DeepSeek,
+  )
+  @IsUrl({
+    require_protocol: true,
+    protocols: ['https', 'http'],
+    require_tld: false,
+  })
+  DEEPSEEK_BASE_URL?: string;
+
+  @ValidateIf(
+    (env: EnvironmentVariables) => env.AI_PROVIDER === AiProviderName.DeepSeek,
+  )
+  @IsString()
+  @IsNotEmpty()
+  @MaxLength(100)
+  DEEPSEEK_MODEL?: string;
+
+  @Transform(toIntWithDefault(AI_REQUEST_TIMEOUT_MS_DEFAULT))
+  @IsInt()
+  @Min(1000)
+  @Max(120_000)
+  AI_REQUEST_TIMEOUT_MS!: number;
+
+  @Transform(toIntWithDefault(AI_MAX_HISTORY_MESSAGES_DEFAULT))
+  @IsInt()
+  @Min(2)
+  @Max(50)
+  AI_MAX_HISTORY_MESSAGES!: number;
+
+  @Transform(toIntWithDefault(AI_MAX_OUTPUT_TOKENS_DEFAULT))
+  @IsInt()
+  @Min(64)
+  @Max(4096)
+  AI_MAX_OUTPUT_TOKENS!: number;
+
+  @Transform(toIntWithDefault(AI_RATE_LIMIT_PER_MINUTE_DEFAULT))
+  @IsInt()
+  @Min(1)
+  @Max(120)
+  AI_RATE_LIMIT_PER_MINUTE!: number;
+
+  @Transform(({ value }) => toBoolean(value ?? true))
+  @IsBoolean()
+  AI_PUBLIC_CHAT_ENABLED!: boolean;
+
+  @Transform(toIntWithDefault(AI_PUBLIC_RATE_LIMIT_PER_MINUTE_DEFAULT))
+  @IsInt()
+  @Min(1)
+  @Max(60)
+  AI_PUBLIC_RATE_LIMIT_PER_MINUTE!: number;
+
+  @Transform(toIntWithDefault(AI_PUBLIC_DAILY_MESSAGE_LIMIT_DEFAULT))
+  @IsInt()
+  @Min(1)
+  @Max(100_000)
+  AI_PUBLIC_DAILY_MESSAGE_LIMIT!: number;
+}
+
+function blankToUndefined(value: unknown): unknown {
+  return typeof value === 'string' && value.trim() === '' ? undefined : value;
 }
 
 export function validateEnv(
@@ -393,6 +473,31 @@ export function validateEnv(
     DATABASE_IDLE_TIMEOUT_MS:
       config.DATABASE_IDLE_TIMEOUT_MS ?? DATABASE_IDLE_TIMEOUT_MS_DEFAULT,
     DATABASE_SLOW_QUERY_MS: config.DATABASE_SLOW_QUERY_MS ?? 0,
+    // Mock is a development convenience only; production must name a real provider.
+    AI_PROVIDER:
+      blankToUndefined(config.AI_PROVIDER) ??
+      (config.NODE_ENV === NodeEnvironment.Production
+        ? undefined
+        : AiProviderName.Mock),
+    DEEPSEEK_API_KEY: blankToUndefined(config.DEEPSEEK_API_KEY),
+    DEEPSEEK_BASE_URL: blankToUndefined(config.DEEPSEEK_BASE_URL),
+    DEEPSEEK_MODEL: blankToUndefined(config.DEEPSEEK_MODEL),
+    AI_REQUEST_TIMEOUT_MS:
+      config.AI_REQUEST_TIMEOUT_MS ?? AI_REQUEST_TIMEOUT_MS_DEFAULT,
+    AI_MAX_HISTORY_MESSAGES:
+      config.AI_MAX_HISTORY_MESSAGES ?? AI_MAX_HISTORY_MESSAGES_DEFAULT,
+    AI_MAX_OUTPUT_TOKENS:
+      config.AI_MAX_OUTPUT_TOKENS ?? AI_MAX_OUTPUT_TOKENS_DEFAULT,
+    AI_RATE_LIMIT_PER_MINUTE:
+      config.AI_RATE_LIMIT_PER_MINUTE ?? AI_RATE_LIMIT_PER_MINUTE_DEFAULT,
+    AI_PUBLIC_CHAT_ENABLED:
+      blankToUndefined(config.AI_PUBLIC_CHAT_ENABLED) ?? true,
+    AI_PUBLIC_RATE_LIMIT_PER_MINUTE:
+      config.AI_PUBLIC_RATE_LIMIT_PER_MINUTE ??
+      AI_PUBLIC_RATE_LIMIT_PER_MINUTE_DEFAULT,
+    AI_PUBLIC_DAILY_MESSAGE_LIMIT:
+      config.AI_PUBLIC_DAILY_MESSAGE_LIMIT ??
+      AI_PUBLIC_DAILY_MESSAGE_LIMIT_DEFAULT,
   };
 
   const validated = plainToInstance(EnvironmentVariables, withDefaults, {
@@ -451,6 +556,21 @@ export function validateEnv(
     if (validated.OBJECT_STORAGE_DRIVER === ObjectStorageDriver.Memory) {
       throw new Error(
         'Environment validation failed:\nOBJECT_STORAGE_DRIVER: memory is not allowed in production',
+      );
+    }
+
+    if (validated.AI_PROVIDER === AiProviderName.Mock) {
+      throw new Error(
+        'Environment validation failed:\nAI_PROVIDER: mock is not allowed in production',
+      );
+    }
+
+    if (
+      validated.AI_PROVIDER === AiProviderName.DeepSeek &&
+      !validated.DEEPSEEK_BASE_URL?.startsWith('https://')
+    ) {
+      throw new Error(
+        'Environment validation failed:\nDEEPSEEK_BASE_URL: must use https in production',
       );
     }
   }

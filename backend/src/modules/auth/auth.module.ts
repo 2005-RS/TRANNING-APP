@@ -51,6 +51,11 @@ import { RefreshSessionService } from './services/refresh-session.service';
     { provide: APP_GUARD, useClass: AccessAuthGuard },
     { provide: APP_GUARD, useClass: RolesGuard },
   ],
-  exports: [PasswordHasherService, RefreshSessionService],
+  exports: [
+    PasswordHasherService,
+    RefreshSessionService,
+    AccessTokenService,
+    AuthService,
+  ],
 })
 export class AuthModule {}

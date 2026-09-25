@@ -5,6 +5,7 @@ import { SessionRestoreScreen } from '@/features/auth/components/session-restore
 import { useAuthSession } from '@/features/auth/hooks/use-auth-session';
 import { isAuthUnresolved } from '@/features/auth/lib/auth-session-context';
 import { SkipLink } from '@/app/shells/skip-link';
+import { isPublicSitePath } from '@/features/public-site/lib/public-paths';
 
 function RouterHrefProbe() {
   const href = useRouterState({
@@ -57,9 +58,11 @@ function preloadClientRoute(pathname: string) {
 export function RootLayout() {
   const { status } = useAuthSession();
   const pathname = useRouterState({ select: (state) => state.location.pathname });
-  const unresolved = isAuthUnresolved(status);
+  // Public marketing pages never read private data, so they render during session restore.
+  const publicPage = isPublicSitePath(pathname);
+  const unresolved = isAuthUnresolved(status) && !publicPage;
   const bootstrapping = status === 'BOOTSTRAPPING';
-  const restoreFailed = status === 'RESTORE_FAILED';
+  const restoreFailed = status === 'RESTORE_FAILED' && !publicPage;
 
   useEffect(() => {
     if (!bootstrapping || !pathname.startsWith('/client')) {
@@ -73,7 +76,7 @@ export function RootLayout() {
       <SkipLink />
       <HeadContent />
       {import.meta.env.MODE === 'test' ? <RouterHrefProbe /> : null}
-      {bootstrapping ? <AppBootScreen /> : null}
+      {bootstrapping && !publicPage ? <AppBootScreen /> : null}
       {restoreFailed ? <SessionRestoreScreen /> : null}
       <div hidden={unresolved} className={unresolved ? undefined : 'contents'}>
         <Outlet />

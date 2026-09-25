@@ -25,6 +25,7 @@ import { ProgressPhotosModule } from './modules/progress-photos/progress-photos.
 import { DashboardModule } from './modules/dashboard/dashboard.module';
 import { WorkoutSessionsModule } from './modules/workout-sessions/workout-sessions.module';
 import { WorkoutTemplatesModule } from './modules/workout-templates/workout-templates.module';
+import { ChatModule } from './modules/chat/chat.module';
 
 @Module({
   imports: [
@@ -67,6 +68,7 @@ import { WorkoutTemplatesModule } from './modules/workout-templates/workout-temp
     CheckInsModule,
     NotificationsModule,
     DashboardModule,
+    ChatModule,
   ],
   providers: [
     ThrottlerGuard,
