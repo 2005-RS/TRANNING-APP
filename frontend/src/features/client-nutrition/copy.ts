@@ -35,6 +35,11 @@ export const clientNutritionCopySource = {
       'Planned meal total minus the daily target. This is not remaining calories or intake.',
     meals: 'Meals',
     meal: 'Meal',
+    comparison: 'Planned nutrients vs daily targets',
+    planned: 'Planned',
+    target: 'Target',
+    noTarget: 'No target set',
+    savedHint: 'Values from the saved meal plan. Differences are planned amounts minus targets.',
   },
   meals: {
     title: 'Meals',

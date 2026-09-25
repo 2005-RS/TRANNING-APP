@@ -20,6 +20,12 @@ export function RedirectTo({ href }: { href: string }) {
   return null;
 }
 
+export function HomeRedirect() {
+  const { status, user } = useAuthSession();
+  if (isAuthUnresolved(status)) return null;
+  return <Navigate to={status === 'AUTHENTICATED' && user ? homeForRole(user.role) : '/login'} replace />;
+}
+
 export function RequireAuth({
   role,
   children,

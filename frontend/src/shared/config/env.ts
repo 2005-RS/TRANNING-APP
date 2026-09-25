@@ -29,6 +29,15 @@ export function readPublicEnv(
     throw new Error(`Invalid public frontend environment: ${details}`);
   }
 
+  if (parsed.data.VITE_APP_ENV === 'production') {
+    const protocol = new URL(parsed.data.VITE_API_URL).protocol;
+    if (protocol !== 'https:') {
+      throw new Error(
+        'Invalid public frontend environment: VITE_API_URL must use https when VITE_APP_ENV is production',
+      );
+    }
+  }
+
   return parsed.data;
 }
 

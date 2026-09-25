@@ -4,10 +4,12 @@ import {
   useEffect,
   useId,
   useRef,
+  useState,
   type HTMLAttributes,
   type ReactNode,
 } from 'react';
 import { X } from 'lucide-react';
+import { MOTION_DURATION_MS, useReducedMotion } from '@/shared/lib/motion';
 import { cn } from '@/shared/lib/utils';
 import { Button } from '@/shared/ui/button';
 import { useNavigationCopy } from '@/features/navigation/copy';
@@ -47,6 +49,22 @@ export function Sheet({
   );
 }
 
+function sheetOffsetClass(
+  side: 'left' | 'right' | 'bottom',
+  reduceMotion: boolean | null,
+) {
+  if (reduceMotion) {
+    return 'translate-x-0 translate-y-0 opacity-0';
+  }
+  if (side === 'bottom') {
+    return 'translate-y-4 opacity-0';
+  }
+  if (side === 'left') {
+    return '-translate-x-4 opacity-0';
+  }
+  return 'translate-x-4 opacity-0';
+}
+
 export function SheetContent({
   side = 'left',
   className,
@@ -62,20 +80,65 @@ export function SheetContent({
 }) {
   const navigationCopy = useNavigationCopy();
   const { open, onOpenChange, titleId, descriptionId } = useSheetContext();
+  const reduceMotion = useReducedMotion();
   const dialogRef = useRef<HTMLDialogElement>(null);
+  const [panelState, setPanelState] = useState<'closed' | 'open'>('closed');
 
   useEffect(() => {
     const dialog = dialogRef.current;
     if (!dialog) {
       return;
     }
-    if (open && !dialog.open) {
-      dialog.showModal();
+
+    let cancelled = false;
+    const frames: number[] = [];
+    let closeTimer: number | null = null;
+
+    if (open) {
+      if (!dialog.open) {
+        dialog.showModal();
+      }
+      if (reduceMotion) {
+        setPanelState('open');
+      } else {
+        setPanelState('closed');
+        frames.push(
+          requestAnimationFrame(() => {
+            frames.push(
+              requestAnimationFrame(() => {
+                if (!cancelled) {
+                  setPanelState('open');
+                }
+              }),
+            );
+          }),
+        );
+      }
+    } else {
+      setPanelState('closed');
+      if (dialog.open) {
+        if (reduceMotion) {
+          dialog.close();
+        } else {
+          closeTimer = window.setTimeout(() => {
+            if (!cancelled && dialog.open) {
+              dialog.close();
+            }
+          }, MOTION_DURATION_MS.panel);
+        }
+      }
     }
-    if (!open && dialog.open) {
-      dialog.close();
-    }
-  }, [open]);
+
+    return () => {
+      cancelled = true;
+      for (const frame of frames) {
+        cancelAnimationFrame(frame);
+      }
+      if (closeTimer !== null) {
+        window.clearTimeout(closeTimer);
+      }
+    };
+  }, [open, reduceMotion]);
 
   useEffect(() => {
     if (!open) {
@@ -93,15 +156,21 @@ export function SheetContent({
       ref={dialogRef}
       aria-labelledby={titleId}
       aria-describedby={descriptionId}
+      data-motion-state={panelState}
       className={cn(
         'fixed z-[var(--z-modal)] m-0 max-h-none max-w-none overflow-hidden border-border bg-background p-0 text-foreground shadow-lg',
         'backdrop:bg-black/50',
+        'transition-[opacity,transform] duration-[var(--motion-panel)] ease-[cubic-bezier(0.16,1,0.3,1)]',
+        'motion-reduce:transition-none',
         side === 'left' &&
           'inset-y-0 left-0 right-auto h-svh w-[min(var(--sidebar-width),90vw)] border-r',
         side === 'right' &&
           'inset-y-0 left-auto right-0 h-svh w-[min(var(--sidebar-width),90vw)] border-l',
         side === 'bottom' &&
           'inset-x-0 bottom-0 top-auto max-h-[85svh] w-full rounded-t-xl border-t',
+        panelState === 'open'
+          ? 'translate-x-0 translate-y-0 opacity-100'
+          : sheetOffsetClass(side, reduceMotion),
         className,
       )}
       onClose={() => onOpenChange(false)}

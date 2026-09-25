@@ -35,6 +35,11 @@ export const esClientNutrition: LooseCopy<typeof clientNutritionCopySource> = {
       'Total planificado de comidas menos el objetivo diario. Esto no es calorías restantes ni ingesta.',
     meals: 'Comidas',
     meal: 'Comida',
+    comparison: 'Nutrientes planificados vs objetivos diarios',
+    planned: 'Planificado',
+    target: 'Objetivo',
+    noTarget: 'Sin objetivo definido',
+    savedHint: 'Valores del plan de comidas guardado. Las diferencias son las cantidades planificadas menos los objetivos.',
   },
   meals: {
     title: 'Comidas',

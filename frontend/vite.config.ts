@@ -81,6 +81,7 @@ export default defineConfig(({ mode }) => {
       strictPort: true,
     },
     build: {
+      sourcemap: false,
       rollupOptions: {
         output: {
           manualChunks(id) {

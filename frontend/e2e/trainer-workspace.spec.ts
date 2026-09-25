@@ -801,3 +801,54 @@ test.describe('trainer workspace', () => {
     await expect(page.getByRole('heading', { name: 'Dashboard' })).toBeVisible();
   });
 });
+
+test('nutrition editor saves portions before activation and fits supported widths', async ({ page }) => {
+  test.setTimeout(90_000);
+  await mockAuthenticatedTrainer(page);
+  const planId = 'cccccccc-cccc-4ccc-8ccc-cccccccccccc';
+  const foodId = 'ffffffff-ffff-4fff-8fff-ffffffffffff';
+  let savedQuantity = 100;
+  let savedName = 'Breakfast';
+  let status = 'DRAFT';
+  const response = () => ({
+    id: planId, name: 'Nutrition coaching plan', status, clientProfileId: clientId, createdByUserId: trainerUser.id,
+    createdAt: '2026-09-24T00:00:00Z', updatedAt: '2026-09-24T00:00:00Z',
+    targets: { caloriesKcal: 2000, proteinG: 150, carbohydratesG: 220, fatG: 65 },
+    mealPlanTotals: { caloriesKcal: 165, proteinG: 31, carbohydratesG: 0, fatG: 3.6, fiberG: 0 },
+    targetDifferences: { caloriesDifferenceKcal: -1835, proteinDifferenceG: -119, carbohydratesDifferenceG: -220, fatDifferenceG: -61.4 },
+    meals: [{ id: 'meal-one', name: savedName, mealType: 'BREAKFAST', position: 0,
+      totals: { caloriesKcal: 165, proteinG: 31, carbohydratesG: 0, fatG: 3.6, fiberG: 0 },
+      items: [{ id: 'item-one', foodId, foodName: 'Chicken breast snapshot', quantityGrams: savedQuantity, position: 0,
+        nutrition: { caloriesKcal: 165, proteinG: 31, carbohydratesG: 0, fatG: 3.6, fiberG: 0 } }],
+    }],
+  });
+  await page.route(`**/api/v1/clients/${clientId}/nutrition-plans/${planId}**`, async (route) => {
+    if (route.request().method() === 'PUT') {
+      const body = route.request().postDataJSON();
+      savedQuantity = body.meals[0].items[0].quantityGrams;
+      savedName = body.meals[0].name;
+    }
+    if (route.request().method() === 'PATCH') status = 'ACTIVE';
+    await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(response()) });
+  });
+  await page.goto(`/trainer/clients/${clientId}/nutrition/${planId}`);
+  await expect(page.getByRole('heading', { name: 'Nutrition coaching plan' })).toBeVisible();
+  await expect(page.getByText('Chicken breast snapshot')).toBeVisible();
+  for (const width of [320, 375, 430, 768, 1024, 1440]) {
+    await page.setViewportSize({ width, height: 1000 });
+    expect(await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth)).toBeLessThanOrEqual(1);
+  }
+  const name = page.getByLabel('Meal name', { exact: true });
+  await name.fill('Breakfast after training');
+  await expect(name).toBeFocused();
+  await page.getByLabel('Quantity (g)', { exact: true }).fill('125.25');
+  await expect(page.getByRole('button', { name: 'Activate', exact: true })).toBeDisabled();
+  await page.getByRole('button', { name: 'Save meals', exact: true }).click();
+  await expect(page.getByRole('button', { name: 'Activate', exact: true })).toBeEnabled();
+  expect(savedQuantity).toBe(125.25);
+  expect(savedName).toBe('Breakfast after training');
+  await page.screenshot({ path: 'node_modules/nutrition-desktop.png', fullPage: true });
+  await page.getByRole('button', { name: 'Activate', exact: true }).click();
+  await expect(page.getByRole('button', { name: 'Archive', exact: true })).toBeVisible();
+  await expect(page.getByText('Chicken breast snapshot')).toBeVisible();
+});

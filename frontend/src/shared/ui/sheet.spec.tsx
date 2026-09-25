@@ -23,6 +23,18 @@ function FileSheet() {
   );
 }
 
+function ClosableSheet() {
+  const [open, setOpen] = useState(true);
+  return (
+    <Sheet open={open} onOpenChange={setOpen}>
+      <SheetContent side="bottom">
+        <SheetTitle>Confirm</SheetTitle>
+        {open ? <p>Sheet open</p> : <p>Sheet closed</p>}
+      </SheetContent>
+    </Sheet>
+  );
+}
+
 describe('Sheet', () => {
   it('does not close after a 0,0 click synthesized by a file picker', () => {
     render(<FileSheet />);
@@ -36,5 +48,12 @@ describe('Sheet', () => {
     const dialog = screen.getByRole('dialog');
     dialog.dispatchEvent(new Event('cancel', { cancelable: true }));
     expect(screen.getByText('Sheet open')).toBeInTheDocument();
+  });
+
+  it('requests close immediately on Escape without waiting for the exit animation', () => {
+    render(<ClosableSheet />);
+    expect(screen.getByText('Sheet open')).toBeInTheDocument();
+    fireEvent.keyDown(screen.getByRole('dialog'), { key: 'Escape' });
+    expect(screen.getByText('Sheet closed')).toBeInTheDocument();
   });
 });

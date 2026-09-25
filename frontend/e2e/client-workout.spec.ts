@@ -267,6 +267,7 @@ test.describe('client workout', () => {
     await expect(page.getByRole('textbox', { name: 'Reps' })).toBeEnabled();
     await page.getByRole('button', { name: 'Log set' }).click();
     await expect(page.getByRole('timer')).toBeVisible();
+    await expect(page.getByText('Rest remaining')).toBeVisible();
   });
 });
 

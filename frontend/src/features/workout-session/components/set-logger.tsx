@@ -111,7 +111,11 @@ export function SetLogger({
           onChange={(actualReps) => onChange({ ...draft, actualReps })}
         />
       )}
-      <Button type="submit" className="min-h-14 w-full text-base" disabled={pending}>
+      <Button
+        type="submit"
+        className="min-h-14 w-full text-base transition-transform duration-[var(--motion-instant)] ease-[cubic-bezier(0.16,1,0.3,1)] active:scale-[0.98] motion-reduce:transform-none"
+        disabled={pending}
+      >
         {pending ? workoutCopy.focus.loggingSet : workoutCopy.focus.logSet}
       </Button>
     </form>
