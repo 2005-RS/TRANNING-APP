@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import { TestApp } from '@/features/auth/tests/render';
@@ -171,7 +171,11 @@ describe('Client body progress', { timeout: 15_000 }, () => {
     const cancel = await screen.findByRole('button', { name: clientBodyCopy.photos.close });
     expect(cancel).toBeEnabled();
     await user.click(cancel);
-    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    // The sheet closes after its exit transition, so the dialog stays mounted
+    // for one motion duration before it leaves the accessibility tree.
+    await waitFor(() => {
+      expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    });
   });
 
   it('shows pending upload status without treating it as ready', async () => {

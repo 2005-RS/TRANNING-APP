@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { TestApp } from '@/features/auth/tests/render';
@@ -98,15 +98,26 @@ describe('Client nutrition', { timeout: 15_000 }, () => {
     expect(screen.queryByText('NaN')).not.toBeInTheDocument();
   });
 
-  it('omits missing optional targets without breaking', async () => {
+  it('marks missing optional targets as unset without breaking', async () => {
     nutritionMockState.current = { nutritionPlan: partialTargetsPlan };
     renderNutrition();
 
     expect(
       await screen.findByRole('heading', { name: 'Protein-only targets' }, { timeout }),
     ).toBeInTheDocument();
-    expect(screen.getByText('160 g')).toBeInTheDocument();
-    expect(screen.queryByText(clientNutritionCopy.targets.calories)).not.toBeInTheDocument();
+
+    const protein = screen.getByRole('region', {
+      name: clientNutritionCopy.targets.protein,
+    });
+    expect(within(protein).getByText('160 g')).toBeInTheDocument();
+
+    const calories = screen.getByRole('region', {
+      name: clientNutritionCopy.targets.calories,
+    });
+    expect(
+      within(calories).getByText(clientNutritionCopy.totals.noTarget),
+    ).toBeInTheDocument();
+
     expect(screen.getByText(clientNutritionCopy.meals.noFoods)).toBeInTheDocument();
   });
 
