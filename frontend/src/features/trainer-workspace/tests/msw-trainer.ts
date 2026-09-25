@@ -38,6 +38,8 @@ import type {
   ExerciseMediaResponseDto,
   ExerciseResponseDto,
   NutritionPlanResponseDto,
+  NutritionTotalsDto,
+  ReplaceNutritionPlanMealsDto,
   ReplaceWorkoutTemplateExercisesDto,
   TrainerClientOverviewItemDto,
   TrainerDashboardResponseDto,
@@ -73,6 +75,7 @@ type TrainerMockState = {
   nutritionPlan: NutritionPlanResponseDto;
   lastReviewBody: unknown;
   lastNutritionCreate: unknown;
+  lastNutritionReplace: ReplaceNutritionPlanMealsDto | null;
   lastTrainingCreate: unknown;
   lastTemplateCreate: unknown;
   lastTemplateReplace: ReplaceWorkoutTemplateExercisesDto | null;
@@ -102,6 +105,7 @@ export const trainerMockState: TrainerMockState = {
   nutritionPlan: structuredClone(draftNutritionPlan),
   lastReviewBody: null,
   lastNutritionCreate: null,
+  lastNutritionReplace: null,
   lastTrainingCreate: null,
   lastTemplateCreate: null,
   lastTemplateReplace: null,
@@ -131,6 +135,7 @@ export function resetTrainerMockState(): void {
   trainerMockState.nutritionPlan = structuredClone(draftNutritionPlan);
   trainerMockState.lastReviewBody = null;
   trainerMockState.lastNutritionCreate = null;
+  trainerMockState.lastNutritionReplace = null;
   trainerMockState.lastTrainingCreate = null;
   trainerMockState.lastTemplateCreate = null;
   trainerMockState.lastTemplateReplace = null;
@@ -199,6 +204,109 @@ function itemsFromReplaceBody(items: WorkoutTemplateExerciseInputDto[]): Workout
       notes: unwrapScalar(input.notes) as string | null,
     };
   });
+}
+
+function roundNutrient(value: number): number {
+  return Math.round(value * 100) / 100;
+}
+
+function emptyTotals(): NutritionTotalsDto {
+  return { caloriesKcal: 0, proteinG: 0, carbohydratesG: 0, fatG: 0, fiberG: 0 };
+}
+
+function addTotals(left: NutritionTotalsDto, right: NutritionTotalsDto): NutritionTotalsDto {
+  return {
+    caloriesKcal: roundNutrient(left.caloriesKcal + right.caloriesKcal),
+    proteinG: roundNutrient(left.proteinG + right.proteinG),
+    carbohydratesG: roundNutrient(left.carbohydratesG + right.carbohydratesG),
+    fatG: roundNutrient(left.fatG + right.fatG),
+    fiberG: roundNutrient(left.fiberG + right.fiberG),
+  };
+}
+
+function rescaleTotals(nutrition: NutritionTotalsDto, fromGrams: number, toGrams: number): NutritionTotalsDto {
+  const factor = fromGrams > 0 ? toGrams / fromGrams : 0;
+  return {
+    caloriesKcal: roundNutrient(nutrition.caloriesKcal * factor),
+    proteinG: roundNutrient(nutrition.proteinG * factor),
+    carbohydratesG: roundNutrient(nutrition.carbohydratesG * factor),
+    fatG: roundNutrient(nutrition.fatG * factor),
+    fiberG: roundNutrient(nutrition.fiberG * factor),
+  };
+}
+
+type NutrientSource = {
+  caloriesKcal?: number | null;
+  proteinG?: number | null;
+  carbohydratesG?: number | null;
+  fatG?: number | null;
+  fiberG?: number | null;
+};
+
+function toTotals(source: NutrientSource): NutritionTotalsDto {
+  return {
+    caloriesKcal: source.caloriesKcal ?? 0,
+    proteinG: source.proteinG ?? 0,
+    carbohydratesG: source.carbohydratesG ?? 0,
+    fatG: source.fatG ?? 0,
+    fiberG: source.fiberG ?? 0,
+  };
+}
+
+function scaleTotals(per100: NutrientSource, grams: number): NutritionTotalsDto {
+  return rescaleTotals(toTotals(per100), 100, grams);
+}
+
+function applyMealReplacement(
+  plan: NutritionPlanResponseDto,
+  body: ReplaceNutritionPlanMealsDto,
+): NutritionPlanResponseDto {
+  const previousItems = new Map(
+    plan.meals.flatMap((meal) => meal.items.map((item) => [item.foodId, item] as const)),
+  );
+  const meals = body.meals.map((meal, mealIndex) => {
+    const items = meal.items.map((item, itemIndex) => {
+      const catalog = item.foodId === catalogFood.id ? catalogFood : undefined;
+      const previous = previousItems.get(item.foodId);
+      return {
+        id: `meal-item-${mealIndex}-${itemIndex}`,
+        foodId: item.foodId,
+        foodName: catalog?.name ?? previous?.foodName ?? 'Food',
+        brand: catalog?.brand ?? previous?.brand ?? null,
+        quantityGrams: item.quantityGrams,
+        nutrition: catalog
+          ? scaleTotals(catalog.nutritionPer100g, item.quantityGrams)
+          : previous
+            ? rescaleTotals(toTotals(previous.nutrition), previous.quantityGrams, item.quantityGrams)
+            : emptyTotals(),
+        position: itemIndex,
+        notes: unwrapScalar(item.notes) as string | null,
+      };
+    });
+    const totals = items.reduce((sum, item) => addTotals(sum, item.nutrition), emptyTotals());
+    return {
+      id: `meal-${mealIndex}`,
+      name: meal.name,
+      mealType: meal.mealType,
+      position: mealIndex,
+      notes: unwrapScalar(meal.notes) as string | null,
+      totals,
+      items,
+    };
+  });
+  const mealPlanTotals = meals.reduce((sum, meal) => addTotals(sum, meal.totals), emptyTotals());
+  const targets = plan.targets;
+  return {
+    ...plan,
+    meals,
+    mealPlanTotals,
+    targetDifferences: {
+      caloriesDifferenceKcal: targets.caloriesKcal == null ? null : roundNutrient(mealPlanTotals.caloriesKcal - targets.caloriesKcal),
+      proteinDifferenceG: targets.proteinG == null ? null : roundNutrient(mealPlanTotals.proteinG - targets.proteinG),
+      carbohydratesDifferenceG: targets.carbohydratesG == null ? null : roundNutrient(mealPlanTotals.carbohydratesG - targets.carbohydratesG),
+      fatDifferenceG: targets.fatG == null ? null : roundNutrient(mealPlanTotals.fatG - targets.fatG),
+    },
+  };
 }
 
 function paginate<T>(data: T[], page = 1, limit = 20) {
@@ -321,9 +429,12 @@ export const trainerHandlers = [
     } as NutritionPlanResponseDto;
     return HttpResponse.json(trainerMockState.nutritionPlan, { status: 201 });
   }),
-  http.put(`${API}/clients/:clientId/nutrition-plans/:planId/meals`, async () =>
-    HttpResponse.json(trainerMockState.nutritionPlan),
-  ),
+  http.put(`${API}/clients/:clientId/nutrition-plans/:planId/meals`, async ({ request }) => {
+    const body = (await request.json()) as ReplaceNutritionPlanMealsDto;
+    trainerMockState.lastNutritionReplace = body;
+    trainerMockState.nutritionPlan = applyMealReplacement(trainerMockState.nutritionPlan, body);
+    return HttpResponse.json(trainerMockState.nutritionPlan);
+  }),
   http.patch(`${API}/clients/:clientId/nutrition-plans/:planId/status`, async ({ request }) => {
     const body = (await request.json()) as { status: NutritionPlanResponseDto['status'] };
     trainerMockState.nutritionPlan = { ...trainerMockState.nutritionPlan, status: body.status };

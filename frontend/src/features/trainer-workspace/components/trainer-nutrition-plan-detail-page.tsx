@@ -1,29 +1,15 @@
-import { useMemo, useState } from 'react';
-import { useNavigate } from '@tanstack/react-router';
+import { useState } from 'react';
+import { Link } from '@tanstack/react-router';
 import { useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
-import {
-  NutritionPlanMealInputDtoMealType,
-  NutritionPlanResponseDtoStatus,
-  NutritionFoodsListStatus,
-  UpdateNutritionPlanStatusDtoStatus,
-  type NutritionPlanMealInputDto,
-  type NutritionPlanMealInputDtoNotes,
-  type NutritionPlanMealItemInputDtoNotes,
-} from '@/generated/models';
-import {
-  useNutritionPlansGetById,
-  useNutritionPlansReplaceMeals,
-  useNutritionPlansUpdateStatus,
-} from '@/generated/nutrition-plans/nutrition-plans';
-import { useNutritionFoodsList } from '@/generated/nutrition-foods/nutrition-foods';
-import { NativeSelect, WorkspaceSurface } from '@/features/trainer-workspace/components/workspace-surface';
-import { StatusBadge } from '@/features/trainer-workspace/components/status-badge';
-import { TrainerErrorState } from '@/features/trainer-workspace/components/trainer-states';
-import { TrainerSectionSkeleton } from '@/features/trainer-workspace/components/trainer-skeleton';
+import { useNutritionPlansGetById, useNutritionPlansUpdateStatus } from '@/generated/nutrition-plans/nutrition-plans';
+import { WorkspaceSurface } from './workspace-surface';
+import { NutritionMealEditor } from './nutrition-meal-editor';
+import { StatusBadge } from './status-badge';
+import { TrainerErrorState } from './trainer-states';
+import { TrainerSectionSkeleton } from './trainer-skeleton';
+import { PlanTotals } from '@/features/client-nutrition/components/plan-totals';
 import { trainerWorkspaceCopy } from '@/features/trainer-workspace/copy';
-import { parseDecimalInput } from '@/features/trainer-workspace/lib/finite-number';
-import { asOpenApiField } from '@/features/trainer-workspace/lib/openapi-field';
 import { formatGrams, formatKcal } from '@/features/trainer-workspace/lib/formatters';
 import { invalidateTrainerNutrition } from '@/features/trainer-workspace/lib/invalidate';
 import { TRAINER_STALE_TIME_MS } from '@/features/trainer-workspace/lib/query-policy';
@@ -31,315 +17,93 @@ import { useTrainerClientId, useTrainerRouteId } from '@/features/trainer-worksp
 import { mapApiError } from '@/shared/errors/api-error';
 import { Alert } from '@/shared/ui/alert';
 import { Button } from '@/shared/ui/button';
-import { Input } from '@/shared/ui/input';
-import { Label } from '@/shared/ui/label';
-
-const copy = trainerWorkspaceCopy.nutrition;
-const mealTypes = Object.values(NutritionPlanMealInputDtoMealType);
 
 export function TrainerNutritionPlanDetailPage() {
   const clientId = useTrainerClientId();
   const planId = useTrainerRouteId('planId');
-  const navigate = useNavigate();
+  return <NutritionPlanDetail key={`${clientId}-${planId}`} clientId={clientId} planId={planId} />;
+}
+
+function NutritionPlanDetail({ clientId, planId }: { clientId: string; planId: string }) {
+  const copy = trainerWorkspaceCopy.nutrition;
   const queryClient = useQueryClient();
   const [error, setError] = useState<string | null>(null);
+  const [dirty, setDirty] = useState(false);
   const planQuery = useNutritionPlansGetById(clientId, planId, {
     query: { enabled: Boolean(clientId && planId), staleTime: TRAINER_STALE_TIME_MS, refetchOnWindowFocus: false },
   });
-  const foodsQuery = useNutritionFoodsList(
-    { limit: 50, status: NutritionFoodsListStatus.ACTIVE },
-    { query: { staleTime: TRAINER_STALE_TIME_MS, refetchOnWindowFocus: false } },
-  );
-  const replaceMeals = useNutritionPlansReplaceMeals();
   const updateStatus = useNutritionPlansUpdateStatus();
-  const foods = foodsQuery.data?.data ?? [];
 
-  const initialMeals = useMemo<NutritionPlanMealInputDto[]>(
-    () =>
-      (planQuery.data?.meals ?? []).map((meal) => ({
-        name: meal.name,
-        mealType: meal.mealType,
-        notes: asOpenApiField<NutritionPlanMealInputDtoNotes | undefined>(meal.notes ?? null),
-        items: meal.items.map((item) => ({
-          foodId: item.foodId,
-          quantityGrams: item.quantityGrams,
-          notes: asOpenApiField<NutritionPlanMealItemInputDtoNotes | undefined>(item.notes ?? null),
-        })),
-      })),
-    [planQuery.data],
+  if (planQuery.isPending) return <WorkspaceSurface><TrainerSectionSkeleton label={copy.loadingLabel} /></WorkspaceSurface>;
+  if (planQuery.isError || !planQuery.data) return (
+    <TrainerErrorState error={planQuery.error} retrying={planQuery.isFetching}
+      onRetry={() => { if (!planQuery.isFetching) void planQuery.refetch(); }} />
   );
-  const [meals, setMeals] = useState<NutritionPlanMealInputDto[] | null>(null);
-  const draft = meals ?? initialMeals;
-
-  if (planQuery.isPending) {
-    return (
-      <WorkspaceSurface>
-        <TrainerSectionSkeleton label={copy.loadingLabel} />
-      </WorkspaceSurface>
-    );
-  }
-  if (planQuery.isError || !planQuery.data) {
-    return (
-      <TrainerErrorState
-        error={planQuery.error}
-        retrying={planQuery.isFetching}
-        onRetry={() => {
-          if (!planQuery.isFetching) {
-            void planQuery.refetch();
-          }
-        }}
-      />
-    );
-  }
-
   const plan = planQuery.data;
-  const editable = plan.status === NutritionPlanResponseDtoStatus.DRAFT;
+  const editable = plan.status === 'DRAFT';
+  const changeStatus = async (status: 'ACTIVE' | 'ARCHIVED') => {
+    setError(null);
+    try {
+      await updateStatus.mutateAsync({ clientId, planId, data: { status } });
+      await invalidateTrainerNutrition(queryClient, clientId);
+      toast.success(status === 'ACTIVE' ? trainerWorkspaceCopy.activate : trainerWorkspaceCopy.archive);
+    } catch (err) { setError(mapApiError(err).description); }
+  };
 
   return (
     <div className="space-y-5">
       <div className="flex flex-wrap items-start justify-between gap-3">
-        <div>
-          <Button
-            variant="ghost"
-            onClick={() => {
-              void navigate({ to: '/trainer/clients/$clientId/nutrition', params: { clientId } });
-            }}
-          >
-            {copy.title}
-          </Button>
-          <h2 className="text-lg font-semibold tracking-tight">{plan.name}</h2>
-          <p className="text-xs text-muted-foreground">{copy.prescribedHint}</p>
+        <div className="min-w-0">
+          <Link to="/trainer/clients/$clientId/nutrition" params={{ clientId }} className="text-sm text-primary underline underline-offset-4">{copy.title}</Link>
+          <h2 className="mt-2 break-words text-xl font-semibold tracking-tight">{plan.name}</h2>
+          <p className="mt-1 text-sm text-muted-foreground">{copy.prescribedHint}</p>
         </div>
         <StatusBadge status={plan.status} />
       </div>
       {error ? <Alert variant="danger">{error}</Alert> : null}
-
-      <WorkspaceSurface>
-        <h3 className="text-base font-semibold">{copy.targets}</h3>
-        <dl className="mt-3 grid grid-cols-2 gap-3 text-sm sm:grid-cols-4">
-          <div>
-            <dt className="text-muted-foreground">{copy.calories}</dt>
-            <dd className="font-mono tabular-nums">{formatKcal(plan.targets.caloriesKcal) ?? trainerWorkspaceCopy.notSet}</dd>
-          </div>
-          <div>
-            <dt className="text-muted-foreground">{copy.protein}</dt>
-            <dd className="font-mono tabular-nums">{formatGrams(plan.targets.proteinG) ?? trainerWorkspaceCopy.notSet}</dd>
-          </div>
-          <div>
-            <dt className="text-muted-foreground">{copy.carbs}</dt>
-            <dd className="font-mono tabular-nums">{formatGrams(plan.targets.carbohydratesG) ?? trainerWorkspaceCopy.notSet}</dd>
-          </div>
-          <div>
-            <dt className="text-muted-foreground">{copy.fat}</dt>
-            <dd className="font-mono tabular-nums">{formatGrams(plan.targets.fatG) ?? trainerWorkspaceCopy.notSet}</dd>
-          </div>
-        </dl>
-        <p className="mt-4 text-sm text-muted-foreground">
-          {copy.mealTotals}: {formatKcal(plan.mealPlanTotals.caloriesKcal)}
-        </p>
-      </WorkspaceSurface>
-
+      <PlanTotals plan={plan} variant="trainer" />
       {editable ? (
-        <WorkspaceSurface className="flex flex-wrap gap-2">
-          <Button
-            disabled={updateStatus.isPending}
-            onClick={async () => {
-              setError(null);
-              try {
-                await updateStatus.mutateAsync({
-                  clientId,
-                  planId,
-                  data: { status: UpdateNutritionPlanStatusDtoStatus.ACTIVE },
-                });
-                await invalidateTrainerNutrition(queryClient, clientId);
-                toast.success(trainerWorkspaceCopy.activate);
-              } catch (err) {
-                setError(mapApiError(err).description);
-              }
-            }}
-          >
-            {trainerWorkspaceCopy.activate}
-          </Button>
-        </WorkspaceSurface>
-      ) : plan.status === NutritionPlanResponseDtoStatus.ACTIVE ? (
-        <WorkspaceSurface>
-          <Button
-            variant="outline"
-            disabled={updateStatus.isPending}
-            onClick={async () => {
-              setError(null);
-              try {
-                await updateStatus.mutateAsync({
-                  clientId,
-                  planId,
-                  data: { status: UpdateNutritionPlanStatusDtoStatus.ARCHIVED },
-                });
-                await invalidateTrainerNutrition(queryClient, clientId);
-                toast.success(trainerWorkspaceCopy.archive);
-              } catch (err) {
-                setError(mapApiError(err).description);
-              }
-            }}
-          >
-            {trainerWorkspaceCopy.archive}
-          </Button>
-        </WorkspaceSurface>
-      ) : null}
-
-      <WorkspaceSurface>
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <h3 className="text-base font-semibold">{copy.meals}</h3>
-          {editable ? (
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() =>
-                setMeals([
-                  ...draft,
-                  {
-                    name: 'Meal',
-                    mealType: NutritionPlanMealInputDtoMealType.OTHER,
-                    items: foods[0] ? [{ foodId: foods[0].id, quantityGrams: 100 }] : [],
-                  },
-                ])
-              }
-            >
-              {copy.addMeal}
-            </Button>
-          ) : null}
-        </div>
-        {draft.length === 0 ? (
-          <p className="mt-3 text-sm text-muted-foreground">{copy.noMeals}</p>
-        ) : (
-          <ul className="mt-4 space-y-4">
-            {draft.map((meal, mealIndex) => (
-              <li key={`${meal.name}-${mealIndex}`} className="rounded-md border border-border p-3 space-y-3">
-                {editable ? (
-                  <div className="grid gap-3 sm:grid-cols-2">
-                    <div className="space-y-1">
-                      <Label>{copy.mealName}</Label>
-                      <Input
-                        value={meal.name}
-                        onChange={(event) => {
-                          const next = [...draft];
-                          next[mealIndex] = { ...meal, name: event.target.value };
-                          setMeals(next);
-                        }}
-                      />
-                    </div>
-                    <div className="space-y-1">
-                      <Label>{copy.mealType}</Label>
-                      <NativeSelect
-                        value={meal.mealType}
-                        onChange={(event) => {
-                          const next = [...draft];
-                          next[mealIndex] = {
-                            ...meal,
-                            mealType: event.target.value as NutritionPlanMealInputDtoMealType,
-                          };
-                          setMeals(next);
-                        }}
-                      >
-                        {mealTypes.map((type) => (
-                          <option key={type} value={type}>
-                            {trainerWorkspaceCopy.mealTypes[type]}
-                          </option>
-                        ))}
-                      </NativeSelect>
-                    </div>
+        <>
+          <NutritionMealEditor plan={plan} clientId={clientId} onDirtyChange={setDirty} />
+          <WorkspaceSurface className="space-y-3">
+            {dirty ? <p id="nutrition-activation-hint" className="text-sm text-muted-foreground">{copy.unsaved}</p> : null}
+            <Button disabled={dirty || updateStatus.isPending || plan.meals.length === 0}
+              aria-describedby={dirty ? 'nutrition-activation-hint' : undefined}
+              onClick={() => void changeStatus('ACTIVE')}>{trainerWorkspaceCopy.activate}</Button>
+          </WorkspaceSurface>
+        </>
+      ) : (
+        <>
+          <WorkspaceSurface>
+            <h3 className="text-base font-semibold">{copy.meals}</h3>
+            {plan.meals.length === 0 ? <p className="mt-3 text-sm text-muted-foreground">{copy.noMeals}</p> : null}
+            <ol className="mt-4 space-y-4">
+              {plan.meals.map((meal) => (
+                <li key={meal.id} className="space-y-3 rounded-md border border-border p-4">
+                  <div className="flex flex-wrap justify-between gap-2">
+                    <h4 className="font-medium">{meal.name} · {trainerWorkspaceCopy.mealTypes[meal.mealType]}</h4>
+                    <span className="font-mono text-sm">{formatKcal(meal.totals.caloriesKcal)}</span>
                   </div>
-                ) : (
-                  <p className="font-medium">
-                    {meal.name} · {trainerWorkspaceCopy.mealTypes[meal.mealType]}
-                  </p>
-                )}
-                <ul className="space-y-2">
-                  {meal.items.map((item, itemIndex) => (
-                    <li key={`${item.foodId}-${itemIndex}`} className="grid gap-2 sm:grid-cols-[1fr_8rem]">
-                      {editable ? (
-                        <>
-                          <NativeSelect
-                            value={item.foodId}
-                            aria-label={copy.food}
-                            onChange={(event) => {
-                              const next = [...draft];
-                              const items = [...meal.items];
-                              items[itemIndex] = { ...item, foodId: event.target.value };
-                              next[mealIndex] = { ...meal, items };
-                              setMeals(next);
-                            }}
-                          >
-                            {foods.map((food) => (
-                              <option key={food.id} value={food.id}>
-                                {food.name}
-                              </option>
-                            ))}
-                          </NativeSelect>
-                          <Input
-                            inputMode="decimal"
-                            aria-label={copy.quantity}
-                            value={String(item.quantityGrams)}
-                            onChange={(event) => {
-                              const parsed = parseDecimalInput(event.target.value);
-                              const next = [...draft];
-                              const items = [...meal.items];
-                              items[itemIndex] = {
-                                ...item,
-                                quantityGrams: parsed ?? item.quantityGrams,
-                              };
-                              next[mealIndex] = { ...meal, items };
-                              setMeals(next);
-                            }}
-                          />
-                        </>
-                      ) : (
-                        <p className="text-sm">
-                          {foods.find((food) => food.id === item.foodId)?.name ?? copy.food} ·{' '}
-                          {formatGrams(item.quantityGrams)}
-                        </p>
-                      )}
-                    </li>
-                  ))}
-                </ul>
-                {editable && foods[0] ? (
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => {
-                      const next = [...draft];
-                      next[mealIndex] = {
-                        ...meal,
-                        items: [...meal.items, { foodId: foods[0]!.id, quantityGrams: 50 }],
-                      };
-                      setMeals(next);
-                    }}
-                  >
-                    {copy.addItem}
-                  </Button>
-                ) : null}
-              </li>
-            ))}
-          </ul>
-        )}
-        {editable ? (
-          <Button
-            className="mt-4"
-            disabled={replaceMeals.isPending}
-            onClick={async () => {
-              setError(null);
-              try {
-                await replaceMeals.mutateAsync({ clientId, planId, data: { meals: draft } });
-                await invalidateTrainerNutrition(queryClient, clientId);
-                toast.success(copy.saveMeals);
-              } catch (err) {
-                setError(mapApiError(err).description);
-              }
-            }}
-          >
-            {copy.saveMeals}
-          </Button>
-        ) : null}
-      </WorkspaceSurface>
+                  {meal.notes ? <p className="whitespace-pre-wrap text-sm text-muted-foreground">{meal.notes}</p> : null}
+                  <ul className="divide-y divide-border">
+                    {meal.items.map((item) => (
+                      <li key={item.id} className="flex flex-wrap justify-between gap-2 py-2 text-sm">
+                        <div className="min-w-0 break-words">
+                          <p>{item.foodName}{item.brand ? ` · ${item.brand}` : ''}</p>
+                          {item.notes ? <p className="text-muted-foreground">{item.notes}</p> : null}
+                        </div>
+                        <span className="font-mono">{formatGrams(item.quantityGrams)} · {formatKcal(item.nutrition.caloriesKcal)}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </li>
+              ))}
+            </ol>
+          </WorkspaceSurface>
+          {plan.status === 'ACTIVE' ? <Button variant="outline" disabled={updateStatus.isPending}
+            onClick={() => void changeStatus('ARCHIVED')}>{trainerWorkspaceCopy.archive}</Button> : null}
+        </>
+      )}
     </div>
   );
 }

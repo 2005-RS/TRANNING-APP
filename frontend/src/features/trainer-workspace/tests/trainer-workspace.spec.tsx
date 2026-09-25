@@ -14,9 +14,12 @@ import {
   TRAINER_CREATED_EXERCISE_ID,
   TRAINER_EXERCISE_B_ID,
   TRAINER_EXERCISE_ID,
+  TRAINER_NUTRITION_PLAN_ID,
   TRAINER_TEMPLATE_B_ID,
   SIGNED_EXERCISE_MEDIA_URL,
   adminCatalogExercise,
+  catalogFood,
+  draftNutritionPlan,
   readyExerciseImage,
 } from '@/features/trainer-workspace/tests/fixtures';
 import {
@@ -147,6 +150,29 @@ describe('Trainer workspace', () => {
         targetProteinG: 170.25,
       });
     });
+  });
+
+  it('saves meal portions from the catalog search and blocks activation while dirty', async () => {
+    const user = userEvent.setup();
+    usePopulatedTrainerWorkspace();
+    trainerMockState.nutritionPlan = structuredClone(draftNutritionPlan);
+    renderTrainer(`/trainer/clients/${TRAINER_CLIENT_A_ID}/nutrition/${TRAINER_NUTRITION_PLAN_ID}`);
+    expect(await screen.findByRole('heading', { name: draftNutritionPlan.name }, { timeout })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: trainerWorkspaceCopy.activate })).toBeDisabled();
+    await user.click(screen.getByRole('button', { name: trainerWorkspaceCopy.nutrition.addMeal }));
+    await user.clear(screen.getByLabelText(trainerWorkspaceCopy.nutrition.mealName));
+    await user.type(screen.getByLabelText(trainerWorkspaceCopy.nutrition.mealName), 'Breakfast plate');
+    expect(screen.getByRole('button', { name: trainerWorkspaceCopy.activate })).toBeDisabled();
+    await user.click(screen.getByRole('button', { name: trainerWorkspaceCopy.nutrition.chooseFood }));
+    await user.click(await screen.findByRole('button', { name: `${trainerWorkspaceCopy.nutrition.addItem}: ${catalogFood.name}` }, { timeout }));
+    await user.clear(screen.getByLabelText(trainerWorkspaceCopy.nutrition.quantity));
+    await user.type(screen.getByLabelText(trainerWorkspaceCopy.nutrition.quantity), '125.25');
+    await user.click(screen.getByRole('button', { name: trainerWorkspaceCopy.nutrition.saveMeals }));
+    await waitFor(() => {
+      expect(trainerMockState.lastNutritionReplace?.meals[0]?.items[0]?.quantityGrams).toBe(125.25);
+    });
+    expect(await screen.findByText(catalogFood.name)).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: trainerWorkspaceCopy.activate })).toBeEnabled();
   });
 
   it('sends the training plan create payload', async () => {
