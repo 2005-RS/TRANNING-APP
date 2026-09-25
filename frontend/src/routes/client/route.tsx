@@ -1,10 +1,10 @@
 import { createRoute, lazyRouteComponent, redirect } from '@tanstack/react-router';
 import { ClientRoleLayout } from '@/app/shells/role-layouts';
 import { clientCopy, documentTitleFor } from '@/features/navigation/copy';
-import { type AppPath, getRouteMeta } from '@/features/navigation/route-meta';
+import { getRouteMeta } from '@/features/navigation/route-meta';
 import { validateProgressSearch } from '@/features/client-progress/lib/progress-search';
+import { validateNotificationsSearch } from '@/features/notifications/lib/search';
 import { rootRoute } from '@/routes/__root';
-import { RoutePlaceholderPage } from '@/routes/placeholder-page';
 
 export const clientRoute = createRoute({
   getParentRoute: () => rootRoute,
@@ -169,17 +169,21 @@ const clientCheckInDetailRoute = createRoute({
   ),
 });
 
-function clientPage<TPath extends string>(path: TPath, key: AppPath) {
-  return createRoute({
-    getParentRoute: () => clientRoute,
-    path,
-    staticData: getRouteMeta(key),
-    head: () => ({
-      meta: [{ title: getRouteMeta(key).documentTitle }],
-    }),
-    component: RoutePlaceholderPage,
-  });
-}
+const clientNotificationsMeta = getRouteMeta('/client/notifications');
+
+const clientNotificationsRoute = createRoute({
+  getParentRoute: () => clientRoute,
+  path: 'notifications',
+  validateSearch: validateNotificationsSearch,
+  staticData: clientNotificationsMeta,
+  head: () => ({
+    meta: [{ title: clientNotificationsMeta.documentTitle }],
+  }),
+  component: lazyRouteComponent(
+    () => import('@/features/notifications/components/notifications-pages'),
+    'ClientNotificationsPage',
+  ),
+});
 
 export const clientRouteTree = clientRoute.addChildren([
   clientIndexRoute,
@@ -192,5 +196,5 @@ export const clientRouteTree = clientRoute.addChildren([
   clientNutritionRoute,
   clientCheckInsRoute,
   clientCheckInDetailRoute,
-  clientPage('notifications', '/client/notifications'),
+  clientNotificationsRoute,
 ]);

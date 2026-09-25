@@ -72,7 +72,7 @@ export const esClientNav: LooseCopy<typeof clientCopySource> = {
   notifications: {
     label: 'Notificaciones',
     title: 'Notificaciones',
-    description: 'Las notificaciones aparecerán aquí.',
+    description: 'Novedades sobre tus seguimientos y planes.',
   },
 };
 
@@ -110,7 +110,7 @@ export const esTrainerNav: LooseCopy<typeof trainerCopySource> = {
   notifications: {
     label: 'Notificaciones',
     title: 'Notificaciones',
-    description: 'Las notificaciones aparecerán aquí.',
+    description: 'Novedades sobre tus clientes asignados.',
   },
 };
 
@@ -148,6 +148,6 @@ export const esAdminNav: LooseCopy<typeof adminCopySource> = {
   notifications: {
     label: 'Notificaciones',
     title: 'Notificaciones',
-    description: 'Las notificaciones aparecerán aquí.',
+    description: 'Novedades dirigidas a tu cuenta.',
   },
 };

@@ -6,7 +6,11 @@ import { getAdminNav } from '@/features/navigation/nav-config';
 export function AdminAppShell({ children }: { children: ReactNode }) {
   const navigationCopy = useNavigationCopy();
   return (
-    <ProductivityShell roleLabel={navigationCopy.roles.ADMIN} items={getAdminNav()}>
+    <ProductivityShell
+      roleLabel={navigationCopy.roles.ADMIN}
+      items={getAdminNav()}
+      notificationsPath="/admin/notifications"
+    >
       {children}
     </ProductivityShell>
   );

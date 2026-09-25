@@ -3,17 +3,24 @@ import { BrandMark } from '@/features/auth/components/brand-mark';
 import { ThemeCycleButton } from '@/features/auth/components/theme-cycle-button';
 import { LanguageSwitcher } from '@/i18n/language-switcher';
 import { useNavigationCopy } from '@/features/navigation/copy';
+import {
+  NotificationsBellLink,
+  type NotificationsPath,
+} from '@/features/notifications/components/unread-indicators';
 import { UserMenu } from '@/app/shells/user-menu';
 import { Button } from '@/shared/ui/button';
 import { cn } from '@/shared/lib/utils';
 
 export function ShellHeader({
   title,
+  notificationsPath,
   onOpenNavigation,
   showBrand = false,
   compact = false,
 }: {
   title: string;
+  /** Desktop shows the unread count in the sidebar; below `lg` the bell carries it. */
+  notificationsPath?: NotificationsPath;
   onOpenNavigation?: () => void;
   showBrand?: boolean;
   compact?: boolean;
@@ -50,6 +57,9 @@ export function ShellHeader({
         {title}
       </p>
       <div className="ml-auto flex items-center gap-1">
+        {notificationsPath ? (
+          <NotificationsBellLink to={notificationsPath} className="lg:hidden" />
+        ) : null}
         <LanguageSwitcher compact className="sm:hidden" />
         <div className="hidden sm:block">
           <LanguageSwitcher />

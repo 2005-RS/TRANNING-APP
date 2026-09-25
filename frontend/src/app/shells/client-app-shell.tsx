@@ -7,6 +7,11 @@ import { ClientBottomNav, ClientMoreSheetList } from '@/features/navigation/clie
 import { useClientNavCopy, useNavigationCopy } from '@/features/navigation/copy';
 import { isClientWorkoutFocusPath } from '@/features/navigation/route-meta';
 import { useCurrentRouteMeta } from '@/features/navigation/use-current-route-meta';
+import {
+  NavUnreadBadge,
+  NavUnreadDot,
+  NotificationsBellLink,
+} from '@/features/notifications/components/unread-indicators';
 import { UserMenu } from '@/app/shells/user-menu';
 import { TrainingAssistant } from '@/features/training-assistant/components/training-assistant';
 import { ThemeCycleButton } from '@/features/auth/components/theme-cycle-button';
@@ -65,6 +70,9 @@ export function ClientAppShell({ children }: { children: ReactNode }) {
           <p className="min-w-0 truncate text-sm font-semibold">{clientCopy.workout.title}</p>
         ) : null}
         <div className="ml-auto flex items-center gap-1">
+          {focusMode ? null : (
+            <NotificationsBellLink to="/client/notifications" className="size-11 min-h-11 min-w-11" />
+          )}
           {focusMode ? null : <LanguageSwitcher compact />}
           <ThemeCycleButton />
           <UserMenu compact />
@@ -88,7 +96,10 @@ export function ClientAppShell({ children }: { children: ReactNode }) {
         </motion.div>
       </main>
       {focusMode ? null : (
-        <ClientBottomNav onMorePress={() => setMoreOpen(true)} />
+        <ClientBottomNav
+          onMorePress={() => setMoreOpen(true)}
+          moreIndicator={<NavUnreadDot />}
+        />
       )}
       <TrainingAssistant placement="client" hidden={focusMode} />
       {focusMode ? null : (
@@ -98,7 +109,10 @@ export function ClientAppShell({ children }: { children: ReactNode }) {
               <SheetTitle>{navigationCopy.moreNav}</SheetTitle>
               <SheetDescription>{clientCopy.more.description}</SheetDescription>
             </SheetHeader>
-            <ClientMoreSheetList onNavigate={() => setMoreOpen(false)} />
+            <ClientMoreSheetList
+              onNavigate={() => setMoreOpen(false)}
+              badges={{ '/client/notifications': <NavUnreadBadge /> }}
+            />
             <div className="border-t border-border px-4 py-3">
               <p className="mb-2 text-xs font-medium text-muted-foreground">
                 {commonCopy.language.label}

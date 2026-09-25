@@ -9,8 +9,8 @@ import {
   validateListSearch,
   validateTrainerProgressSearch,
 } from '@/features/trainer-workspace/lib/search';
+import { validateNotificationsSearch } from '@/features/notifications/lib/search';
 import { rootRoute } from '@/routes/__root';
-import { RoutePlaceholderPage } from '@/routes/placeholder-page';
 
 export const trainerRoute = createRoute({
   getParentRoute: () => rootRoute,
@@ -257,9 +257,13 @@ const notificationsMeta = getRouteMeta('/trainer/notifications');
 const trainerNotificationsRoute = createRoute({
   getParentRoute: () => trainerRoute,
   path: 'notifications',
+  validateSearch: validateNotificationsSearch,
   staticData: notificationsMeta,
   head: () => ({ meta: [{ title: notificationsMeta.documentTitle }] }),
-  component: RoutePlaceholderPage,
+  component: lazyRouteComponent(
+    () => import('@/features/notifications/components/notifications-pages'),
+    'TrainerNotificationsPage',
+  ),
 });
 
 export const trainerRouteTree = trainerRoute.addChildren([

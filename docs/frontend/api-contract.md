@@ -157,6 +157,14 @@ Frontend Zod is UX. PostgreSQL uniqueness and assignment checks win. 409 after a
 18. **No Admin DELETE** for Trainers, Clients, Exercises, or Foods. Lifecycle is status only (`PATCH …/status`: DISABLED / ARCHIVED). Exercise **media** does support DELETE.
 19. **`GET /admin/dashboard?periodDays=` affects one metric.** Only `completedWorkoutSessions` is period-scoped; all other counts are current totals. The UI places the period selector beside that metric only.
 
+#### F12 notifications contract notes (do not work around in the frontend)
+
+20. **Semantic types only.** `NotificationResponseDto` carries `type`, `relatedEntity {type, id}`, optional `clientProfileId`, `readAt`, `createdAt`. No actor, Client name, or Check-In text. Copy is localized per type and must not name people. Unknown future types render a generic fallback.
+21. **Recipients in v1** (backend publisher, not guaranteed by OpenAPI): `CHECK_IN_SUBMITTED` → current Trainer; `CHECK_IN_REVIEWED`, `TRAINING_PLAN_ACTIVATED`, `NUTRITION_PLAN_ACTIVATED` → Client. ADMIN normally receives none; its inbox still works.
+22. **No mark-unread, no delete, no push/realtime.** Mark-read is idempotent; foreign IDs return 404. Writes are not optimistic. The unread badge polls `unread-count` every 60s while visible (`refetchIntervalInBackground: false`).
+23. **Client has no per-plan route**, so plan notifications link to the current-plan pages. Trainer links require `clientProfileId`; when absent there is no link.
+24. **Dashboard `notifications.unreadCount` stays unrendered.** Navigation uses `/notifications/unread-count`; read-state writes invalidate the list, the count, and only the signed-in role's dashboard key.
+
 ## Query key examples (Orval-first)
 
 Prefer generated keys. Conceptual invalidation:
@@ -168,6 +176,7 @@ PATCH plan status ACTIVE → client current plan + trainer dashboard
 PATCH check-in draft / status SUBMITTED → `/api/v1/clients/me/check-ins` + detail + dashboard
 F10 Trainer review POST/PATCH → `/api/v1/clients/:clientId/check-ins` + detail + trainer dashboard pendingCheckIns
 (Client app learns of review via 60s staleTime / next visit; cannot invalidate another user's cache)
+F12 PATCH notification read / read-all → `/api/v1/notifications` (all params) + `/api/v1/notifications/unread-count` + current role dashboard
 ```
 
 Do not invent `["clientStuff"]`.

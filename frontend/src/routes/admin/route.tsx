@@ -10,7 +10,7 @@ import {
   validateAdminPeopleSearch,
 } from '@/features/admin-workspace/lib/search';
 import { rootRoute } from '@/routes/__root';
-import { RoutePlaceholderPage } from '@/routes/placeholder-page';
+import { validateNotificationsSearch } from '@/features/notifications/lib/search';
 
 export const adminRoute = createRoute({
   getParentRoute: () => rootRoute,
@@ -152,9 +152,13 @@ const notificationsMeta = getRouteMeta('/admin/notifications');
 const adminNotificationsRoute = createRoute({
   getParentRoute: () => adminRoute,
   path: 'notifications',
+  validateSearch: validateNotificationsSearch,
   staticData: notificationsMeta,
   head: () => ({ meta: [{ title: notificationsMeta.documentTitle }] }),
-  component: RoutePlaceholderPage,
+  component: lazyRouteComponent(
+    () => import('@/features/notifications/components/notifications-pages'),
+    'AdminNotificationsPage',
+  ),
 });
 
 export const adminRouteTree = adminRoute.addChildren([

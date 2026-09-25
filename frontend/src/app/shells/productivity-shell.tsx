@@ -4,6 +4,10 @@ import { useNavigationCopy } from '@/features/navigation/copy';
 import type { NavItem } from '@/features/navigation/nav-config';
 import { ProductivitySidebarNav } from '@/features/navigation/productivity-sidebar';
 import { useCurrentRouteMeta } from '@/features/navigation/use-current-route-meta';
+import {
+  NavUnreadBadge,
+  type NotificationsPath,
+} from '@/features/notifications/components/unread-indicators';
 import { ShellHeader } from '@/app/shells/shell-header';
 import { TrainingAssistant } from '@/features/training-assistant/components/training-assistant';
 import {
@@ -17,15 +21,18 @@ import {
 export function ProductivityShell({
   roleLabel,
   items,
+  notificationsPath,
   children,
 }: {
   roleLabel: string;
   items: NavItem[];
+  notificationsPath: NotificationsPath;
   children: ReactNode;
 }) {
   const navigationCopy = useNavigationCopy();
   const meta = useCurrentRouteMeta();
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
+  const badges = { [notificationsPath]: <NavUnreadBadge /> };
 
   useEffect(() => {
     document.title = meta.documentTitle;
@@ -42,12 +49,13 @@ export function ProductivityShell({
             {roleLabel}
           </p>
           <div className="flex-1 overflow-y-auto py-1">
-            <ProductivitySidebarNav items={items} />
+            <ProductivitySidebarNav items={items} badges={badges} />
           </div>
         </aside>
         <div className="flex min-w-0 flex-col">
           <ShellHeader
             title={meta.title}
+            notificationsPath={notificationsPath}
             onOpenNavigation={() => setMobileNavOpen(true)}
           />
           <main id="main-content" className="min-h-0 flex-1">
@@ -71,6 +79,7 @@ export function ProductivityShell({
           </div>
           <ProductivitySidebarNav
             items={items}
+            badges={badges}
             onNavigate={() => setMobileNavOpen(false)}
           />
         </SheetContent>

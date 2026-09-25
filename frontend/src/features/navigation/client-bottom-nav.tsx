@@ -1,4 +1,5 @@
 import { useRouterState } from '@tanstack/react-router';
+import type { ReactNode } from 'react';
 import { useClientNavCopy, useNavigationCopy } from '@/features/navigation/copy';
 import {
   getClientMoreNav,
@@ -6,14 +7,18 @@ import {
   getClientPrimaryNav,
   isClientMoreActive,
   isPathActive,
+  type AppPath,
 } from '@/features/navigation/nav-config';
 import { cn } from '@/shared/lib/utils';
 import { NavLink } from '@/features/navigation/nav-link';
 
 export function ClientBottomNav({
   onMorePress,
+  moreIndicator,
 }: {
   onMorePress: () => void;
+  /** Rendered inside the More tab, e.g. an unread dot for notifications. */
+  moreIndicator?: ReactNode;
 }) {
   const clientCopy = useClientNavCopy();
   const pathname = useRouterState({ select: (state) => state.location.pathname });
@@ -61,7 +66,7 @@ export function ClientBottomNav({
             aria-current={moreActive ? 'page' : undefined}
             aria-haspopup="dialog"
             className={cn(
-              'flex min-h-14 w-full flex-col items-center justify-center gap-0.5 rounded-xl px-1 text-center text-[0.7rem] font-medium leading-tight transition-colors duration-200 focus-visible:outline-none sm:text-xs',
+              'relative flex min-h-14 w-full flex-col items-center justify-center gap-0.5 rounded-xl px-1 text-center text-[0.7rem] font-medium leading-tight transition-colors duration-200 focus-visible:outline-none sm:text-xs',
               moreActive
                 ? 'bg-muted text-foreground'
                 : 'text-muted-foreground hover:text-foreground',
@@ -83,6 +88,7 @@ export function ClientBottomNav({
             <span className={cn('line-clamp-2', moreActive && 'font-semibold')}>
               {clientMoreTab.label}
             </span>
+            {moreIndicator}
           </button>
         </li>
       </ul>
@@ -92,8 +98,10 @@ export function ClientBottomNav({
 
 export function ClientMoreSheetList({
   onNavigate,
+  badges,
 }: {
   onNavigate: () => void;
+  badges?: Partial<Record<AppPath, ReactNode>>;
 }) {
   const navigationCopy = useNavigationCopy();
   const pathname = useRouterState({ select: (state) => state.location.pathname });
@@ -120,6 +128,7 @@ export function ClientMoreSheetList({
               >
                 <Icon className="size-5" aria-hidden />
                 {item.label}
+                {badges?.[item.to] ? <span className="ml-auto">{badges[item.to]}</span> : null}
               </NavLink>
             </li>
           );

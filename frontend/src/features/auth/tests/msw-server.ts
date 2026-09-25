@@ -30,6 +30,10 @@ import {
   trainerHandlers,
 } from '@/features/trainer-workspace/tests/msw-trainer';
 import { adminHandlers, resetAdminMockState } from '@/features/admin-workspace/tests/msw-admin';
+import {
+  notificationHandlers,
+  resetNotificationsMockState,
+} from '@/features/notifications/tests/msw-notifications';
 
 const API = 'http://localhost:3000/api/v1/auth';
 
@@ -60,6 +64,7 @@ export function resetAuthMockState(): void {
   resetCheckInMockState();
   resetTrainerMockState();
   resetAdminMockState();
+  resetNotificationsMockState();
 }
 
 export const authHandlers = [
@@ -139,4 +144,5 @@ export const authServer = setupServer(
   ...checkInHandlers,
   ...trainerHandlers,
   ...adminHandlers,
+  ...notificationHandlers,
 );

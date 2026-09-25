@@ -1,5 +1,6 @@
 import { useRouterState } from '@tanstack/react-router';
-import type { NavItem } from '@/features/navigation/nav-config';
+import type { ReactNode } from 'react';
+import type { AppPath, NavItem } from '@/features/navigation/nav-config';
 import { isPathActive } from '@/features/navigation/nav-config';
 import { NavLink } from '@/features/navigation/nav-link';
 import { useNavigationCopy } from '@/features/navigation/copy';
@@ -7,9 +8,11 @@ import { cn } from '@/shared/lib/utils';
 
 export function ProductivitySidebarNav({
   items,
+  badges,
   onNavigate,
 }: {
   items: NavItem[];
+  badges?: Partial<Record<AppPath, ReactNode>>;
   onNavigate?: () => void;
 }) {
   const navigationCopy = useNavigationCopy();
@@ -21,6 +24,7 @@ export function ProductivitySidebarNav({
         {items.map((item) => {
           const active = isPathActive(pathname, item.to);
           const Icon = item.icon;
+          const badge = badges?.[item.to];
           return (
             <li key={item.to}>
               <NavLink
@@ -40,6 +44,7 @@ export function ProductivitySidebarNav({
                   strokeWidth={active ? 2.4 : 2}
                 />
                 <span>{item.label}</span>
+                {badge ? <span className="ml-auto">{badge}</span> : null}
               </NavLink>
             </li>
           );

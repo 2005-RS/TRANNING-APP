@@ -6,7 +6,11 @@ import { getTrainerNav } from '@/features/navigation/nav-config';
 export function TrainerAppShell({ children }: { children: ReactNode }) {
   const navigationCopy = useNavigationCopy();
   return (
-    <ProductivityShell roleLabel={navigationCopy.roles.TRAINER} items={getTrainerNav()}>
+    <ProductivityShell
+      roleLabel={navigationCopy.roles.TRAINER}
+      items={getTrainerNav()}
+      notificationsPath="/trainer/notifications"
+    >
       {children}
     </ProductivityShell>
   );

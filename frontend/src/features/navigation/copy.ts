@@ -72,7 +72,7 @@ export const clientCopySource = {
   notifications: {
     label: 'Notifications',
     title: 'Notifications',
-    description: 'Notifications will appear here.',
+    description: 'Updates about your check-ins and plans.',
   },
 } as const;
 
@@ -110,7 +110,7 @@ export const trainerCopySource = {
   notifications: {
     label: 'Notifications',
     title: 'Notifications',
-    description: 'Notifications will appear here.',
+    description: 'Updates about your assigned Clients.',
   },
 } as const;
 
@@ -140,7 +140,7 @@ export const adminCopySource = {
   notifications: {
     label: 'Notifications',
     title: 'Notifications',
-    description: 'Notifications will appear here.',
+    description: 'Updates addressed to your account.',
   },
 } as const;
 

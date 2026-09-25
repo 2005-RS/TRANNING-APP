@@ -35,7 +35,7 @@ Layout: bottom nav on ordinary Client screens. **Focus Mode** (`/client/workout/
 | `/client/nutrition` | Current prescribed plan (F07). Empty when `nutritionPlan` is null. Not intake logging. | `GET /api/v1/clients/me/nutrition-plans/current` |
 | `/client/check-ins` | Latest + history + create draft | `GET/POST /clients/me/check-ins` (summaries omit long text) |
 | `/client/check-ins/$checkInId` | Draft edit/submit; submitted/reviewed read-only + Trainer feedback | `GET/PATCH /clients/me/check-ins/:id`, `PATCH .../status`, `DELETE` draft |
-| `/client/notifications` | Inbox | `/notifications` |
+| `/client/notifications` | Inbox (F12). Search `?view=unread&page=N`. Deep links: check-in reviewed → `/client/check-ins/$checkInId`; plan activated → `/client/training` or `/client/nutrition` | `GET /notifications`, `GET /notifications/unread-count`, `PATCH /notifications/:id/read`, `PATCH /notifications/read-all` |
 | `/client/profile` | Self | `GET/PATCH /clients/me`, `GET /clients/me/trainer` |
 
 ## Trainer (`role === TRAINER`)
@@ -65,7 +65,7 @@ F03 sidebar labels are unchanged. Nested Client URLs are not extra sidebar items
 | `/trainer/nutrition` | Foods catalog | `GET/POST /nutrition/foods` |
 | `/trainer/exercises` | Exercise catalog | `GET/POST /exercises` |
 | `/trainer/exercises/$exerciseId` | Detail + owner media upload/delete | `GET /exercises/:id`, `GET .../media`; owner: `POST .../media/upload-requests`, storage POST, `POST .../finalize`, `DELETE .../media/:mediaId` |
-| `/trainer/notifications` | F12 placeholder | none |
+| `/trainer/notifications` | Inbox (F12). Same search as Client. Deep links via `clientProfileId`: check-in → `/trainer/clients/$clientId/check-ins/$checkInId`; plans → `.../training/$planId`, `.../nutrition/$planId` | same `/notifications` operations |
 
 Not implemented as routes: `/trainer/clients/$clientId/sessions` (recent sessions on Overview), `/trainer/clients/$clientId/photos` (Body tab), `/trainer/templates` (use `/trainer/training`), `/trainer/foods` (use `/trainer/nutrition`), `/trainer/profile`.
 
@@ -89,11 +89,13 @@ Layout: sidebar. No decorative 3D.
 | `/admin/exercises/$exerciseId` | Detail, status, Admin media upload/delete | `GET/PATCH /exercises/:id`, status; `POST .../media/upload-requests`; storage POST; `POST .../finalize`; `GET .../media`; `GET .../access`; `DELETE .../media/:mediaId` |
 | `/admin/foods` | Foods catalog | `GET/POST /nutrition/foods` |
 | `/admin/foods/$foodId` | Detail, status | `GET/PATCH /nutrition/foods/:id`, status |
-| `/admin/notifications` | F12 placeholder | none |
+| `/admin/notifications` | Inbox (F12). Read/unread only; no deep links (Admin has no Client check-in/plan routes) | same `/notifications` operations |
 
 Admin check-in **review** is not an API capability (TRAINER only). Admin may read check-ins; F11 does not clone Trainer Client-context tabs (`/admin/clients/$clientId/**` inspection) so Admin stays identity/assignment/catalog operations rather than a second coaching workspace.
 
-Not implemented as Admin routes: `/admin/clients/$clientId/assignment` (assignment lives on the Client profile), nested progress/body/nutrition/training/check-in inspection, workout-template builder, notification inbox.
+Not implemented as Admin routes: `/admin/clients/$clientId/assignment` (assignment lives on the Client profile), nested progress/body/nutrition/training/check-in inspection, workout-template builder.
+
+Unread count (F12) is shown in navigation for every role — header bell (Client always; Trainer/Admin below `lg`), productivity sidebar badge, Client “More” tab dot and More sheet — from `GET /notifications/unread-count`, not from dashboard DTOs.
 
 ## Explicitly out of scope (no routes)
 
