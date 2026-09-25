@@ -1,9 +1,17 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate, useParams } from '@tanstack/react-router';
+import { CheckCircle2, CircleX } from 'lucide-react';
+import { AnimatePresence, motion } from 'motion/react';
 import { toast } from 'sonner';
 import { Alert } from '@/shared/ui/alert';
 import { Button } from '@/shared/ui/button';
 import { PageContainer } from '@/shared/ui/page';
+import {
+  motionTransition,
+  revealHidden,
+  revealVisible,
+  useReducedMotion,
+} from '@/shared/lib/motion';
 import { ApiError, mapApiError } from '@/shared/errors/api-error';
 import {
   UpdateWorkoutSessionStatusDtoStatus,
@@ -39,6 +47,7 @@ import { isUuid } from '@/features/workout-session/lib/session-ids';
 export function WorkoutFocusPage() {
   const { sessionId } = useParams({ from: '/client/workout/$sessionId' });
   const navigate = useNavigate();
+  const reduceMotion = useReducedMotion();
   const sessionQuery = useWorkoutSessionById(sessionId);
   const { replaceSets, updateStatus } = useWorkoutSessionMutations();
   const rest = useRestTimer();
@@ -211,12 +220,24 @@ export function WorkoutFocusPage() {
       ) : null}
 
       {!inProgress ? (
-        <section className="client-surface-card space-y-4">
-          <h2 className="text-lg font-semibold tracking-tight">
-            {session.status === WorkoutSessionResponseDtoStatus.COMPLETED
-              ? workoutCopy.focus.completedTitle
-              : workoutCopy.focus.cancelledTitle}
-          </h2>
+        <motion.section
+          className="client-surface-card space-y-4"
+          initial={revealHidden(reduceMotion)}
+          animate={revealVisible}
+          transition={motionTransition('fast', reduceMotion)}
+        >
+          <div className="flex items-start gap-3">
+            {session.status === WorkoutSessionResponseDtoStatus.COMPLETED ? (
+              <CheckCircle2 className="mt-0.5 size-6 text-success" aria-hidden />
+            ) : (
+              <CircleX className="mt-0.5 size-6 text-muted-foreground" aria-hidden />
+            )}
+            <h2 className="text-lg font-semibold tracking-tight">
+              {session.status === WorkoutSessionResponseDtoStatus.COMPLETED
+                ? workoutCopy.focus.completedTitle
+                : workoutCopy.focus.cancelledTitle}
+            </h2>
+          </div>
           <p className="text-sm text-muted-foreground">{workoutCopy.focus.terminalHint}</p>
           {recordedSummary.length > 0 ? (
             <ul className="space-y-1 text-sm text-muted-foreground">
@@ -231,7 +252,7 @@ export function WorkoutFocusPage() {
           >
             {workoutCopy.focus.backToTraining}
           </Link>
-        </section>
+        </motion.section>
       ) : exercises.length === 0 ? (
         <p className="text-sm text-muted-foreground">{workoutCopy.focus.noExercises}</p>
       ) : activeExercise ? (
@@ -246,23 +267,41 @@ export function WorkoutFocusPage() {
             }
           />
 
-          {rest.isResting || rest.isComplete ? (
-            <RestTimer
-              remainingSeconds={rest.remainingSeconds}
-              complete={rest.isComplete}
-              onSkip={rest.skip}
-            />
-          ) : (
-            <SetLogger
-              draft={draft}
-              durationExercise={durationExercise}
-              pending={replaceSets.isPending}
-              onChange={setDraft}
-              onLog={() => {
-                void logSet();
-              }}
-            />
-          )}
+          <AnimatePresence initial={false} mode="popLayout">
+            {rest.isResting || rest.isComplete ? (
+              <motion.div
+                key="rest-timer"
+                initial={revealHidden(reduceMotion)}
+                animate={revealVisible}
+                exit={reduceMotion ? undefined : { opacity: 0 }}
+                transition={motionTransition('fast', reduceMotion)}
+              >
+                <RestTimer
+                  remainingSeconds={rest.remainingSeconds}
+                  complete={rest.isComplete}
+                  onSkip={rest.skip}
+                />
+              </motion.div>
+            ) : (
+              <motion.div
+                key="set-logger"
+                initial={revealHidden(reduceMotion)}
+                animate={revealVisible}
+                exit={reduceMotion ? undefined : { opacity: 0 }}
+                transition={motionTransition('fast', reduceMotion)}
+              >
+                <SetLogger
+                  draft={draft}
+                  durationExercise={durationExercise}
+                  pending={replaceSets.isPending}
+                  onChange={setDraft}
+                  onLog={() => {
+                    void logSet();
+                  }}
+                />
+              </motion.div>
+            )}
+          </AnimatePresence>
 
           {activeExercise.sets.length > 0 ? (
             <Button

@@ -17,6 +17,7 @@ import { WorkoutLoadingState } from '@/features/workout-session/components/worko
 import { formatScheduledDay } from '@/features/workout-session/lib/formatters';
 import { recordedSetCount } from '@/features/workout-session/lib/session-helpers';
 import { buttonVariants } from '@/shared/ui/button-variants';
+import { SectionReveal } from '@/shared/ui/section-reveal';
 import { cn } from '@/shared/lib/utils';
 import type { TrainingPlanWorkoutResponseDto } from '@/generated/models';
 
@@ -72,49 +73,53 @@ export function TrainingHubPage() {
 
   return (
     <PageContainer density="client" className="mx-auto max-w-lg min-w-0">
-      <PageHeader className="mb-6">
-        <div className="space-y-2">
-          <PageTitle>{workoutCopy.hub.title}</PageTitle>
-          <PageDescription>{workoutCopy.hub.description}</PageDescription>
-        </div>
-      </PageHeader>
+      <SectionReveal>
+        <PageHeader className="mb-6">
+          <div className="space-y-2">
+            <PageTitle>{workoutCopy.hub.title}</PageTitle>
+            <PageDescription>{workoutCopy.hub.description}</PageDescription>
+          </div>
+        </PageHeader>
+      </SectionReveal>
 
       <div className="space-y-5">
         {currentSession ? (
-          <section className="client-surface-card dashboard-hero-card dashboard-hero-card--action space-y-5">
-            <div className="flex items-start gap-3.5">
-              <span className="mt-0.5 flex size-11 shrink-0 items-center justify-center rounded-full bg-primary/15 text-primary">
-                <Dumbbell className="size-5" aria-hidden />
-              </span>
-              <div className="min-w-0 space-y-1.5">
-                <p className="text-sm font-medium text-muted-foreground">
-                  {workoutCopy.hub.inProgressEyebrow}
-                </p>
-                <h2 className="text-[1.55rem] font-semibold leading-tight tracking-tight">
-                  {currentSession.workoutName}
-                </h2>
-                <p className="text-sm text-muted-foreground">
-                  {workoutCopy.hub.started}{' '}
-                  <span className="text-numeric text-foreground">
-                    {formatIsoDateTime(currentSession.startedAt) ?? ''}
-                  </span>
-                  {' · '}
-                  {formatCountLabel(
-                    recordedSetCount(currentSession),
-                    workoutCopy.hub.setRecorded,
-                    workoutCopy.hub.setsRecorded,
-                  )}
-                </p>
+          <SectionReveal>
+            <section className="client-surface-card dashboard-hero-card dashboard-hero-card--action space-y-5">
+              <div className="flex items-start gap-3.5">
+                <span className="mt-0.5 flex size-11 shrink-0 items-center justify-center rounded-full bg-primary/15 text-primary">
+                  <Dumbbell className="size-5" aria-hidden />
+                </span>
+                <div className="min-w-0 space-y-1.5">
+                  <p className="text-sm font-medium text-muted-foreground">
+                    {workoutCopy.hub.inProgressEyebrow}
+                  </p>
+                  <h2 className="text-[1.55rem] font-semibold leading-tight tracking-tight">
+                    {currentSession.workoutName}
+                  </h2>
+                  <p className="text-sm text-muted-foreground">
+                    {workoutCopy.hub.started}{' '}
+                    <span className="text-numeric text-foreground">
+                      {formatIsoDateTime(currentSession.startedAt) ?? ''}
+                    </span>
+                    {' · '}
+                    {formatCountLabel(
+                      recordedSetCount(currentSession),
+                      workoutCopy.hub.setRecorded,
+                      workoutCopy.hub.setsRecorded,
+                    )}
+                  </p>
+                </div>
               </div>
-            </div>
-            <Link
-              to="/client/workout/$sessionId"
-              params={{ sessionId: currentSession.id }}
-              className={cn(buttonVariants({ size: 'lg' }), 'min-h-14 w-full')}
-            >
-              {workoutCopy.hub.continue}
-            </Link>
-          </section>
+              <Link
+                to="/client/workout/$sessionId"
+                params={{ sessionId: currentSession.id }}
+                className={cn(buttonVariants({ size: 'lg' }), 'min-h-14 w-full')}
+              >
+                {workoutCopy.hub.continue}
+              </Link>
+            </section>
+          </SectionReveal>
         ) : null}
 
         {mappedStartError ? (
