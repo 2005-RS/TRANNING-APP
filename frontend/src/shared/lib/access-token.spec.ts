@@ -15,5 +15,7 @@ describe('access token memory', () => {
     expect(getAccessToken()).toBe('access-token-value');
     expect(window.localStorage.getItem('accessToken')).toBeNull();
     expect(window.sessionStorage.getItem('accessToken')).toBeNull();
+    expect(JSON.stringify(window.localStorage)).not.toContain('access-token-value');
+    expect(JSON.stringify(window.sessionStorage)).not.toContain('access-token-value');
   });
 });

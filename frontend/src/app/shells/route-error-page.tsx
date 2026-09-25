@@ -1,14 +1,13 @@
 import type { ErrorComponentProps } from '@tanstack/react-router';
 import { BrandMark } from '@/features/auth/components/brand-mark';
 import { useNavigationCopy } from '@/features/navigation/copy';
+import { logDevError } from '@/shared/lib/safe-log';
 import { Button } from '@/shared/ui/button';
 import { PageContainer, PageDescription, PageTitle } from '@/shared/ui/page';
 
 export function RouteErrorPage({ error, reset }: ErrorComponentProps) {
   const navigationCopy = useNavigationCopy();
-  if (import.meta.env.DEV) {
-    console.error(error);
-  }
+  logDevError(error);
 
   return (
     <main id="main-content" className="min-h-svh bg-background">

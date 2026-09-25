@@ -23,4 +23,23 @@ describe('readPublicEnv', () => {
       /absolute http/,
     );
   });
+
+  it('requires https for the API origin when VITE_APP_ENV is production', () => {
+    expect(() =>
+      readPublicEnv({
+        VITE_API_URL: 'http://api.example.test',
+        VITE_APP_ENV: 'production',
+      }),
+    ).toThrow(/must use https/);
+
+    expect(
+      readPublicEnv({
+        VITE_API_URL: 'https://api.example.test',
+        VITE_APP_ENV: 'production',
+      }),
+    ).toEqual({
+      VITE_API_URL: 'https://api.example.test',
+      VITE_APP_ENV: 'production',
+    });
+  });
 });

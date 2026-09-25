@@ -31,7 +31,7 @@ export function TestProviders({
   status?: AuthStatus;
   user?: AuthUserResponseDto | null;
 }) {
-  const queryClient = createAppQueryClient();
+  const [queryClient] = useState(() => createAppQueryClient());
   return (
     <ThemeProvider>
       <QueryClientProvider client={queryClient}>
@@ -63,7 +63,7 @@ export function TestApp({
   user?: AuthUserResponseDto | null;
   skipBootstrap?: boolean;
 }) {
-  const queryClient = createAppQueryClient();
+  const [queryClient] = useState(() => createAppQueryClient());
   const [router] = useState(() => createTestRouter(initialEntry));
   return (
     <ThemeProvider>

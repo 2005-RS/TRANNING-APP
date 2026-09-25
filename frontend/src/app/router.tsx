@@ -10,6 +10,7 @@ import { publicSiteRouteTree } from '@/routes/public-site';
 import { clientRouteTree } from '@/routes/client/route';
 import { trainerRouteTree } from '@/routes/trainer/route';
 import { adminRouteTree } from '@/routes/admin/route';
+import { RouteErrorPage } from '@/app/shells/route-error-page';
 import { ContentSkeleton } from '@/shared/ui/page';
 
 const routeTree = rootRoute.addChildren([
@@ -28,6 +29,7 @@ export function createAppRouter(history?: RouterHistory) {
     defaultPreload: 'intent',
     defaultPendingMs: 200,
     defaultPendingComponent: ContentSkeleton,
+    defaultErrorComponent: RouteErrorPage,
   });
 }
 
