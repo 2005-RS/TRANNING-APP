@@ -39,7 +39,7 @@ const claudeArgs = [
   '--permission-mode',
   'acceptEdits',
   '--allowedTools',
-  'Read Glob Grep Write Edit Bash(git status*) Bash(git diff*) Bash(git log*) Bash(git show*) Bash(npm run lint*) Bash(npm run test*) Bash(npm run build*) Bash(npm --prefix*)',
+  'Read Glob Grep Write Edit Bash(git status*) Bash(git diff*) Bash(git log*) Bash(git show*)',
 ];
 
 section('ai:review');
