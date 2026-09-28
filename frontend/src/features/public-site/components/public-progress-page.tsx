@@ -1,9 +1,8 @@
 import { Camera, ClipboardCheck, LineChart, Ruler } from 'lucide-react';
 import {
-  PublicAssistantNote,
+  PublicClosing,
   PublicFeatureGrid,
   PublicPageHero,
-  PublicSignInCta,
 } from '@/features/public-site/components/public-sections';
 import { usePublicSiteCopy } from '@/features/public-site/copy';
 
@@ -13,7 +12,7 @@ export function PublicProgressPage() {
 
   return (
     <>
-      <PublicPageHero eyebrow={progress.eyebrow} heading={progress.heading} body={progress.body} />
+      <PublicPageHero heading={progress.heading} body={progress.body} />
       <PublicFeatureGrid
         columns={4}
         items={[
@@ -23,8 +22,7 @@ export function PublicProgressPage() {
           { key: 'checkIns', icon: ClipboardCheck, ...features.checkIns },
         ]}
       />
-      <PublicAssistantNote />
-      <PublicSignInCta />
+      <PublicClosing />
     </>
   );
 }

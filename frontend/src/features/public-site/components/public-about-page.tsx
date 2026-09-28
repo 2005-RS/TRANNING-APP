@@ -1,8 +1,8 @@
 import { Bot, KeyRound, Languages, Lock } from 'lucide-react';
 import {
+  PublicClosing,
   PublicFeatureGrid,
   PublicPageHero,
-  PublicSignInCta,
 } from '@/features/public-site/components/public-sections';
 import { usePublicSiteCopy } from '@/features/public-site/copy';
 
@@ -12,7 +12,7 @@ export function PublicAboutPage() {
 
   return (
     <>
-      <PublicPageHero eyebrow={about.eyebrow} heading={about.heading} body={about.body} />
+      <PublicPageHero heading={about.heading} body={about.body} />
       <PublicFeatureGrid
         columns={2}
         items={[
@@ -22,7 +22,8 @@ export function PublicAboutPage() {
           { key: 'languages', icon: Languages, ...sections.languages },
         ]}
       />
-      <PublicSignInCta />
+      {/* The grid above already covers the assistant. */}
+      <PublicClosing assistant={false} />
     </>
   );
 }

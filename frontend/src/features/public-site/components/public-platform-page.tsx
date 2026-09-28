@@ -9,10 +9,9 @@ import {
   Timer,
 } from 'lucide-react';
 import {
-  PublicAssistantNote,
+  PublicClosing,
   PublicFeatureGrid,
   PublicPageHero,
-  PublicSignInCta,
 } from '@/features/public-site/components/public-sections';
 import { usePublicSiteCopy } from '@/features/public-site/copy';
 
@@ -22,7 +21,7 @@ export function PublicPlatformPage() {
 
   return (
     <>
-      <PublicPageHero eyebrow={platform.eyebrow} heading={platform.heading} body={platform.body} />
+      <PublicPageHero heading={platform.heading} body={platform.body} />
       <PublicFeatureGrid
         columns={4}
         items={[
@@ -36,8 +35,7 @@ export function PublicPlatformPage() {
           { key: 'admin', icon: Settings2, ...modules.admin },
         ]}
       />
-      <PublicAssistantNote />
-      <PublicSignInCta />
+      <PublicClosing />
     </>
   );
 }

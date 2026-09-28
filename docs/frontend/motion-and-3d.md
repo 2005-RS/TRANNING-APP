@@ -39,6 +39,30 @@ Mandatory:
 - Rest timer and set completion still clearly change state (text/color/icon, not only animation)
 - Do not convey “rest complete” solely by a motion flourish
 
+## Ambient trace field
+
+User-authorized F13 exception (2026-09-25) to “no looping background animation”. It is the one cinematic element the public website and login are allowed.
+
+**What it is:** a stack of hairline traces, like a history of sessions, that rise into soft ridges on the side away from the text. A slow wave moves down the stack like a rep cadence. It is abstract; it never shows or implies real client data.
+
+**Where:** the public home hero and the desktop login hero. Nowhere in the Client, Trainer, or Admin apps, and not on the other public pages, which keep the static CSS atmosphere.
+
+**How:** a hand-written WebGL fragment shader in `shared/ui/trace-field.tsx`, loaded with `React.lazy` so it never blocks the login form. No new dependency.
+
+**Rules:**
+
+- Colors come from the `--background`, `--muted-foreground`, and `--primary` tokens at runtime, and follow theme changes.
+- `prefers-reduced-motion: reduce` draws one still frame and never starts the animation loop.
+- The loop stops when the hero leaves the viewport or the tab is hidden.
+- Without WebGL, or after a lost context, the CSS `login-hero-atmosphere` stays visible. Nothing depends on the canvas.
+- The canvas is `aria-hidden` and ignores pointer events.
+- Device pixel ratio is capped (2 on desktop, 1.5 below 768px) to bound GPU cost, and frames are drawn at 30 fps.
+- The WebGL context is created only once the hero is on screen, so the hidden login hero on phones never starts one.
+- The hero marks its copy with `data-field-clear`; traces fade out around that box, so text never sits on a line in any language or width.
+- The canvas reports `data-state`: `running`, `still` (reduced motion), `paused` (off screen or hidden tab), or `unavailable` (CSS fallback). E2E asserts these states.
+
+Hero copy enters once on page load with the CSS `.hero-enter` sequence (heading, body, actions, 70ms apart), not the Motion library, so the public pages load no animation JavaScript.
+
 ## Rive
 
 **Classification:** DEFERRED until F13 (or the first celebration moment that needs it).

@@ -1,11 +1,10 @@
 import { Link } from '@tanstack/react-router';
 import { ShieldCheck, UserRound, Users } from 'lucide-react';
 import {
-  PublicAssistantNote,
+  PublicClosing,
   PublicContainer,
   PublicFeatureGrid,
   PublicPageHero,
-  PublicSignInCta,
 } from '@/features/public-site/components/public-sections';
 import { useAccountDestination } from '@/features/public-site/hooks/use-account-destination';
 import { usePublicSiteCopy } from '@/features/public-site/copy';
@@ -21,8 +20,8 @@ export function PublicHomePage() {
 
   return (
     <>
-      <PublicPageHero eyebrow={home.eyebrow} heading={home.heading} body={home.body}>
-        <div className="mt-8 flex flex-wrap gap-3">
+      <PublicPageHero heading={home.heading} body={home.body} ambient>
+        <div className="mt-10 flex flex-wrap gap-3">
           <Link to={account.to} className={cn(buttonVariants({ size: 'lg' }))}>
             {account.signedIn ? account.label : home.primary}
           </Link>
@@ -30,7 +29,7 @@ export function PublicHomePage() {
             {home.secondary}
           </Link>
         </div>
-        <p className="mt-6 max-w-xl text-sm text-muted-foreground">{copy.accessNote}</p>
+        <p className="mt-6 max-w-md text-sm leading-relaxed text-muted-foreground">{copy.accessNote}</p>
       </PublicPageHero>
 
       <PublicFeatureGrid
@@ -42,16 +41,28 @@ export function PublicHomePage() {
         ]}
       />
 
-      <section className="border-t border-border py-14 sm:py-20">
+      <section className="border-t border-border py-16 sm:py-24">
         <PublicContainer>
-          <h2 className="mb-8 text-2xl font-semibold tracking-tight text-foreground">{home.stepsTitle}</h2>
-          <ol className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <h2 className="mb-12 text-balance text-2xl font-semibold tracking-tight text-foreground sm:text-3xl">
+            {home.stepsTitle}
+          </h2>
+          <ol className="grid gap-10 lg:grid-cols-4 lg:gap-8">
             {STEP_KEYS.map((key, index) => (
-              <li key={key} className="rounded-xl border border-border bg-card p-5 text-card-foreground">
-                <span aria-hidden className="font-mono text-sm tabular-nums text-muted-foreground">
-                  {String(index + 1).padStart(2, '0')}
+              <li key={key} className="relative pl-14 lg:pl-0 lg:pt-14">
+                {index < STEP_KEYS.length - 1 ? (
+                  // Connects this step to the next: down on mobile, across on desktop.
+                  <span
+                    aria-hidden
+                    className="absolute -bottom-10 left-4 top-10 w-px bg-border lg:-right-8 lg:bottom-auto lg:left-10 lg:top-4 lg:h-px lg:w-auto"
+                  />
+                ) : null}
+                <span
+                  aria-hidden
+                  className="text-numeric absolute left-0 top-0 flex size-8 items-center justify-center rounded-full border border-border bg-background text-xs text-foreground"
+                >
+                  {index + 1}
                 </span>
-                <h3 className="mt-3 text-base font-semibold tracking-tight">{home.steps[key].title}</h3>
+                <h3 className="text-base font-semibold tracking-tight text-foreground">{home.steps[key].title}</h3>
                 <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{home.steps[key].body}</p>
               </li>
             ))}
@@ -59,8 +70,7 @@ export function PublicHomePage() {
         </PublicContainer>
       </section>
 
-      <PublicAssistantNote />
-      <PublicSignInCta />
+      <PublicClosing />
     </>
   );
 }

@@ -16,13 +16,11 @@ export const esAuth: LooseCopy<typeof authCopySource> = {
     goToSignIn: 'Ir a iniciar sesión',
   },
   hero: {
-    eyebrow: 'Espacio de entrenamiento',
     title: 'Entrena con precisión.',
     body: 'Planes, sesiones y progreso en una superficie clara para entrenadores y atletas.',
     footer: 'Entrenamiento privado, con sesión iniciada.',
   },
   login: {
-    mobileEyebrow: 'Training Platform',
     title: 'Iniciar sesión',
     subtitle: 'Usa la cuenta que creó tu entrenador o administrador.',
     emailLabel: 'Correo electrónico',

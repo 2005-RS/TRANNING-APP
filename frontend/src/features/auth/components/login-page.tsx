@@ -25,7 +25,7 @@ export function LoginPage() {
       >
         <div className="mb-8 flex items-center justify-between gap-3 lg:mb-0">
           <Link to="/" className="rounded-md lg:hidden" aria-label={authCopy.backToSite}>
-            <BrandMark compact />
+            <BrandMark />
           </Link>
           <div className="ml-auto flex items-center gap-1">
             <LanguageSwitcher />
@@ -35,9 +35,6 @@ export function LoginPage() {
         <div className="flex flex-1 flex-col justify-center">
           <div className="mx-auto w-full max-w-sm space-y-8">
             <header className="space-y-2">
-              <p className="text-xs font-medium uppercase tracking-[0.2em] text-muted-foreground lg:hidden">
-                {authCopy.login.mobileEyebrow}
-              </p>
               <h1 className="text-3xl font-semibold tracking-tight text-foreground">
                 {authCopy.login.title}
               </h1>

@@ -35,7 +35,6 @@ export const publicSiteCopySource = {
   },
   home: {
     title: 'Home',
-    eyebrow: 'Coaching workspace',
     heading: 'Train with precision.',
     body: 'Plans, sessions, and progress in one quiet surface for coaches and athletes.',
     primary: 'Sign in',
@@ -77,7 +76,6 @@ export const publicSiteCopySource = {
   },
   platform: {
     title: 'Platform',
-    eyebrow: 'Platform',
     heading: 'Everything a coaching relationship needs, in one place.',
     body: 'Each role sees only its own workspace, and each trainer only sees the clients assigned to them.',
     modules: {
@@ -117,7 +115,6 @@ export const publicSiteCopySource = {
   },
   training: {
     title: 'Training',
-    eyebrow: 'Training',
     heading: 'From the trainer’s plan to every recorded set.',
     body: 'The trainer designs the program; the client follows it without guesswork.',
     features: {
@@ -149,7 +146,6 @@ export const publicSiteCopySource = {
   },
   progress: {
     title: 'Progress',
-    eyebrow: 'Progress',
     heading: 'See what is changing, without the noise.',
     body: 'Neutral numbers and trends. Interpretation stays between the client and their trainer.',
     features: {
@@ -173,7 +169,6 @@ export const publicSiteCopySource = {
   },
   about: {
     title: 'About',
-    eyebrow: 'About',
     heading: 'A private workspace for coaching.',
     body: 'Training Platform connects trainers with the clients assigned to them. It is designed for organisations that coach people, not as an open social network.',
     sections: {

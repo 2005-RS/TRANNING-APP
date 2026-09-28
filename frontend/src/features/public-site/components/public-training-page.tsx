@@ -1,9 +1,8 @@
 import { Dumbbell, LibraryBig, ListChecks, Play, Timer, Layers } from 'lucide-react';
 import {
-  PublicAssistantNote,
+  PublicClosing,
   PublicFeatureGrid,
   PublicPageHero,
-  PublicSignInCta,
 } from '@/features/public-site/components/public-sections';
 import { usePublicSiteCopy } from '@/features/public-site/copy';
 
@@ -13,7 +12,7 @@ export function PublicTrainingPage() {
 
   return (
     <>
-      <PublicPageHero eyebrow={training.eyebrow} heading={training.heading} body={training.body} />
+      <PublicPageHero heading={training.heading} body={training.body} />
       <PublicFeatureGrid
         items={[
           { key: 'templates', icon: Layers, ...features.templates },
@@ -24,8 +23,7 @@ export function PublicTrainingPage() {
           { key: 'exercises', icon: LibraryBig, ...features.exercises },
         ]}
       />
-      <PublicAssistantNote />
-      <PublicSignInCta />
+      <PublicClosing />
     </>
   );
 }

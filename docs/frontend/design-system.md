@@ -73,6 +73,7 @@ Scale (token names):
 | `--text-label` | Form labels, overline |
 | `--text-caption` | Meta, timestamps |
 | `--text-numeric-display` | Geist Mono display |
+| `--text-hero` | Public home and login hero tagline only (`text-hero` utility) |
 
 Readability over decorative tracking. Do not set the whole UI to mono.
 
@@ -106,6 +107,7 @@ Dark: prefer border + slight elevation over heavy drop shadow. Light: soft shado
 | `--motion-instant` | 100–150ms |
 | `--motion-fast` | 160–220ms |
 | `--motion-panel` | 220–300ms |
+| `--motion-cinematic` | 600ms — public home and login hero only, never app chrome |
 
 Easing: standard decelerate. No 500ms+ UI chrome. See [motion-and-3d.md](./motion-and-3d.md).
 

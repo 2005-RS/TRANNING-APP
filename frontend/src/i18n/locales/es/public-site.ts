@@ -31,7 +31,6 @@ export const esPublicSite: LooseCopy<typeof publicSiteCopySource> = {
   },
   home: {
     title: 'Inicio',
-    eyebrow: 'Espacio de entrenamiento',
     heading: 'Entrena con precisión.',
     body: 'Planes, sesiones y progreso en una superficie clara para entrenadores y atletas.',
     primary: 'Iniciar sesión',
@@ -73,7 +72,6 @@ export const esPublicSite: LooseCopy<typeof publicSiteCopySource> = {
   },
   platform: {
     title: 'Plataforma',
-    eyebrow: 'Plataforma',
     heading: 'Todo lo que necesita una relación de coaching, en un solo lugar.',
     body: 'Cada rol ve solo su propio espacio, y cada entrenador solo ve a los clientes que tiene asignados.',
     modules: {
@@ -113,7 +111,6 @@ export const esPublicSite: LooseCopy<typeof publicSiteCopySource> = {
   },
   training: {
     title: 'Entrenamiento',
-    eyebrow: 'Entrenamiento',
     heading: 'Del plan del entrenador a cada serie registrada.',
     body: 'El entrenador diseña el programa; el cliente lo sigue sin adivinar.',
     features: {
@@ -145,7 +142,6 @@ export const esPublicSite: LooseCopy<typeof publicSiteCopySource> = {
   },
   progress: {
     title: 'Progreso',
-    eyebrow: 'Progreso',
     heading: 'Mira qué está cambiando, sin ruido.',
     body: 'Números y tendencias neutrales. La interpretación queda entre el cliente y su entrenador.',
     features: {
@@ -169,7 +165,6 @@ export const esPublicSite: LooseCopy<typeof publicSiteCopySource> = {
   },
   about: {
     title: 'Acerca de',
-    eyebrow: 'Acerca de',
     heading: 'Un espacio privado para el coaching.',
     body: 'Training Platform conecta a los entrenadores con los clientes que tienen asignados. Está pensada para organizaciones que entrenan personas, no como una red social abierta.',
     sections: {

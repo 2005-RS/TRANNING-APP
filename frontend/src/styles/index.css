@@ -82,9 +82,13 @@
   --text-label: 0.75rem;
   --text-caption: 0.75rem;
   --text-numeric-display: 3rem;
+  /* Public home and login hero only. */
+  --text-hero: clamp(2.75rem, 1.6rem + 5.2vw, 5.75rem);
   --motion-instant: 120ms;
   --motion-fast: 180ms;
   --motion-panel: 260ms;
+  /* Public home and login hero only; never app chrome. */
+  --motion-cinematic: 600ms;
   --z-base: 0;
   --z-dropdown: 20;
   --z-sticky: 30;
@@ -252,6 +256,48 @@ html:has(.client-workout-focus) {
   opacity: 0.45;
 }
 
+/* Public page heroes: heading, body, then actions enter once, 70ms apart. */
+@keyframes hero-enter {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.hero-enter {
+  animation: hero-enter var(--motion-panel) cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.hero-enter:nth-child(2) {
+  animation-delay: 70ms;
+}
+
+.hero-enter:nth-child(3) {
+  animation-delay: 140ms;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero-enter {
+    animation: none;
+  }
+}
+
+/* WebGL field fades in over the CSS atmosphere once its first frame exists. */
+.trace-field {
+  opacity: 0;
+  transition: opacity var(--motion-cinematic) cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.trace-field[data-state='running'],
+.trace-field[data-state='still'],
+.trace-field[data-state='paused'] {
+  opacity: 1;
+}
+
 .boot-bar {
   animation: boot-slide 1.1s ease-in-out infinite;
 }
@@ -270,6 +316,13 @@ html:has(.client-workout-focus) {
   line-height: 1.1;
   font-weight: 600;
   letter-spacing: -0.03em;
+}
+
+@utility text-hero {
+  font-size: var(--text-hero);
+  line-height: 0.95;
+  font-weight: 600;
+  letter-spacing: -0.045em;
 }
 
 @utility text-numeric {

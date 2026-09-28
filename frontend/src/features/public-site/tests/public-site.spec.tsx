@@ -95,6 +95,13 @@ describe('public website', () => {
     expect(screen.getAllByRole('link', { name: authCopy.backToSite })[0]).toHaveAttribute('href', '/');
   });
 
+  it('keeps "Sign in" as the only page heading on the login screen', async () => {
+    render(<TestApp initialEntry="/login" status="UNAUTHENTICATED" />);
+
+    await screen.findByRole('heading', { name: authCopy.login.title }, { timeout: 4000 });
+    expect(screen.getAllByRole('heading', { level: 1 })).toHaveLength(1);
+  });
+
   it('treats only the marketing paths as public', () => {
     expect(isPublicSitePath('/')).toBe(true);
     expect(isPublicSitePath('/about')).toBe(true);

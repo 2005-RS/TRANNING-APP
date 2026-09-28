@@ -16,13 +16,11 @@ export const authCopySource = {
     goToSignIn: 'Go to sign in',
   },
   hero: {
-    eyebrow: 'Coaching workspace',
     title: 'Train with precision.',
     body: 'Plans, sessions, and progress in one quiet surface for coaches and athletes.',
     footer: 'Private training, signed in.',
   },
   login: {
-    mobileEyebrow: 'Training Platform',
     title: 'Sign in',
     subtitle: 'Use the account your coach or administrator created.',
     emailLabel: 'Email',
