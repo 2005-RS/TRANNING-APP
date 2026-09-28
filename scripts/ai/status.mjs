@@ -45,7 +45,7 @@ console.log(`FIX CYCLE: ${cycle}/${FIX_CYCLE_LIMIT}`);
 section('Next step');
 if (tStatus === 'PLAN_FAILED') {
   console.log('Last ai:plan failed or did not finish. Re-run: npm run ai:plan -- "<task description>"');
-} else if (!tStatus || tStatus === 'PLANNING') {
+} else if (!tStatus || tStatus === '(none)' || tStatus === 'PLANNING') {
   console.log('npm run ai:plan -- "<task description>"');
 } else if (tStatus === 'READY') {
   console.log('npm run ai:implement');

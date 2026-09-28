@@ -202,7 +202,7 @@ function killTree(child) {
  * It also:
  * - displays the agent/model
  * - displays elapsed time
- * - prints a heartbeat every 30 seconds
+ * - prints a local heartbeat every 15 seconds (no extra agent calls)
  * - enforces a timeout
  * - handles Ctrl+C
  * - kills the complete process tree when cancelled
@@ -220,7 +220,8 @@ export function runAgent({
     const started = Date.now();
 
     console.log(
-      `[${stamp()}] ${label}: starting agent=${cmd} ` +
+      `[${stamp()}] ${label}: starting ${cmd === 'claude' ? 'Claude' : cmd}... ` +
+      `agent=${cmd} ` +
       `model=${model ?? '(cli default)'} ` +
       `timeout=${fmt(timeoutMs)}`,
     );
@@ -247,11 +248,10 @@ export function runAgent({
 
     const heartbeat = setInterval(() => {
       console.log(
-        `[${stamp()}] ${label}: still working… ` +
-        `${fmt(Date.now() - started)} elapsed ` +
-        `(pid ${child.pid})`,
+        `[${stamp()}] ${label}: working... ` +
+        `elapsed=${fmt(Date.now() - started)}`,
       );
-    }, 30_000);
+    }, 15_000);
 
     const timer = setTimeout(() => {
       timedOut = true;
@@ -635,7 +635,7 @@ export const FIX_CYCLE_LIMIT = 2;
  */
 export const REVIEW_TEMPLATE = `# Review
 
-TASK: (pending — run npm run ai:review)
+TASK: (pending - run npm run ai:review)
 STATUS: (none)
 FIX CYCLE: 0/2
 

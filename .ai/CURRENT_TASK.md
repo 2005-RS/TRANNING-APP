@@ -5,4 +5,4 @@ STATUS: (none)
 
 ## Title
 
-(none — run npm run ai:plan -- "<task>")
+(none - run npm run ai:plan -- "<task>")
