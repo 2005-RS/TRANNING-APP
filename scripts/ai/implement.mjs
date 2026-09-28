@@ -73,6 +73,6 @@ warnIfHeadMoved(before, 'ai:implement');
 
 section('Result');
 const diff = gitStatusShort();
-console.log(diff ? diff : '(no working-tree changes — Codex may not have implemented anything)');
+console.log(diff ? diff : '(no working-tree changes - Codex may not have implemented anything)');
 console.log(`\nNext: npm run ai:check:fast, then npm run ai:review`);
 process.exit(exitCode);

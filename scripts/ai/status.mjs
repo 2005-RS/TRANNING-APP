@@ -26,7 +26,7 @@ const changed = changedPaths();
 console.log(`Uncommitted changes: ${changed.length} file(s)`);
 if (changed.length) {
   console.log(gitStatusShort().split('\n').slice(0, 10).join('\n'));
-  if (changed.length > 10) console.log(`  … and ${changed.length - 10} more`);
+  if (changed.length > 10) console.log(`  ... and ${changed.length - 10} more`);
 }
 
 section('Task');
@@ -55,7 +55,7 @@ if (tStatus === 'PLAN_FAILED') {
   console.log('Run the validation named in .ai/REVIEW.md (e.g. npm run ai:check:full), then npm run ai:review. No ai:fix needed.');
 } else if (rFinal === 'CHANGES_REQUESTED') {
   if (cycle >= FIX_CYCLE_LIMIT) {
-    console.log('STOP — fix-cycle limit reached. Human review needed before continuing.');
+    console.log('STOP - fix-cycle limit reached. Human review needed before continuing.');
   } else {
     console.log(`npm run ai:fix   (cycle ${cycle}/${FIX_CYCLE_LIMIT} used so far)`);
   }

@@ -2,7 +2,7 @@
 // npm run ai:plan -- "<task description>" [--model <alias>] [--dry-run]
 //
 // Claude reads .ai/prompts/architect.md and writes .ai/CURRENT_TASK.md.
-// Claude does not implement here — see scripts/ai/implement.mjs for that.
+// Claude does not implement here - see scripts/ai/implement.mjs for that.
 import { rmSync } from 'node:fs';
 import { join } from 'node:path';
 import {
@@ -11,7 +11,8 @@ import {
   REVIEW_FILE,
   REVIEW_TEMPLATE,
   TASK_FILE,
-  commandExists,
+  commandExistsAsync,
+  startHeartbeat,
   parseArgs,
   readText,
   CLAUDE_DEFAULT_MODEL,
@@ -44,7 +45,7 @@ const claudeArgs = [
   '--permission-mode',
   'acceptEdits',
   // Tool allowlist as defense-in-depth: the architect can read/write, and can
-  // only inspect git history/diff/status — it cannot commit, push, or reset.
+  // only inspect git history/diff/status - it cannot commit, push, or reset.
   '--allowedTools',
   'Read Glob Grep Write Edit Bash(git status*) Bash(git diff*) Bash(git log*) Bash(git show*)',
 ];
@@ -59,8 +60,18 @@ if (flags['dry-run']) {
   process.exit(0);
 }
 
-if (!commandExists('claude')) {
-  console.error('`claude` CLI not found on PATH. Install/authenticate Claude Code first.');
+// Progress must be visible BEFORE anything that can block: announce and start
+// the Node-only heartbeat first, then run the (async) CLI preflight.
+const planTimeout = timeoutMs(flags, 10);
+console.log(
+  `[${new Date().toLocaleTimeString('en-GB')}] ai:plan: starting Claude... ` +
+  `agent=claude model=${model} timeout=${Math.round(planTimeout / 60_000)}m`,
+);
+const heartbeat = startHeartbeat('ai:plan');
+
+if (!(await commandExistsAsync('claude'))) {
+  heartbeat.stop();
+  console.error('`claude` CLI not found on PATH (or `claude --version` failed). Install/authenticate Claude Code first.');
   process.exit(1);
 }
 
@@ -78,7 +89,8 @@ const result = await runAgent({
   args: claudeArgs,
   input: prompt,
   model,
-  timeoutMs: timeoutMs(flags, 10),
+  timeoutMs: planTimeout,
+  heartbeat,
 });
 if (result.code !== 0) {
   setTaskStatus('PLAN_FAILED');
@@ -88,10 +100,10 @@ if (result.code !== 0) {
 }
 
 section('Result');
-console.log(`.ai/CURRENT_TASK.md — Title: ${taskTitle() ?? '(unchanged)'}  STATUS: ${taskStatus() ?? '(unknown)'}`);
+console.log(`.ai/CURRENT_TASK.md - Title: ${taskTitle() ?? '(unchanged)'}  STATUS: ${taskStatus() ?? '(unknown)'}`);
 if (taskStatus() === 'READY') {
   console.log('Next: npm run ai:implement');
 } else {
-  console.log('Next: review .ai/CURRENT_TASK.md — it is not READY yet (open questions or still PLANNING).');
+  console.log('Next: review .ai/CURRENT_TASK.md - it is not READY yet (open questions or still PLANNING).');
   if (taskStatus() === 'PLANNING') setTaskStatus('PLAN_FAILED');
 }

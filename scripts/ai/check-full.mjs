@@ -2,7 +2,7 @@
 // npm run ai:check:full [-- --e2e] [-- --api-generate] [-- --side backend|frontend]
 //
 // Pre-approval gate: lint + test + build on both sides by default (matches
-// the existing docs/frontend/quality-gates.md "global gate" convention — it
+// the existing docs/frontend/quality-gates.md "global gate" convention - it
 // is not diff-scoped). No AI calls.
 //
 // --e2e also runs each side's E2E suite. Slower; backend E2E needs Docker
@@ -12,7 +12,7 @@
 // --api-generate runs `npm run api:generate` in frontend/ first. It requires
 // the backend running locally on the port configured in frontend/.env
 // (see docs/frontend/local-environment.md) and is guarded/verified by that
-// script itself — this wrapper does not duplicate that guard.
+// script itself - this wrapper does not duplicate that guard.
 import { parseArgs, recordChecks, run, section } from './lib.mjs';
 
 const { flags } = parseArgs(process.argv.slice(2), ['e2e', 'api-generate']);

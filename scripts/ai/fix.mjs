@@ -2,7 +2,7 @@
 // npm run ai:fix [-- --model <alias>] [-- --reasoning medium|high|xhigh] [-- --dry-run]
 //
 // Codex reads .ai/CURRENT_TASK.md and .ai/REVIEW.md and fixes BLOCKER /
-// IMPORTANT findings. Hard-capped at 2 automatic cycles per task — after
+// IMPORTANT findings. Hard-capped at 2 automatic cycles per task - after
 // that this script refuses to run and asks for a human.
 import { join } from 'node:path';
 import {
@@ -30,7 +30,7 @@ const { flags } = parseArgs(process.argv.slice(2), ['dry-run']);
 
 const cycle = fixCycle();
 if (cycle >= FIX_CYCLE_LIMIT) {
-  console.error(`STOP — .ai/REVIEW.md already recorded ${cycle}/${FIX_CYCLE_LIMIT} automatic fix cycles.`);
+  console.error(`STOP - .ai/REVIEW.md already recorded ${cycle}/${FIX_CYCLE_LIMIT} automatic fix cycles.`);
   console.error('This is the hard cap for this task. Request human review instead of running ai:fix again.');
   process.exit(1);
 }

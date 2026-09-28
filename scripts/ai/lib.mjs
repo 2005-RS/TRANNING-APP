@@ -1,5 +1,5 @@
 // Shared helpers for scripts/ai/*.mjs. Zero third-party dependencies on
-// purpose — these scripts are thin wrappers around `git`, `npm`, `claude`,
+// purpose - these scripts are thin wrappers around `git`, `npm`, `claude`,
 // and `codex`, not a framework.
 import { spawn, spawnSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
@@ -154,6 +154,46 @@ export function commandExists(cmd) {
   );
 }
 
+/**
+ * Async variant of commandExists: `<cmd> --version` runs in a child process
+ * WITHOUT blocking the event loop, so a heartbeat keeps ticking while it runs.
+ * (spawnSync froze the whole process, heartbeat and console flush included.)
+ */
+export function commandExistsAsync(cmd, timeout = 20_000) {
+  return new Promise((resolve) => {
+    if (resolveBin(cmd) === null) return resolve(false);
+
+    const b = bin(cmd);
+    const child = spawn(b.file, ['--version'], {
+      cwd: ROOT,
+      shell: b.shell,
+      stdio: 'ignore',
+      windowsHide: true,
+    });
+    const timer = setTimeout(() => killTree(child), timeout);
+    child.on('error', () => {
+      clearTimeout(timer);
+      resolve(false);
+    });
+    child.on('close', (code) => {
+      clearTimeout(timer);
+      resolve(code === 0);
+    });
+  });
+}
+
+/**
+ * Local heartbeat driven only by Node timers (no agent calls, no tokens).
+ * Start it BEFORE any operation that may take long; call stop() when done.
+ */
+export function startHeartbeat(label, everyMs = 15_000) {
+  const started = Date.now();
+  const timer = setInterval(() => {
+    console.log(`[${stamp()}] ${label}: working... elapsed=${fmt(Date.now() - started)}`);
+  }, everyMs);
+  return { started, stop: () => clearInterval(timer) };
+}
+
 const stamp = () => new Date().toLocaleTimeString('en-GB');
 
 const fmt = (ms) => {
@@ -214,17 +254,23 @@ export function runAgent({
   input,
   model,
   timeoutMs,
+  heartbeat: externalHeartbeat,
 }) {
   return new Promise((resolve) => {
     const b = bin(cmd);
-    const started = Date.now();
+    // A caller may have started the heartbeat earlier (and already announced
+    // the start); then elapsed time is measured from that moment.
+    const hb = externalHeartbeat ?? startHeartbeat(label);
+    const started = hb.started;
 
-    console.log(
-      `[${stamp()}] ${label}: starting ${cmd === 'claude' ? 'Claude' : cmd}... ` +
-      `agent=${cmd} ` +
-      `model=${model ?? '(cli default)'} ` +
-      `timeout=${fmt(timeoutMs)}`,
-    );
+    if (!externalHeartbeat) {
+      console.log(
+        `[${stamp()}] ${label}: starting ${cmd === 'claude' ? 'Claude' : cmd}... ` +
+        `agent=${cmd} ` +
+        `model=${model ?? '(cli default)'} ` +
+        `timeout=${fmt(timeoutMs)}`,
+      );
+    }
 
     const child = spawn(
       b.file,
@@ -246,19 +292,12 @@ export function runAgent({
 
     child.stdin.end(input ?? '');
 
-    const heartbeat = setInterval(() => {
-      console.log(
-        `[${stamp()}] ${label}: working... ` +
-        `elapsed=${fmt(Date.now() - started)}`,
-      );
-    }, 15_000);
-
     const timer = setTimeout(() => {
       timedOut = true;
 
       console.error(
         `[${stamp()}] ${label}: TIMEOUT after ` +
-        `${fmt(timeoutMs)} — killing agent.`,
+        `${fmt(timeoutMs)} - killing agent.`,
       );
 
       killTree(child);
@@ -270,7 +309,7 @@ export function runAgent({
       cancelled = true;
 
       console.error(
-        `\n[${stamp()}] ${label}: Ctrl+C — cancelling agent.`,
+        `\n[${stamp()}] ${label}: Ctrl+C - cancelling agent.`,
       );
 
       killTree(child);
@@ -289,7 +328,7 @@ export function runAgent({
 
       settled = true;
 
-      clearInterval(heartbeat);
+      hb.stop();
       clearTimeout(timer);
 
       process.off('SIGINT', onSigint);
@@ -432,7 +471,7 @@ export function warnIfHeadMoved(before, label) {
 
   if (after !== before) {
     console.warn(
-      '\n⚠️  WARNING: HEAD changed during ' +
+      '\nWARNING: HEAD changed during ' +
       label +
       '.',
     );
@@ -685,7 +724,7 @@ export function workTreeFingerprint() {
 }
 
 /**
- * 'FRESH' | 'STALE' | 'MISSING' — does CHECKS.md describe the current
+ * 'FRESH' | 'STALE' | 'MISSING' - does CHECKS.md describe the current
  * working tree (HEAD + changed files' size/mtime)?
  */
 export function checksFreshness() {
@@ -750,8 +789,8 @@ export function parseArgs(
  */
 export function section(title) {
   console.log(
-    `\n— ${title} ` +
-    `${'—'.repeat(
+    `\n- ${title} ` +
+    `${'-'.repeat(
       Math.max(
         0,
         60 - title.length,

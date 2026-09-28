@@ -88,9 +88,9 @@ console.log(`.ai/REVIEW.md FINAL: ${final ?? '(unknown)'}`);
 if (final === 'APPROVED') {
   console.log('Next: human review, then commit.');
 } else if (final === 'VALIDATION_REQUIRED') {
-  console.log('Next: no code defect found — run the missing validation named in .ai/REVIEW.md (e.g. npm run ai:check:full), then npm run ai:review. Do NOT run ai:fix.');
+  console.log('Next: no code defect found - run the missing validation named in .ai/REVIEW.md (e.g. npm run ai:check:full), then npm run ai:review. Do NOT run ai:fix.');
 } else if (cycleBefore >= 2) {
-  console.log('Fix-cycle limit already reached — do not run ai:fix again. Human review needed.');
+  console.log('Fix-cycle limit already reached - do not run ai:fix again. Human review needed.');
 } else {
   console.log(`Next: npm run ai:fix (cycle ${cycleBefore}/2 used so far)`);
 }
