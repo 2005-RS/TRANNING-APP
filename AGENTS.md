@@ -20,3 +20,18 @@ Non-negotiables (summary; the rules above are authoritative):
 - Access token in memory only; refresh via HttpOnly cookie. Never persist tokens in `localStorage`, `sessionStorage`, or IndexedDB.
 - Never commit `.env`, credentials, or hardcoded JWTs. Never log tokens, cookies, signed URLs, or Check-In text.
 - Database changes only through TypeORM migrations (`synchronize: false`).
+- Inspect the existing module/feature before writing code; follow its existing patterns instead of inventing a new one.
+- Make small, focused changes. No unrelated refactors, renames, or reformatting of files you didn't need to touch.
+- Do not add a new dependency unless the task explicitly needs it and nothing already installed covers it.
+- Verify before a task is considered done, and report failures honestly; do not claim success if a check fails. In the Claude + Codex workflow the general lint/test/build checks belong to the `ai:check:*` scripts (the Claude reviewer reads `.ai/CHECKS.md`); implementer/fixer must not duplicate them and may only run one small, targeted check needed for their own change. Outside that workflow, run the relevant lint/test/build checks yourself.
+- Do not run `git commit`, `git push`, `git reset --hard`, `git clean`, or any force-push unless a human explicitly asks for that specific action.
+
+## Multi-agent workflow (Claude plans/reviews, Codex implements)
+
+This repo uses a small Claude (architect/reviewer) + Codex (implementer)
+loop for day-to-day tasks. It is optional scaffolding, not a replacement for
+the rules above. See [`.ai/WORKFLOW.md`](.ai/WORKFLOW.md) for the full loop,
+[`.ai/CURRENT_TASK.md`](.ai/CURRENT_TASK.md) for the task currently in
+flight, and [`.ai/prompts/`](.ai/prompts/) for the short per-role prompts.
+Quick reference: `npm run ai:status`, `ai:plan`, `ai:implement`, `ai:review`,
+`ai:fix`, `ai:check:fast`, `ai:check:full` (run from the repo root).

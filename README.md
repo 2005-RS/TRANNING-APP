@@ -50,3 +50,5 @@ Trabajen en su rama y abran un Pull Request hacia `main`.
 ## Trabajo con IA
 
 Las reglas del proyecto están en `.cursor/rules/` (Cursor las carga solo). Para otros agentes (Claude Code, Codex, Copilot…) el punto de entrada es [`AGENTS.md`](AGENTS.md). La fase actual está en [`docs/frontend/current-task.md`](docs/frontend/current-task.md).
+
+Flujo Claude (planifica/revisa) + Codex (implementa) para tareas puntuales: [`.ai/WORKFLOW.md`](.ai/WORKFLOW.md).

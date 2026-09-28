@@ -1,0 +1,16 @@
+{
+  "name": "training-app",
+  "private": true,
+  "version": "0.0.0",
+  "description": "Repo-root scripts for the Claude (plan/review) + Codex (implement/fix) workflow. Not a workspace root — backend/ and frontend/ remain independent npm projects.",
+  "type": "module",
+  "scripts": {
+    "ai:status": "node scripts/ai/status.mjs",
+    "ai:plan": "node scripts/ai/plan.mjs",
+    "ai:implement": "node scripts/ai/implement.mjs",
+    "ai:review": "node scripts/ai/review.mjs",
+    "ai:fix": "node scripts/ai/fix.mjs",
+    "ai:check:fast": "node scripts/ai/check-fast.mjs",
+    "ai:check:full": "node scripts/ai/check-full.mjs"
+  }
+}
