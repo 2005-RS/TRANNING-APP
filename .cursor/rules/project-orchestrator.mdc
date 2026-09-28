@@ -61,12 +61,13 @@ F10 is the **complete Trainer Workspace**, not “Trainer Dashboard” only. Tra
 | F09 CLIENT Check-ins | VERIFIED |
 | F10 TRAINER Workspace (complete, not dashboard-only) | VERIFIED |
 | F11 Admin Workspace (complete, not dashboard-only) | VERIFIED |
-| **F12 Notifications** | **CURRENT — NOT STARTED** |
-| F13–F14 | PLANNED |
+| F12 Notifications | VERIFIED |
+| **F13 Motion / 3D / Premium Polish** | **CURRENT** |
+| F14 | PLANNED |
 
 Do not implement a phase unless the user explicitly commands it.
 
-Client, Trainer, or Admin UI polish after a verified phase does **not** advance the roadmap. Current phase remains F12.
+Client, Trainer, or Admin UI polish after a verified phase does **not** advance the roadmap. Current phase remains F13.
 
 Local environment safety (ports, guarded `api:generate`, Playwright server ownership): `docs/frontend/local-environment.md`.
 

@@ -4,38 +4,47 @@ Lightweight state file. Update only after a phase is **externally accepted**.
 
 ## Current phase
 
-**F12** — Notifications
+**F13** — Motion / 3D / Premium Polish
 
 ## Task
 
-Notification inbox, unread state, navigation integration (see [frontend-roadmap.md](./frontend-roadmap.md#f12--notifications))
+Premium visual refinement of the public website, login, and the Client, Trainer, and Admin apps (see [frontend-roadmap.md](./frontend-roadmap.md#f13--motion--3d--premium-polish)).
 
 ## Status
 
-**NOT STARTED**
+**IN PROGRESS** — stage 1 of 3
+
+## Stages (user-agreed, 2026-09-25)
+
+1. **Public website + login.** Redesign, plus the animated background on the home hero and the login hero.
+2. **Client app.** Motion and surface polish. No looping background.
+3. **Trainer + Admin.** Restrained productivity polish. No decorative motion.
+
+Show each stage in the browser before starting the next.
 
 ## Previous phase
 
-**F11 VERIFIED** — Admin Workspace (externally accepted)
+**F12 VERIFIED** — Notifications (externally accepted 2026-09-25)
 
 ## Next planned phase
 
-**F13** — Motion / 3D / Premium Polish
+**F14** — Frontend Hardening / Production
 
-Do not start F13 from an F12 task.
+Do not start F14 from an F13 task.
 
 ## Current Task Boundaries
 
-When execution begins:
-
-- Implement **only F12**.
-- Inspect **generated OpenAPI** (`frontend/src/generated/notifications/`) first. Document gaps. Do not invent notification types, fields, or actions.
-- F12 is the first phase that may surface dashboard `notifications.unreadCount` and replace the `/client`, `/trainer`, and `/admin` notification placeholders.
-- Excluded: push, email, in-app chat, F13 motion/3D, F14 hardening.
-- **Do not modify backend** unless a future task explicitly authorizes it.
+- Implement **only F13**.
+- Animated background: home hero and login hero only, hand-written WebGL shader, **no new dependency**. Still frame under `prefers-reduced-motion`, paused off screen and in hidden tabs, CSS fallback without WebGL. See [motion-and-3d.md](./motion-and-3d.md#ambient-trace-field).
+- Three.js, R3F, Drei, Rive, and Spline are **not** installed by this task.
+- Stack stays as in `frontend-standards.mdc`: no second UI or CSS framework.
+- Tokens only in features; no raw hex. Geist Sans for UI, Geist Mono for numbers.
+- Motion durations follow `--motion-*` tokens. One orchestrated page-load moment, not a reveal on every section.
+- Do not change copy meaning, invent capabilities, add sign-up, prices, statistics, or testimonials.
+- **Do not modify backend.**
 - Keep access tokens in memory; do not change auth storage.
-- Do not hand-edit `frontend/src/generated/**`. Regenerate only with the guarded `npm run api:generate` ([local-environment.md](./local-environment.md)).
-- Preserve F02 session behavior (including `RESTORE_FAILED`), F03 shells, verified Client F04–F09, Trainer F10, and Admin F11.
+- Do not hand-edit `frontend/src/generated/**`.
+- Preserve F02 session behavior, F03 shells, verified Client F04–F09, Trainer F10, Admin F11, and Notifications F12.
 - Follow [engineering-guardrails.md](./engineering-guardrails.md) and [quality-gates.md](./quality-gates.md).
 - Report with [task-report-template.md](./task-report-template.md), then **STOP**.
 

@@ -294,7 +294,7 @@ Trainer **complements** Client. Do not duplicate Client gym UX inside Trainer. T
 
 ## F12 — Notifications
 
-**Status:** CURRENT / NOT STARTED
+**Status:** VERIFIED
 
 **Objective:** Notification inbox, unread state, navigation integration.
 
@@ -310,13 +310,15 @@ Trainer **complements** Client. Do not duplicate Client gym UX inside Trainer. T
 
 ## F13 — Motion / 3D / Premium Polish
 
-**Status:** PLANNED
+**Status:** CURRENT / NOT STARTED
 
 **Objective:** Performance-conscious visual refinement. Functional 3D only where useful. Rive only for special celebratory moments if justified.
 
 **Included:** Motion polish; optional Three.js / R3F / Drei / Rive **only if the phase task authorizes the install**.
 
 **Excluded:** Implementing unfinished F05–F12 features; neon/gaming UI; looping decoration.
+
+**Authorized exception (user, 2026-09-25):** one animated background on the public home hero and the login hero only, drawn by a hand-written WebGL shader with no new dependency. It must render a still frame under `prefers-reduced-motion`, pause when off screen or in a hidden tab, and fall back to the CSS atmosphere without WebGL. It stays out of the Client, Trainer, and Admin apps. See [motion-and-3d.md](./motion-and-3d.md#ambient-trace-field).
 
 **Dependencies:** Feature surfaces to polish must already exist.
 
