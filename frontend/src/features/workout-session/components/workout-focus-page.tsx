@@ -220,12 +220,7 @@ export function WorkoutFocusPage() {
       ) : null}
 
       {!inProgress ? (
-        <motion.section
-          className="client-surface-card space-y-4"
-          initial={revealHidden(reduceMotion)}
-          animate={revealVisible}
-          transition={motionTransition('fast', reduceMotion)}
-        >
+        <section className="client-surface-card space-y-4">
           <div className="flex items-start gap-3">
             {session.status === WorkoutSessionResponseDtoStatus.COMPLETED ? (
               <CheckCircle2 className="mt-0.5 size-6 text-success" aria-hidden />
@@ -252,7 +247,7 @@ export function WorkoutFocusPage() {
           >
             {workoutCopy.focus.backToTraining}
           </Link>
-        </motion.section>
+        </section>
       ) : exercises.length === 0 ? (
         <p className="text-sm text-muted-foreground">{workoutCopy.focus.noExercises}</p>
       ) : activeExercise ? (

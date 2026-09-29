@@ -176,6 +176,11 @@ describe('Client body progress', { timeout: 15_000 }, () => {
     await waitFor(() => {
       expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
     });
+    // A closed <dialog> must keep the UA `display: none`; an unconditional
+    // `flex` leaves an invisible layer over the bottom navigation.
+    const closedSheet = document.querySelector('dialog:not([open])');
+    expect(closedSheet).not.toBeNull();
+    expect(closedSheet?.classList.contains('flex')).toBe(false);
   });
 
   it('shows pending upload status without treating it as ready', async () => {

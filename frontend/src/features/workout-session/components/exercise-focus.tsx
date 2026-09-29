@@ -9,7 +9,6 @@ import { Button } from '@/shared/ui/button';
 import { formatCompactNumber } from '@/features/client-dashboard/lib/formatters';
 import { useWorkoutCopy } from '@/features/workout-session/copy';
 import { formatPrescription } from '@/features/workout-session/lib/formatters';
-import { cn } from '@/shared/lib/utils';
 
 function demonstrationOf(
   exercise: WorkoutSessionExerciseResponseDto,
@@ -107,9 +106,7 @@ export function ExerciseFocus({
           {exercise.sets.map((set) => (
             <li
               key={set.id}
-              className={cn(
-                'flex min-h-12 items-center justify-between rounded-lg border border-border/80 bg-muted/40 px-3',
-              )}
+              className="flex min-h-12 items-center justify-between rounded-lg border border-border/80 bg-muted/40 px-3"
             >
               <span className="text-sm text-muted-foreground">
                 {workoutCopy.focus.recorded} {set.setNumber}

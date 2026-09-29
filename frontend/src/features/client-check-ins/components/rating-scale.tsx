@@ -44,7 +44,7 @@ export function RatingScale({
               aria-pressed={selected}
               aria-label={`${label} ${rating}`}
               className={cn(
-                'min-h-12 font-mono text-base tabular-nums',
+                'client-surface-interactive min-h-12 font-mono text-base tabular-nums',
                 'focus-visible:z-10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
                 index > 0 && 'border-l border-border',
                 selected

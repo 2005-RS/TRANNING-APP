@@ -41,10 +41,10 @@ export function ClientBottomNav({
                 to={item.to}
                 aria-current={active ? 'page' : undefined}
                 className={cn(
-                  'flex min-h-14 flex-col items-center justify-center gap-0.5 rounded-xl px-1 text-center text-[0.7rem] font-medium leading-tight transition-colors duration-200 focus-visible:outline-none sm:text-xs',
+                  'client-surface-interactive flex min-h-14 flex-col items-center justify-center gap-0.5 rounded-xl border border-transparent px-1 text-center text-[0.7rem] font-medium leading-tight focus-visible:outline-none sm:text-xs',
                   active
                     ? 'bg-muted text-foreground'
-                    : 'text-muted-foreground hover:text-foreground',
+                    : 'text-muted-foreground',
                 )}
               >
                 <span
@@ -66,10 +66,10 @@ export function ClientBottomNav({
             aria-current={moreActive ? 'page' : undefined}
             aria-haspopup="dialog"
             className={cn(
-              'relative flex min-h-14 w-full flex-col items-center justify-center gap-0.5 rounded-xl px-1 text-center text-[0.7rem] font-medium leading-tight transition-colors duration-200 focus-visible:outline-none sm:text-xs',
+              'client-surface-interactive relative flex min-h-14 w-full flex-col items-center justify-center gap-0.5 rounded-xl border border-transparent px-1 text-center text-[0.7rem] font-medium leading-tight focus-visible:outline-none sm:text-xs',
               moreActive
                 ? 'bg-muted text-foreground'
-                : 'text-muted-foreground hover:text-foreground',
+                : 'text-muted-foreground',
             )}
             onClick={onMorePress}
           >
@@ -120,10 +120,10 @@ export function ClientMoreSheetList({
                 aria-current={active ? 'page' : undefined}
                 onClick={onNavigate}
                 className={cn(
-                  'flex min-h-12 items-center gap-3 rounded-lg px-3 text-base',
+                  'client-surface-interactive flex min-h-12 items-center gap-3 rounded-lg border border-transparent px-3 text-base',
                   active
                     ? 'bg-muted font-semibold text-foreground'
-                    : 'text-foreground hover:bg-muted',
+                    : 'text-foreground',
                 )}
               >
                 <Icon className="size-5" aria-hidden />

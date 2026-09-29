@@ -11,7 +11,7 @@ export function DashboardCard({
   return (
     <section
       className={cn(
-        'client-surface-card',
+        'client-surface-card space-y-4',
         tone === 'hero' && 'dashboard-hero-card dashboard-hero-card--action',
         tone === 'hero-calm' && 'dashboard-hero-card dashboard-hero-card--calm',
         className,

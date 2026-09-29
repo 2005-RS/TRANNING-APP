@@ -145,7 +145,7 @@ export function PhotoUploadSheet({
         onOpenChange(next);
       }}
     >
-      <SheetContent side="bottom" className="flex max-h-[90svh] flex-col overflow-hidden px-0">
+      <SheetContent side="bottom" className="open:flex max-h-[90svh] flex-col overflow-hidden px-0">
         <SheetHeader>
           <SheetTitle>{clientBodyCopy.photos.upload}</SheetTitle>
           <SheetDescription>{clientBodyCopy.photos.mimeHint}</SheetDescription>

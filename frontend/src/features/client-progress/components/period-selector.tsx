@@ -26,7 +26,7 @@ export function PeriodSelector({
             aria-pressed={selected}
             aria-label={clientProgressCopy.periodAria[value]}
             className={cn(
-              'min-h-11 min-w-11 rounded-full px-3 text-sm font-medium',
+              'min-h-11 min-w-11 rounded-full border px-3 text-sm font-medium',
               selected
                 ? 'bg-primary text-primary-foreground'
                 : 'bg-muted text-muted-foreground hover:bg-muted/80 hover:text-foreground',

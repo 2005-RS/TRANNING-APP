@@ -17,7 +17,6 @@ import { WorkoutLoadingState } from '@/features/workout-session/components/worko
 import { formatScheduledDay } from '@/features/workout-session/lib/formatters';
 import { recordedSetCount } from '@/features/workout-session/lib/session-helpers';
 import { buttonVariants } from '@/shared/ui/button-variants';
-import { SectionReveal } from '@/shared/ui/section-reveal';
 import { cn } from '@/shared/lib/utils';
 import type { TrainingPlanWorkoutResponseDto } from '@/generated/models';
 
@@ -73,20 +72,17 @@ export function TrainingHubPage() {
 
   return (
     <PageContainer density="client" className="mx-auto max-w-lg min-w-0">
-      <SectionReveal>
-        <PageHeader className="mb-6">
-          <div className="space-y-2">
-            <PageTitle>{workoutCopy.hub.title}</PageTitle>
-            <PageDescription>{workoutCopy.hub.description}</PageDescription>
-          </div>
-        </PageHeader>
-      </SectionReveal>
+      <PageHeader className="mb-6">
+        <div className="space-y-2">
+          <PageTitle>{workoutCopy.hub.title}</PageTitle>
+          <PageDescription>{workoutCopy.hub.description}</PageDescription>
+        </div>
+      </PageHeader>
 
       <div className="space-y-5">
         {currentSession ? (
-          <SectionReveal>
-            <section className="client-surface-card dashboard-hero-card dashboard-hero-card--action space-y-5">
-              <div className="flex items-start gap-3.5">
+          <section className="client-surface-card dashboard-hero-card dashboard-hero-card--action space-y-5">
+            <div className="flex items-start gap-3.5">
                 <span className="mt-0.5 flex size-11 shrink-0 items-center justify-center rounded-full bg-primary/15 text-primary">
                   <Dumbbell className="size-5" aria-hidden />
                 </span>
@@ -118,8 +114,7 @@ export function TrainingHubPage() {
               >
                 {workoutCopy.hub.continue}
               </Link>
-            </section>
-          </SectionReveal>
+          </section>
         ) : null}
 
         {mappedStartError ? (

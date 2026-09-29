@@ -1,19 +1,14 @@
-import { motion, useReducedMotion } from 'motion/react';
 import type { CheckInReviewResponseDto } from '@/generated/models';
 import { clientCheckInsCopy } from '@/features/client-check-ins/copy';
 import { formatIsoDateTime } from '@/features/client-check-ins/lib/formatters';
 
 export function TrainerFeedback({ review }: { review: CheckInReviewResponseDto }) {
-  const reduceMotion = useReducedMotion();
   const reviewedAt = formatIsoDateTime(review.createdAt);
 
   return (
-    <motion.section
+    <section
       aria-labelledby="trainer-feedback-heading"
       className="client-surface-card dashboard-hero-card dashboard-hero-card--calm space-y-3"
-      initial={reduceMotion ? false : { opacity: 0, y: 8 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.28 }}
     >
       <h2 id="trainer-feedback-heading" className="text-base font-semibold tracking-tight">
         {clientCheckInsCopy.review.title}
@@ -32,7 +27,7 @@ export function TrainerFeedback({ review }: { review: CheckInReviewResponseDto }
           </p>
         </div>
       ) : null}
-    </motion.section>
+    </section>
   );
 }
 

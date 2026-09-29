@@ -64,7 +64,7 @@ export function ExerciseListSection({
                   to="/client/progress/exercises/$exerciseId"
                   params={{ exerciseId: item.exerciseId }}
                   search={{ period }}
-                  className="client-surface-card flex min-h-16 items-center justify-between gap-3 no-underline"
+                  className="client-surface-card client-surface-interactive flex min-h-16 items-center justify-between gap-3 no-underline"
                 >
                   <div className="min-w-0">
                     <p className="truncate text-base font-semibold text-foreground">

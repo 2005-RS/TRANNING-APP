@@ -1,6 +1,5 @@
 import { Link } from '@tanstack/react-router';
 import { ChevronRight } from 'lucide-react';
-import { motion, useReducedMotion } from 'motion/react';
 import type { CheckInSummaryResponseDto } from '@/generated/models';
 import { CheckInResponseDtoStatus } from '@/generated/models';
 import { CheckInStatusBadge } from '@/features/client-check-ins/components/check-in-status-badge';
@@ -10,7 +9,6 @@ import { cn } from '@/shared/lib/utils';
 import { buttonVariants } from '@/shared/ui/button-variants';
 
 export function CurrentCheckInCard({ checkIn }: { checkIn: CheckInSummaryResponseDto }) {
-  const reduceMotion = useReducedMotion();
   const period = formatPeriodRange(checkIn.periodStart, checkIn.periodEnd);
   const isDraft = checkIn.status === CheckInResponseDtoStatus.DRAFT;
   const cta = isDraft
@@ -20,15 +18,12 @@ export function CurrentCheckInCard({ checkIn }: { checkIn: CheckInSummaryRespons
       : clientCheckInsCopy.current.view;
 
   return (
-    <motion.section
+    <section
       className={cn(
         'client-surface-card space-y-4',
         isDraft && 'dashboard-hero-card dashboard-hero-card--action',
       )}
       aria-labelledby="current-check-in-heading"
-      initial={reduceMotion ? false : { opacity: 0, y: 6 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.2 }}
     >
       <div className="space-y-2">
         <p className="text-sm font-medium text-muted-foreground">{clientCheckInsCopy.current.title}</p>
@@ -46,7 +41,7 @@ export function CurrentCheckInCard({ checkIn }: { checkIn: CheckInSummaryRespons
       >
         {cta}
       </Link>
-    </motion.section>
+    </section>
   );
 }
 
@@ -78,7 +73,7 @@ export function CheckInHistoryList({
               <Link
                 to="/client/check-ins/$checkInId"
                 params={{ checkInId: item.id }}
-                className="client-surface-card flex min-h-14 items-center justify-between gap-3 overflow-hidden no-underline outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                className="client-surface-card client-surface-interactive flex min-h-14 items-center justify-between gap-3 overflow-hidden no-underline"
               >
                 <div className="min-w-0 space-y-1">
                   <p className="text-sm font-medium text-foreground">

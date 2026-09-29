@@ -164,7 +164,7 @@
 }
 
 .client-app-shell {
-  background: color-mix(in oklab, var(--card) 16%, var(--background));
+  background: color-mix(in oklab, var(--card) 12%, var(--background));
 }
 
 html:has(.client-workout-focus) {
@@ -172,12 +172,13 @@ html:has(.client-workout-focus) {
 }
 
 .client-app-chrome {
-  background: color-mix(in oklab, var(--card) 32%, var(--background) 68%);
+  background: color-mix(in oklab, var(--card) 72%, var(--background));
+  border-color: color-mix(in oklab, var(--border) 82%, transparent);
 }
 
 .client-surface-card {
   border-radius: var(--radius-xl);
-  border: 1px solid color-mix(in oklab, var(--border) 88%, transparent);
+  border: 1px solid color-mix(in oklab, var(--border) 82%, transparent);
   background: var(--card);
   padding: 1.25rem;
 }
@@ -200,7 +201,44 @@ html:has(.client-workout-focus) {
 }
 
 .client-app-shell .client-surface-card {
-  box-shadow: 0 1px 0 color-mix(in oklab, var(--foreground) 6%, transparent);
+  box-shadow: 0 1px 0 color-mix(in oklab, var(--foreground) 6%, transparent),
+    0 8px 18px -16px color-mix(in oklab, var(--foreground) 40%, transparent);
+}
+
+.client-surface-interactive {
+  transition:
+    border-color var(--motion-fast) ease,
+    background-color var(--motion-fast) ease,
+    box-shadow var(--motion-fast) ease,
+    transform var(--motion-instant) ease;
+}
+
+.client-surface-interactive:active {
+  transform: scale(0.98);
+}
+
+.client-surface-interactive[aria-current='page'],
+.client-surface-interactive[aria-pressed='true'] {
+  border-color: color-mix(in oklab, var(--primary) 48%, var(--border));
+  background: color-mix(in oklab, var(--primary) 10%, var(--card));
+}
+
+@media (hover: hover) {
+  .client-surface-interactive:hover:not(:disabled) {
+    border-color: color-mix(in oklab, var(--primary) 34%, var(--border));
+    background: color-mix(in oklab, var(--primary) 5%, var(--card));
+    box-shadow: 0 10px 24px -20px color-mix(in oklab, var(--foreground) 72%, transparent);
+  }
+}
+
+.client-surface-interactive:disabled {
+  opacity: 0.55;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .client-surface-interactive:active {
+    transform: none;
+  }
 }
 
 @media (min-width: 640px) {
@@ -221,11 +259,10 @@ html:has(.client-workout-focus) {
       color-mix(in oklab, var(--primary) 16%, var(--card)) 0%,
       var(--card) 62%
     );
-  box-shadow: 0 1px 0 color-mix(in oklab, var(--primary) 22%, transparent);
-}
-
-.client-app-shell .dashboard-hero-card--action {
-  box-shadow: 0 1px 0 color-mix(in oklab, var(--primary) 22%, transparent);
+  border-color: color-mix(in oklab, var(--primary) 34%, var(--border));
+  box-shadow:
+    0 1px 0 color-mix(in oklab, var(--primary) 28%, transparent),
+    0 14px 28px -24px color-mix(in oklab, var(--primary) 72%, transparent);
 }
 
 .dashboard-hero-card--calm {
@@ -235,6 +272,7 @@ html:has(.client-workout-focus) {
       color-mix(in oklab, var(--foreground) 4%, var(--card)) 0%,
       var(--card) 70%
     );
+  border-color: color-mix(in oklab, var(--foreground) 12%, var(--border));
 }
 
 .login-hero-atmosphere {

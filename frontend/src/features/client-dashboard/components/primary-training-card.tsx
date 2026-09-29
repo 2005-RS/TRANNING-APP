@@ -14,7 +14,6 @@ import {
 } from '@/features/client-dashboard/lib/formatters';
 import { cn } from '@/shared/lib/utils';
 import { buttonVariants } from '@/shared/ui/button-variants';
-import { SectionReveal } from '@/shared/ui/section-reveal';
 
 type PrimaryTrainingCardProps = {
   session: ClientDashboardCurrentWorkoutSessionDto | null | undefined;
@@ -23,11 +22,10 @@ type PrimaryTrainingCardProps = {
 
 export function PrimaryTrainingCard({ session, plan }: PrimaryTrainingCardProps) {
   return (
-    <SectionReveal>
-      <DashboardCard
-        aria-labelledby="primary-training-heading"
-        tone={session || plan ? 'hero' : 'hero-calm'}
-      >
+    <DashboardCard
+      aria-labelledby="primary-training-heading"
+      tone={session || plan ? 'hero' : 'hero-calm'}
+    >
         {session ? (
           <ActiveSessionContent session={session} planName={plan?.name} />
         ) : plan ? (
@@ -35,8 +33,7 @@ export function PrimaryTrainingCard({ session, plan }: PrimaryTrainingCardProps)
         ) : (
           <NoPlanContent />
         )}
-      </DashboardCard>
-    </SectionReveal>
+    </DashboardCard>
   );
 }
 

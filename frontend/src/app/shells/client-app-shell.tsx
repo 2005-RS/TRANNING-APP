@@ -1,5 +1,5 @@
 import { useEffect, useState, type ReactNode } from 'react';
-import { motion, useReducedMotion } from 'motion/react';
+import { motion } from 'motion/react';
 import { Link, useRouterState } from '@tanstack/react-router';
 import { ArrowLeft } from 'lucide-react';
 import { BrandMark } from '@/features/auth/components/brand-mark';
@@ -26,6 +26,12 @@ import {
 } from '@/shared/ui/sheet';
 import { cn } from '@/shared/lib/utils';
 import { buttonVariants } from '@/shared/ui/button-variants';
+import {
+  motionTransition,
+  revealHidden,
+  revealVisible,
+  useReducedMotion,
+} from '@/shared/lib/motion';
 
 export function ClientAppShell({ children }: { children: ReactNode }) {
   const clientCopy = useClientNavCopy();
@@ -88,9 +94,9 @@ export function ClientAppShell({ children }: { children: ReactNode }) {
       >
         <motion.div
           key={pathname}
-          initial={reduceMotion ? false : { opacity: 0, y: 6 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: reduceMotion ? 0 : 0.18, ease: [0.16, 1, 0.3, 1] }}
+          initial={revealHidden(reduceMotion)}
+          animate={revealVisible}
+          transition={motionTransition('fast', reduceMotion)}
         >
           {children}
         </motion.div>

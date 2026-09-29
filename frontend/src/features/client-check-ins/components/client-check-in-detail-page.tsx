@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { Link, useNavigate, useParams } from '@tanstack/react-router';
 import { toast } from 'sonner';
-import { motion, useReducedMotion } from 'motion/react';
 import type { UpdateCheckInDto } from '@/generated/models';
 import { CheckInResponseDtoStatus, UpdateCheckInStatusDtoStatus } from '@/generated/models';
 import { CheckInDetailSkeleton } from '@/features/client-check-ins/components/check-ins-skeleton';
@@ -23,7 +22,6 @@ import { PageContainer, PageHeader, PageTitle } from '@/shared/ui/page';
 export function ClientCheckInDetailPage() {
   const { checkInId } = useParams({ from: '/client/check-ins/$checkInId' });
   const navigate = useNavigate();
-  const reduceMotion = useReducedMotion();
   const [discardOpen, setDiscardOpen] = useState(false);
   const detailQuery = useClientCheckInDetail(checkInId);
   const { update, updateStatus, remove } = useClientCheckInMutations();
@@ -111,13 +109,9 @@ export function ClientCheckInDetailPage() {
               </Button>
             </>
           ) : (
-            <motion.div
-              initial={reduceMotion ? false : { opacity: 0, y: 8 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.24 }}
-            >
+            <div>
               <CheckInReadOnly checkIn={checkIn} />
-            </motion.div>
+            </div>
           )}
         </div>
       ) : null}
