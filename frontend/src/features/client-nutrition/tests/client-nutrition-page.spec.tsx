@@ -26,7 +26,7 @@ import {
 
 const timeout = 4000;
 
-function renderNutrition(entry = '/client/nutrition') {
+function renderNutrition(entry = '/client/nutrition/plan') {
   return render(
     <TestApp initialEntry={entry} status="AUTHENTICATED" user={clientA} />,
   );
@@ -169,8 +169,9 @@ describe('Client nutrition', { timeout: 15_000 }, () => {
     ).toBeInTheDocument();
     await user.click(screen.getByRole('link', { name: clientDashboardCopy.nutrition.viewNutrition }));
 
+    // The dashboard CTA opens today's journal; the full plan is one link away.
     expect(
-      await screen.findByRole('heading', { name: 'Performance meals' }, { timeout: 10_000 }),
+      await screen.findByRole('button', { name: clientNutritionCopy.journal.addFood }, { timeout: 10_000 }),
     ).toBeInTheDocument();
     expect(screen.getByRole('link', { name: 'Nutrition' })).toHaveAttribute(
       'aria-current',

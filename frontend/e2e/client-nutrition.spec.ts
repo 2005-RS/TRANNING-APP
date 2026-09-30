@@ -110,16 +110,87 @@ async function mockAuthenticatedNutrition(
       body: JSON.stringify(body),
     });
   });
+
+  await page.route('**/api/v1/clients/me/nutrition-journal/days/*', async (route) => {
+    const date = route.request().url().split('/').pop() ?? '2026-09-30';
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify(journalDay(date)),
+    });
+  });
+}
+
+function journalDay(date: string) {
+  const emptyMeal = (mealType: string) => ({
+    mealType,
+    plannedItems: [],
+    extraEntries: [],
+    plannedCaloriesKcal: 0,
+    consumedCaloriesKcal: 0,
+  });
+  return {
+    date,
+    plan: { id: 'plan-1', name: 'Performance meals' },
+    targets: { caloriesKcal: 2450, proteinG: 180, carbohydratesG: 260, fatG: 70 },
+    planned: { caloriesKcal: 311.2, proteinG: 13.5, carbohydratesG: 53, fatG: 5.5, fiberG: 8.5 },
+    consumed: { caloriesKcal: 0, proteinG: 0, carbohydratesG: 0, fatG: 0, fiberG: 0 },
+    remainingCaloriesKcal: 2450,
+    adherence: { plannedItems: 1, eaten: 0, replaced: 0, skipped: 0, pending: 1 },
+    editable: true,
+    meals: [
+      {
+        mealType: 'BREAKFAST',
+        plannedItems: [
+          {
+            planItemId: '0a0a0a0a-0a0a-4a0a-8a0a-0a0a0a0a0a0a',
+            planMealName: 'Morning plate',
+            foodId: '1a1a1a1a-1a1a-4a1a-8a1a-1a1a1a1a1a1a',
+            foodName: 'Oats',
+            brand: null,
+            quantityGrams: 80,
+            nutrition: { caloriesKcal: 311.2, proteinG: 13.5, carbohydratesG: 53, fatG: 5.5, fiberG: 8.5 },
+            status: 'PENDING',
+            entry: null,
+          },
+        ],
+        extraEntries: [],
+        plannedCaloriesKcal: 311.2,
+        consumedCaloriesKcal: 0,
+      },
+      emptyMeal('LUNCH'),
+      emptyMeal('DINNER'),
+      emptyMeal('SNACK'),
+      emptyMeal('OTHER'),
+    ],
+  };
 }
 
 const email = process.env.E2E_EMAIL;
 const password = process.env.E2E_PASSWORD;
 
 test.describe('client nutrition', () => {
-  test('authenticated client opens nutrition and sees the assigned plan', async ({ page }) => {
+  test('authenticated client opens today and logs against the prescribed plan', async ({ page }) => {
     test.setTimeout(45_000);
     await mockAuthenticatedNutrition(page);
     await page.goto('/client/nutrition', {
+      waitUntil: 'domcontentloaded',
+      timeout: 30_000,
+    });
+
+    await expect(page.getByRole('button', { name: 'Add food' })).toBeVisible({ timeout: 20_000 });
+    await expect(page.getByRole('meter', { name: 'Calories' })).toBeVisible();
+    await expect(page.getByRole('button', { name: 'I ate it: Oats' })).toBeVisible();
+    await expect(page.getByRole('link', { name: 'Nutrition' })).toHaveAttribute(
+      'aria-current',
+      'page',
+    );
+  });
+
+  test('authenticated client opens the full plan', async ({ page }) => {
+    test.setTimeout(45_000);
+    await mockAuthenticatedNutrition(page);
+    await page.goto('/client/nutrition/plan', {
       waitUntil: 'domcontentloaded',
       timeout: 30_000,
     });
@@ -139,7 +210,7 @@ test.describe('client nutrition', () => {
   test('no assigned plan shows an honest empty state', async ({ page }) => {
     test.setTimeout(45_000);
     await mockAuthenticatedNutrition(page, { nutritionPlan: null });
-    await page.goto('/client/nutrition', {
+    await page.goto('/client/nutrition/plan', {
       waitUntil: 'domcontentloaded',
       timeout: 30_000,
     });
@@ -160,7 +231,7 @@ test.describe('client nutrition', () => {
       test.setTimeout(45_000);
       await page.setViewportSize({ width, height: 844 });
       await mockAuthenticatedNutrition(page);
-      await page.goto('/client/nutrition', {
+      await page.goto('/client/nutrition/plan', {
         waitUntil: 'domcontentloaded',
         timeout: 30_000,
       });
@@ -171,6 +242,15 @@ test.describe('client nutrition', () => {
         () => document.documentElement.scrollWidth - document.documentElement.clientWidth,
       );
       expect(overflow).toBeLessThanOrEqual(1);
+
+      await page.goto('/client/nutrition', { waitUntil: 'domcontentloaded' });
+      await expect(page.getByRole('button', { name: 'Add food' })).toBeVisible({
+        timeout: 20_000,
+      });
+      const todayOverflow = await page.evaluate(
+        () => document.documentElement.scrollWidth - document.documentElement.clientWidth,
+      );
+      expect(todayOverflow).toBeLessThanOrEqual(1);
     });
   }
 

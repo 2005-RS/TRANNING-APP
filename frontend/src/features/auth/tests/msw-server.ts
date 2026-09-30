@@ -1,5 +1,6 @@
 import { http, HttpResponse } from 'msw';
 import { setupServer } from 'msw/node';
+import { journalHandlers } from '@/features/client-nutrition/tests/msw-journal';
 import { clientA } from '@/features/auth/tests/fixtures';
 import {
   dashboardHandlers,
@@ -140,6 +141,7 @@ export const authServer = setupServer(
   ...workoutHandlers,
   ...progressHandlers,
   ...nutritionHandlers,
+  ...journalHandlers,
   ...bodyHandlers,
   ...checkInHandlers,
   ...trainerHandlers,

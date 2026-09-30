@@ -12,6 +12,7 @@ import {
   type CreateNutritionPlanDtoTargetProteinG,
 } from '@/generated/models';
 import { useNutritionPlansCreate, useNutritionPlansList } from '@/generated/nutrition-plans/nutrition-plans';
+import { ClientFoodJournal } from '@/features/trainer-workspace/components/client-food-journal';
 import { StatusBadge } from '@/features/trainer-workspace/components/status-badge';
 import { TrainerEmptyState, TrainerErrorState } from '@/features/trainer-workspace/components/trainer-states';
 import { TrainerSectionSkeleton } from '@/features/trainer-workspace/components/trainer-skeleton';
@@ -110,6 +111,7 @@ export function TrainerClientNutritionPage() {
           </ul>
         </WorkspaceSurface>
       )}
+      <ClientFoodJournal clientId={clientId} />
     </div>
   );
 }

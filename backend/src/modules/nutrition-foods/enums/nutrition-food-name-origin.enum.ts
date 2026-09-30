@@ -1,0 +1,6 @@
+export enum NutritionFoodNameOrigin {
+  MANUAL = 'MANUAL',
+  SOURCE = 'SOURCE',
+  AI_GENERATED = 'AI_GENERATED',
+  HUMAN_TRANSLATED = 'HUMAN_TRANSLATED',
+}

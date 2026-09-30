@@ -3,6 +3,7 @@ import { ClientRoleLayout } from '@/app/shells/role-layouts';
 import { clientCopy, documentTitleFor } from '@/features/navigation/copy';
 import { getRouteMeta } from '@/features/navigation/route-meta';
 import { validateProgressSearch } from '@/features/client-progress/lib/progress-search';
+import { validateJournalSearch } from '@/features/client-nutrition/lib/journal-search';
 import { validateNotificationsSearch } from '@/features/notifications/lib/search';
 import { rootRoute } from '@/routes/__root';
 
@@ -125,6 +126,20 @@ const clientNutritionMeta = getRouteMeta('/client/nutrition');
 const clientNutritionRoute = createRoute({
   getParentRoute: () => clientRoute,
   path: 'nutrition',
+  validateSearch: validateJournalSearch,
+  staticData: clientNutritionMeta,
+  head: () => ({
+    meta: [{ title: clientNutritionMeta.documentTitle }],
+  }),
+  component: lazyRouteComponent(
+    () => import('@/features/client-nutrition/components/nutrition-today-page'),
+    'NutritionTodayPage',
+  ),
+});
+
+const clientNutritionPlanRoute = createRoute({
+  getParentRoute: () => clientRoute,
+  path: 'nutrition/plan',
   staticData: clientNutritionMeta,
   head: () => ({
     meta: [{ title: clientNutritionMeta.documentTitle }],
@@ -132,6 +147,62 @@ const clientNutritionRoute = createRoute({
   component: lazyRouteComponent(
     () => import('@/features/client-nutrition/components/client-nutrition-page'),
     'ClientNutritionPage',
+  ),
+});
+
+const clientNutritionAddRoute = createRoute({
+  getParentRoute: () => clientRoute,
+  path: 'nutrition/add',
+  validateSearch: validateJournalSearch,
+  staticData: clientNutritionMeta,
+  head: () => ({
+    meta: [{ title: clientNutritionMeta.documentTitle }],
+  }),
+  component: lazyRouteComponent(
+    () => import('@/features/client-nutrition/components/food-search-page'),
+    'FoodSearchPage',
+  ),
+});
+
+const clientNutritionNewFoodRoute = createRoute({
+  getParentRoute: () => clientRoute,
+  path: 'nutrition/foods/new',
+  validateSearch: validateJournalSearch,
+  staticData: clientNutritionMeta,
+  head: () => ({
+    meta: [{ title: clientNutritionMeta.documentTitle }],
+  }),
+  component: lazyRouteComponent(
+    () => import('@/features/client-nutrition/components/new-food-page'),
+    'NewFoodPage',
+  ),
+});
+
+const clientNutritionFoodRoute = createRoute({
+  getParentRoute: () => clientRoute,
+  path: 'nutrition/foods/$foodId',
+  validateSearch: validateJournalSearch,
+  staticData: clientNutritionMeta,
+  head: () => ({
+    meta: [{ title: clientNutritionMeta.documentTitle }],
+  }),
+  component: lazyRouteComponent(
+    () => import('@/features/client-nutrition/components/food-log-page'),
+    'FoodLogPage',
+  ),
+});
+
+const clientNutritionBarcodeRoute = createRoute({
+  getParentRoute: () => clientRoute,
+  path: 'nutrition/barcode',
+  validateSearch: validateJournalSearch,
+  staticData: clientNutritionMeta,
+  head: () => ({
+    meta: [{ title: clientNutritionMeta.documentTitle }],
+  }),
+  component: lazyRouteComponent(
+    () => import('@/features/client-nutrition/components/barcode-page'),
+    'BarcodePage',
   ),
 });
 
@@ -194,6 +265,11 @@ export const clientRouteTree = clientRoute.addChildren([
   clientExerciseProgressRoute,
   clientBodyRoute,
   clientNutritionRoute,
+  clientNutritionPlanRoute,
+  clientNutritionAddRoute,
+  clientNutritionNewFoodRoute,
+  clientNutritionFoodRoute,
+  clientNutritionBarcodeRoute,
   clientCheckInsRoute,
   clientCheckInDetailRoute,
   clientNotificationsRoute,

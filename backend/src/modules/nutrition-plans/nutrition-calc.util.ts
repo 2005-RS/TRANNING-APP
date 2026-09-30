@@ -1,18 +1,22 @@
-/**
- * Deterministic nutrition math from plan-owned snapshots.
- * Totals are rounded to 2 decimal places after each scale and after sums
- * so API values never expose binary floating-point residue.
- */
+import {
+  roundNutrient,
+  scalePer100 as scaleNutrientVectorPer100,
+  sumVectors,
+} from '../nutrition-engine';
+
 export function roundNutrition(value: number): number {
-  return Math.round((Number(value) + Number.EPSILON) * 100) / 100;
+  return roundNutrient(value);
 }
 
 export function scalePer100(per100g: number, quantityGrams: number): number {
-  return roundNutrition((Number(per100g) * Number(quantityGrams)) / 100);
+  return roundNutrition(
+    scaleNutrientVectorPer100({ value: per100g }, quantityGrams).value!,
+  );
 }
 
 export function sumNutrition(values: number[]): number {
-  return roundNutrition(values.reduce((sum, value) => sum + Number(value), 0));
+  const vectors = values.map((value) => ({ value }));
+  return roundNutrition(sumVectors(vectors).totals.value ?? 0);
 }
 
 export function scaleNullablePer100(

@@ -1,0 +1,9 @@
+export enum NutrientCategory {
+  ENERGY = 'ENERGY',
+  MACRO = 'MACRO',
+  FIBER_SUGAR = 'FIBER_SUGAR',
+  FAT_DETAIL = 'FAT_DETAIL',
+  MINERAL = 'MINERAL',
+  VITAMIN = 'VITAMIN',
+  OTHER = 'OTHER',
+}

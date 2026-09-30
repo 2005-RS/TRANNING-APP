@@ -14,6 +14,7 @@ import { TrainingPlanWorkout } from '../../src/modules/training-plans/entities/t
 import { WorkoutSessionExercise } from '../../src/modules/workout-sessions/entities/workout-session-exercise.entity';
 import { WorkoutSession } from '../../src/modules/workout-sessions/entities/workout-session.entity';
 import { NutritionFood } from '../../src/modules/nutrition-foods/entities/nutrition-food.entity';
+import { FoodLogEntry } from '../../src/modules/nutrition-journal/entities/food-log-entry.entity';
 import { NutritionPlanMealItem } from '../../src/modules/nutrition-plans/entities/nutrition-plan-meal-item.entity';
 import { NutritionPlanMeal } from '../../src/modules/nutrition-plans/entities/nutrition-plan-meal.entity';
 import { NutritionPlan } from '../../src/modules/nutrition-plans/entities/nutrition-plan.entity';
@@ -43,6 +44,12 @@ export async function clearIdentityGraph(
     .execute();
   await dataSource
     .getRepository(CheckIn)
+    .createQueryBuilder()
+    .delete()
+    .execute();
+  // Journal entries reference plan items, foods, client profiles and users.
+  await dataSource
+    .getRepository(FoodLogEntry)
     .createQueryBuilder()
     .delete()
     .execute();

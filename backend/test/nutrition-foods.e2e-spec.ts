@@ -164,6 +164,220 @@ describe('Nutrition foods (e2e)', () => {
     };
   }
 
+  it('lists the read-only nutrient catalog for ADMIN and TRAINER only', async () => {
+    const { authorization } = await createAdmin();
+    const trainer = await provisionTrainer(authorization);
+    const client = await provisionClient(authorization);
+    const trainerAuth = await authHeader(trainer.user.email);
+    const clientAuth = await authHeader(client.user.email);
+
+    const adminCatalog = await request(http)
+      .get('/api/v1/nutrition/nutrients')
+      .set('Authorization', authorization)
+      .expect(200);
+    const trainerCatalog = await request(http)
+      .get('/api/v1/nutrition/nutrients')
+      .set('Authorization', trainerAuth)
+      .expect(200);
+
+    expect(adminCatalog.body).toHaveLength(21);
+    expect(
+      adminCatalog.body.map((nutrient: { code: string }) => nutrient.code),
+    ).toEqual(
+      trainerCatalog.body.map((nutrient: { code: string }) => nutrient.code),
+    );
+    expect(
+      adminCatalog.body.map(
+        (nutrient: { displayOrder: number }) => nutrient.displayOrder,
+      ),
+    ).toEqual([...Array(21).keys()].map((index) => index + 1));
+
+    await request(http)
+      .get('/api/v1/nutrition/nutrients')
+      .set('Authorization', clientAuth)
+      .expect(403);
+  });
+
+  it('returns traceable nutrient values and protects food nutrient inputs', async () => {
+    const { authorization } = await createAdmin();
+    const trainer = await provisionTrainer(authorization);
+    const trainerAuth = await authHeader(trainer.user.email);
+
+    const created = await request(http)
+      .post('/api/v1/nutrition/foods')
+      .set('Authorization', trainerAuth)
+      .send(
+        foodBody({
+          nutrients: [
+            { code: 'sodium_mg', amountPer100g: 74 },
+            { code: 'vitamin_c_mg', amountPer100g: null },
+          ],
+        }),
+      )
+      .expect(201);
+    const foodId = readId(created.body);
+    const expectedNutrition = {
+      caloriesKcal: 165,
+      proteinG: 31,
+      carbohydratesG: 0,
+      fatG: 3.6,
+      fiberG: null,
+    };
+
+    expect(created.body.name).toBe('Chicken Breast');
+    expect(created.body.nutritionPer100g).toEqual(expectedNutrition);
+    expect(created.body).toMatchObject({
+      source: 'MANUAL',
+      externalId: null,
+      sourceDataType: null,
+      nameOriginal: null,
+      nameOrigin: 'MANUAL',
+      nameVerifiedAt: null,
+    });
+    expect(created.body.nutrients).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          code: 'energy_kcal',
+          amountPer100g: 165,
+          source: 'MANUAL',
+        }),
+        expect.objectContaining({
+          code: 'fiber_g',
+          amountPer100g: null,
+          source: 'MANUAL',
+        }),
+        expect.objectContaining({
+          code: 'sodium_mg',
+          amountPer100g: 74,
+          source: 'MANUAL',
+        }),
+      ]),
+    );
+
+    const fetched = await request(http)
+      .get(`/api/v1/nutrition/foods/${foodId}`)
+      .set('Authorization', trainerAuth)
+      .expect(200);
+    expect(fetched.body).toMatchObject({
+      name: 'Chicken Breast',
+      nutritionPer100g: expectedNutrition,
+      source: 'MANUAL',
+      externalId: null,
+      nameOriginal: null,
+      nameOrigin: 'MANUAL',
+      nameVerifiedAt: null,
+    });
+    expect(
+      fetched.body.nutrients.find(
+        (nutrient: { code: string }) => nutrient.code === 'sodium_mg',
+      ),
+    ).toMatchObject({ amountPer100g: 74, source: 'MANUAL' });
+
+    const listed = await request(http)
+      .get('/api/v1/nutrition/foods')
+      .set('Authorization', trainerAuth)
+      .expect(200);
+    expect(
+      listed.body.data.find((food: { id: string }) => food.id === foodId),
+    ).toMatchObject({
+      source: 'MANUAL',
+      externalId: null,
+      nameOriginal: null,
+      nameOrigin: 'MANUAL',
+      nameVerifiedAt: null,
+      nutritionPer100g: expectedNutrition,
+    });
+
+    for (const nutrients of [
+      [{ code: 'unknown_nutrient', amountPer100g: 1 }],
+      [{ code: 'protein_g', amountPer100g: 1 }],
+      [
+        { code: 'sodium_mg', amountPer100g: 1 },
+        { code: 'sodium_mg', amountPer100g: 2 },
+      ],
+      [{ code: 'sodium_mg', amountPer100g: 1_000_000.0001 }],
+    ]) {
+      await request(http)
+        .post('/api/v1/nutrition/foods')
+        .set('Authorization', trainerAuth)
+        .send(foodBody({ nutrients }))
+        .expect(400);
+    }
+
+    const serverControlledBodies = [
+      { source: 'USDA_FDC' },
+      { externalId: '123' },
+      { nameOrigin: 'SOURCE' },
+      { nameOriginal: 'Chicken, raw' },
+      { nameVerifiedAt: '2026-01-01T00:00:00.000Z' },
+      {
+        nutrients: [
+          { code: 'sodium_mg', amountPer100g: 1, source: 'USDA_FDC' },
+        ],
+      },
+      {
+        nutrients: [
+          { code: 'sodium_mg', amountPer100g: 1, derivation: 'ESTIMATED' },
+        ],
+      },
+    ];
+    for (const body of serverControlledBodies) {
+      await request(http)
+        .post('/api/v1/nutrition/foods')
+        .set('Authorization', trainerAuth)
+        .send(foodBody(body))
+        .expect(400);
+      await request(http)
+        .patch(`/api/v1/nutrition/foods/${foodId}`)
+        .set('Authorization', trainerAuth)
+        .send(body)
+        .expect(400);
+    }
+
+    const replaced = await request(http)
+      .patch(`/api/v1/nutrition/foods/${foodId}`)
+      .set('Authorization', trainerAuth)
+      .send({ nutrients: [{ code: 'potassium_mg', amountPer100g: 358 }] })
+      .expect(200);
+    expect(
+      replaced.body.nutrients.map(
+        (nutrient: { code: string }) => nutrient.code,
+      ),
+    ).toContain('potassium_mg');
+    expect(
+      replaced.body.nutrients.map(
+        (nutrient: { code: string }) => nutrient.code,
+      ),
+    ).not.toContain('sodium_mg');
+
+    const updated = await request(http)
+      .patch(`/api/v1/nutrition/foods/${foodId}`)
+      .set('Authorization', trainerAuth)
+      .send({ proteinGPer100g: 35 })
+      .expect(200);
+    expect(
+      updated.body.nutrients.find(
+        (nutrient: { code: string }) => nutrient.code === 'potassium_mg',
+      ),
+    ).toMatchObject({ amountPer100g: 358, source: 'MANUAL' });
+    expect(updated.body.nutritionPer100g).toEqual({
+      ...expectedNutrition,
+      proteinG: 35,
+    });
+    expect(updated.body.nutrients).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ code: 'energy_kcal', amountPer100g: 165 }),
+        expect.objectContaining({ code: 'protein_g', amountPer100g: 35 }),
+        expect.objectContaining({
+          code: 'carbohydrates_g',
+          amountPer100g: 0,
+        }),
+        expect.objectContaining({ code: 'fat_g', amountPer100g: 3.6 }),
+        expect.objectContaining({ code: 'fiber_g', amountPer100g: null }),
+      ]),
+    );
+  });
+
   it('shares ACTIVE foods, scopes mutation to creator, and hides archived foods from other trainers', async () => {
     const { authorization } = await createAdmin();
     const trainerA = await provisionTrainer(authorization);

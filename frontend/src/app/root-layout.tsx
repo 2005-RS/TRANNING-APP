@@ -41,7 +41,7 @@ function preloadClientRoute(pathname: string) {
     return;
   }
   if (pathname.startsWith('/client/nutrition')) {
-    void import('@/features/client-nutrition/components/client-nutrition-page');
+    void import('@/features/client-nutrition/components/nutrition-today-page');
     return;
   }
   if (pathname.startsWith('/client/body')) {

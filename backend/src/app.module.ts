@@ -26,6 +26,8 @@ import { DashboardModule } from './modules/dashboard/dashboard.module';
 import { WorkoutSessionsModule } from './modules/workout-sessions/workout-sessions.module';
 import { WorkoutTemplatesModule } from './modules/workout-templates/workout-templates.module';
 import { ChatModule } from './modules/chat/chat.module';
+import { NutritionNutrientsModule } from './modules/nutrition-nutrients/nutrition-nutrients.module';
+import { NutritionJournalModule } from './modules/nutrition-journal/nutrition-journal.module';
 
 @Module({
   imports: [
@@ -64,7 +66,9 @@ import { ChatModule } from './modules/chat/chat.module';
     BodyMeasurementsModule,
     ProgressPhotosModule,
     NutritionFoodsModule,
+    NutritionNutrientsModule,
     NutritionPlansModule,
+    NutritionJournalModule,
     CheckInsModule,
     NotificationsModule,
     DashboardModule,

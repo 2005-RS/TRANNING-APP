@@ -9,8 +9,13 @@ See the ErrorResponseDto schema. Access tokens are short-lived JWTs sent as Bear
 Refresh secrets stay in an HttpOnly cookie and are never returned in JSON.
  * OpenAPI spec version: 1.0.0
  */
+import type { NutritionFoodResponseDtoSource } from './nutritionFoodResponseDtoSource';
+import type { NutritionFoodResponseDtoNameOrigin } from './nutritionFoodResponseDtoNameOrigin';
 import type { NutritionFoodNutritionPer100gDto } from './nutritionFoodNutritionPer100gDto';
+import type { NutritionFoodNutrientResponseDto } from './nutritionFoodNutrientResponseDto';
+import type { FoodPortionResponseDto } from './foodPortionResponseDto';
 import type { NutritionFoodResponseDtoStatus } from './nutritionFoodResponseDtoStatus';
+import type { NutritionFoodResponseDtoVisibility } from './nutritionFoodResponseDtoVisibility';
 
 export interface NutritionFoodResponseDto {
   id: string;
@@ -19,8 +24,24 @@ export interface NutritionFoodResponseDto {
   brand?: string | null;
   /** @nullable */
   description?: string | null;
+  source: NutritionFoodResponseDtoSource;
+  /** @nullable */
+  externalId?: string | null;
+  /** @nullable */
+  sourceDataType?: string | null;
+  /** @nullable */
+  importedAt?: string | null;
+  /** @nullable */
+  nameOriginal?: string | null;
+  nameOrigin: NutritionFoodResponseDtoNameOrigin;
+  /** @nullable */
+  nameVerifiedAt?: string | null;
   nutritionPer100g: NutritionFoodNutritionPer100gDto;
+  nutrients: NutritionFoodNutrientResponseDto[];
+  /** Household measures, ordered. Grams (and ml with density) are always available. */
+  portions: FoodPortionResponseDto[];
   status: NutritionFoodResponseDtoStatus;
+  visibility: NutritionFoodResponseDtoVisibility;
   createdByUserId: string;
   createdAt: string;
   updatedAt: string;

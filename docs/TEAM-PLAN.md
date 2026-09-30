@@ -141,7 +141,14 @@ Perfeccionar `public-site` y el hero del login:
 - SEO básico: title, meta y Open Graph.
 
 ### B2. Módulo de nutrición
-1. **Reintegrar la versión rescatada** que está en `C:\Users\ronny\projects\training-app-rescate\client-nutrition\` (fuera del repo):
+
+> **Nutrition 2.0:** el diseño aprobado, las decisiones D1–D5 y el roadmap N1–N9 están en [`docs/nutrition/nutrition-2.0-reuse-analysis.md`](nutrition/nutrition-2.0-reuse-analysis.md). **N1 terminada** (catálogo de nutrientes, trazabilidad y Nutrition Engine v1). **Diario del cliente terminado:** "Hoy", registro, porciones, alimentos propios, código de barras y vista del coach. Sigue la importación de USDA (N2) y después recetas y plantillas.
+>
+> **Aviso para la línea A:**
+> - N1 agrega una migración y regenera `frontend/src/generated/**`.
+> - N5 retirará el acceso implícito de ADMIN a los planes y diarios de los clientes (D5). El dashboard de Admin conserva su conteo agregado.
+
+1. ✅ **Reintegrar la versión rescatada** (commit `e1710db`) que está en `C:\Users\ronny\projects\training-app-rescate\client-nutrition\` (fuera del repo):
    - el tablero de comidas por tipo (`meal-day-board.tsx`);
    - `meal-type-icon.ts`;
    - los helpers `mealsByType` y `plannedOfTargetPercent`, con sus tests.
@@ -155,4 +162,8 @@ Perfeccionar `public-site` y el hero del login:
 
 Anota aquí lo que encuentres en el área del otro: fecha, archivo y problema.
 
-- _(vacío)_
+- **2026-09-30 · Ronny → Eli (diario):**
+  - Migración `1758067200000-CreateNutritionJournal` y cliente regenerado.
+  - `NutritionFoodResponseDto` ahora exige `portions` y `visibility`; ya están agregados a los fixtures de `admin-workspace/tests/msw-admin.ts`.
+  - Los alimentos PRIVATE de clientes no aparecen en el catálogo de Admin: ni ADMIN los ve (D5).
+- **2026-09-30 · Ronny → Eli:** N1 regeneró `frontend/src/generated/**`. Por eso se agregaron `source`, `nameOrigin` y `nutrients` a los fixtures `NutritionFoodResponseDto` de `frontend/src/features/admin-workspace/tests/msw-admin.ts`. Es solo de test y lo exigía el contrato nuevo. Haz merge de `main` antes de tocar ese archivo.

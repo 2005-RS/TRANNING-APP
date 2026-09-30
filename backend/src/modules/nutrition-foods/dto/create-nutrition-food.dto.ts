@@ -1,6 +1,8 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Transform, Type } from 'class-transformer';
 import {
+  ArrayMaxSize,
+  IsArray,
   IsNumber,
   IsOptional,
   IsString,
@@ -8,6 +10,7 @@ import {
   MaxLength,
   Min,
   MinLength,
+  ValidateNested,
 } from 'class-validator';
 import {
   NUTRITION_FOOD_BRAND_MAX_LENGTH,
@@ -18,12 +21,16 @@ import {
   NUTRITION_FOOD_MACRO_MIN,
   NUTRITION_FOOD_NAME_MAX_LENGTH,
   NUTRITION_FOOD_NAME_MIN_LENGTH,
+  NUTRITION_FOOD_NUTRIENTS_MAX_ITEMS,
+  NUTRITION_FOOD_PORTIONS_MAX_ITEMS,
 } from '../nutrition-foods.constants';
+import { FoodPortionInputDto } from './food-portion-input.dto';
 import {
   normalizeFoodName,
   optionalPlainText,
 } from '../nutrition-food-text.util';
 import { ToNullableNumber } from '../transform.util';
+import { NutritionFoodNutrientInputDto } from './nutrition-food-nutrient-input.dto';
 
 export class CreateNutritionFoodDto {
   @ApiProperty({
@@ -122,4 +129,28 @@ export class CreateNutritionFoodDto {
   @Min(NUTRITION_FOOD_MACRO_MIN)
   @Max(NUTRITION_FOOD_MACRO_MAX)
   fiberGPer100g?: number | null;
+
+  @ApiPropertyOptional({
+    type: [NutritionFoodNutrientInputDto],
+    description:
+      'Non-core nutrient values per 100 grams. Replaces no values on create.',
+  })
+  @IsOptional()
+  @IsArray()
+  @ArrayMaxSize(NUTRITION_FOOD_NUTRIENTS_MAX_ITEMS)
+  @ValidateNested({ each: true })
+  @Type(() => NutritionFoodNutrientInputDto)
+  nutrients?: NutritionFoodNutrientInputDto[];
+
+  @ApiPropertyOptional({
+    type: [FoodPortionInputDto],
+    description:
+      'Household measures ("1 egg" = 50 g). Grams are always available.',
+  })
+  @IsOptional()
+  @IsArray()
+  @ArrayMaxSize(NUTRITION_FOOD_PORTIONS_MAX_ITEMS)
+  @ValidateNested({ each: true })
+  @Type(() => FoodPortionInputDto)
+  portions?: FoodPortionInputDto[];
 }

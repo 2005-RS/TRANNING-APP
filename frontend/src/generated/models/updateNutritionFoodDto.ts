@@ -12,6 +12,8 @@ Refresh secrets stay in an HttpOnly cookie and are never returned in JSON.
 import type { UpdateNutritionFoodDtoBrand } from './updateNutritionFoodDtoBrand';
 import type { UpdateNutritionFoodDtoDescription } from './updateNutritionFoodDtoDescription';
 import type { UpdateNutritionFoodDtoFiberGPer100g } from './updateNutritionFoodDtoFiberGPer100g';
+import type { NutritionFoodNutrientInputDto } from './nutritionFoodNutrientInputDto';
+import type { FoodPortionInputDto } from './foodPortionInputDto';
 
 export interface UpdateNutritionFoodDto {
   /**
@@ -55,4 +57,8 @@ export interface UpdateNutritionFoodDto {
    * @nullable
    */
   fiberGPer100g?: UpdateNutritionFoodDtoFiberGPer100g;
+  /** Replacement set of non-core nutrient values per 100 grams. Omit to leave the set unchanged. */
+  nutrients?: NutritionFoodNutrientInputDto[];
+  /** Replacement set of household measures. Omit to leave the portions unchanged. */
+  portions?: FoodPortionInputDto[];
 }
