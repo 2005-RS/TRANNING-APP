@@ -155,4 +155,4 @@ Perfeccionar `public-site` y el hero del login:
 
 Anota aquí lo que encuentres en el área del otro: fecha, archivo y problema.
 
-- _(vacío)_
+- **2026-09-29 — `frontend/e2e/login.spec.ts:159` (Eli → Ronny).** El test `signs in and out when credentials are provided` nunca había corrido, porque siempre se saltaba sin `E2E_EMAIL`. Ahora el CI crea usuarios reales, así que corre, y falla: `getByRole('menuitem', { name: 'Sign out' })` también coincide con `Sign out everywhere` (strict mode violation). Arreglo: agregar `exact: true`. Mientras no se corrija, el job E2E del CI queda en rojo solo por este test.
