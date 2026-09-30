@@ -610,6 +610,8 @@ test.describe('admin workspace', () => {
 
     await expect(page.getByRole('heading', { name: 'Admin Dashboard' })).toBeVisible({ timeout: 20_000 });
     await expect(page.getByRole('heading', { name: 'Trainer coverage' })).toBeVisible();
+    await expect(page.getByText('Unread notifications')).toBeVisible();
+    await expect(page.getByRole('link', { name: 'Open inbox' })).toHaveAttribute('href', '/admin/notifications');
     await expect(page.getByRole('link', { name: 'Review assignments' })).toBeVisible();
     await page.getByLabel('Reporting window').selectOption('30');
     await expect(page).toHaveURL(/periodDays=30/);

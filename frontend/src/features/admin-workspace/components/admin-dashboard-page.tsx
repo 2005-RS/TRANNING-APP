@@ -169,6 +169,16 @@ export function AdminDashboardPage() {
               value={data.pendingCheckIns}
               hint={copy.dashboard.pendingCheckInsHint}
             />
+            <Figure
+              label={copy.dashboard.unreadNotifications}
+              value={data.notifications.unreadCount}
+              hint={copy.dashboard.unreadNotificationsHint}
+              control={
+                <Link to="/admin/notifications" className={cn(accountLinkClassName, 'mt-3')}>
+                  {copy.dashboard.openInbox}
+                </Link>
+              }
+            />
           </dl>
         </AdminSurface>
       </div>
