@@ -41,6 +41,7 @@ export default defineConfig({
   workers: 1,
   forbidOnly: Boolean(process.env.CI),
   retries: 0,
+  reporter: process.env.CI ? [['github'], ['list']] : 'list',
   use: {
     baseURL,
     trace: 'on-first-retry',

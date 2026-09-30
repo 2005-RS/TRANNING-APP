@@ -156,7 +156,7 @@ test.describe('login smoke', () => {
     await page.getByRole('button', { name: 'Sign in' }).click();
     await expect(page.getByRole('button', { name: 'Account menu' })).toBeVisible();
     await page.getByRole('button', { name: 'Account menu' }).click();
-    await page.getByRole('menuitem', { name: 'Sign out' }).click();
+    await page.getByRole('menuitem', { name: 'Sign out', exact: true }).click();
     await expect(page.getByRole('heading', { name: 'Sign in' })).toBeVisible();
   });
 });

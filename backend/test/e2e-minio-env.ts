@@ -1,8 +1,4 @@
-import { config as loadEnv } from 'dotenv';
-import { resolve } from 'node:path';
 import './e2e-env';
-
-loadEnv({ path: resolve(__dirname, '..', '.env') });
 
 process.env.NODE_ENV = 'test';
 process.env.DATABASE_NAME = 'training_test';

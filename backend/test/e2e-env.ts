@@ -1,3 +1,11 @@
+import { config as loadEnv } from 'dotenv';
+import { resolve } from 'node:path';
+
+// The local .env is read first so a workstation whose Postgres password differs
+// from the CI default can still run the suite. CI has no .env file and falls
+// back to the defaults below. Values that must not vary are assigned outright.
+loadEnv({ path: resolve(__dirname, '..', '.env') });
+
 process.env.NODE_ENV = 'test';
 process.env.PORT ??= '3000';
 process.env.DATABASE_HOST ??= 'localhost';

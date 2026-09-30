@@ -21,6 +21,10 @@ Values below come from the repository configuration. Change a port in one place 
 
 The backend `CORS_ORIGIN` must list the frontend origin you use (`http://localhost:5173` for dev; add `http://localhost:4173` only for credentialed real-backend Playwright runs).
 
+## Backend test databases
+
+`npm run test:e2e` and `npm run test:e2e:minio` read `backend/.env` before applying their own defaults, so they use this workstation's PostgreSQL password and MinIO credentials instead of the CI ones. They then force `DATABASE_NAME=training_test` and refuse any database name that does not end in `_test`. CI has no `.env` file and falls back to the defaults in `backend/test/e2e-env.ts`.
+
 ## API URL (single source of truth)
 
 `VITE_API_URL` — shell environment first, then `frontend/.env*` files (Vite `loadEnv` precedence). It is **required**: there is no fallback port in `vite.config.ts`, `orval.config.ts`, or the runtime (`src/shared/lib/api-origin.ts`). Missing or malformed values fail `dev`, `build`, and `api:generate` with an actionable message.

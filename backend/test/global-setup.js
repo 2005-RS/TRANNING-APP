@@ -2,6 +2,9 @@ const { Client } = require('pg');
 const { execSync } = require('node:child_process');
 const path = require('node:path');
 
+// Same reasoning as test/e2e-env.ts: local credentials first, CI defaults after.
+require('dotenv').config({ path: path.join(__dirname, '..', '.env') });
+
 function assertSafeName(name) {
   if (name === 'training' || name === 'postgres' || !name.endsWith('_test')) {
     throw new Error(

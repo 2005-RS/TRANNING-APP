@@ -1,0 +1,269 @@
+name: CI
+
+on:
+  # Every branch push, so the checks exist on a commit before its PR is opened;
+  # GitHub shows the same run on the PR for that head commit.
+  push:
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+env:
+  NODE_VERSION: '22'
+  # minio/minio and minio/mc were removed from Docker Hub, and quay.io requires
+  # credentials. Chainguard publishes the same server, matching
+  # backend/docker-compose.yml. It only offers :latest, and its older digests are
+  # garbage collected, so a pinned digest would break this workflow later.
+  MINIO_IMAGE: chainguard/minio:latest
+
+jobs:
+  backend:
+    name: Backend (lint, build, unit, e2e)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    defaults:
+      run:
+        working-directory: backend
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_DB: training
+          POSTGRES_USER: training
+          POSTGRES_PASSWORD: changeme
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U training -d training"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+          cache-dependency-path: backend/package-lock.json
+      - run: npm ci
+      - run: npm run lint
+      - run: npm run build
+      - run: npm test
+      # Uses the in-memory object storage and the dedicated training_test database.
+      - run: npm run test:e2e
+
+  backend-storage:
+    name: Backend (MinIO storage e2e)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    defaults:
+      run:
+        working-directory: backend
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_DB: training
+          POSTGRES_USER: training
+          POSTGRES_PASSWORD: changeme
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U training -d training"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      OBJECT_STORAGE_REGION: us-east-1
+      OBJECT_STORAGE_BUCKET: training-exercise-media
+      OBJECT_STORAGE_ACCESS_KEY_ID: ci-minio
+      OBJECT_STORAGE_SECRET_ACCESS_KEY: ci-minio-secret
+      OBJECT_STORAGE_ENDPOINT: http://localhost:9100
+    steps:
+      - uses: actions/checkout@v5
+      - name: Start MinIO
+        working-directory: .
+        run: bash .github/scripts/start-minio.sh
+      - uses: actions/setup-node@v5
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+          cache-dependency-path: backend/package-lock.json
+      - run: npm ci
+      - run: npm run test:e2e:minio
+
+  frontend:
+    name: Frontend (lint, test, build)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    defaults:
+      run:
+        working-directory: frontend
+    env:
+      VITE_API_URL: http://localhost:3000
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - run: npm ci
+      - run: npm run lint
+      - run: npm test
+      - run: npm run build
+
+  e2e:
+    name: E2E (Playwright + real API)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 40
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_DB: training
+          POSTGRES_USER: training
+          POSTGRES_PASSWORD: changeme
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U training -d training"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      # CI-only values for a throwaway API. None of them exist outside this job.
+      NODE_ENV: development
+      PORT: '3000'
+      DATABASE_HOST: localhost
+      DATABASE_PORT: '5432'
+      DATABASE_NAME: training
+      DATABASE_USER: training
+      DATABASE_PASSWORD: changeme
+      DATABASE_SSL: 'false'
+      CORS_ORIGIN: http://localhost:4173
+      JWT_ACCESS_SECRET: ci-only-jwt-access-secret-for-throwaway-api
+      JWT_ACCESS_EXPIRES_IN: '900'
+      JWT_ACCESS_ISSUER: training-platform
+      JWT_ACCESS_AUDIENCE: training-platform-api
+      AUTH_REFRESH_TTL_DAYS: '30'
+      AUTH_REFRESH_COOKIE_NAME: refresh_session
+      AUTH_COOKIE_SECURE: 'false'
+      AUTH_COOKIE_SAME_SITE: lax
+      # The Playwright suite signs in several times within the login throttle window.
+      AUTH_E2E_SKIP_THROTTLE: 'true'
+      OBJECT_STORAGE_DRIVER: s3
+      OBJECT_STORAGE_REGION: us-east-1
+      OBJECT_STORAGE_BUCKET: training-exercise-media
+      OBJECT_STORAGE_ACCESS_KEY_ID: ci-minio
+      OBJECT_STORAGE_SECRET_ACCESS_KEY: ci-minio-secret
+      OBJECT_STORAGE_ENDPOINT: http://localhost:9100
+      OBJECT_STORAGE_FORCE_PATH_STYLE: 'true'
+      EXERCISE_MEDIA_UPLOAD_TTL_SECONDS: '900'
+      EXERCISE_MEDIA_READ_TTL_SECONDS: '120'
+      EXERCISE_VIDEO_MAX_BYTES: '262144000'
+      EXERCISE_IMAGE_MAX_BYTES: '10485760'
+      PROGRESS_PHOTO_MAX_BYTES: '10485760'
+      AI_PROVIDER: mock
+      VITE_API_URL: http://localhost:3000
+      API: http://localhost:3000/api/v1
+    steps:
+      - uses: actions/checkout@v5
+      - name: Start MinIO
+        run: bash .github/scripts/start-minio.sh
+      - uses: actions/setup-node@v5
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+          cache-dependency-path: |
+            backend/package-lock.json
+            frontend/package-lock.json
+
+      - name: Install backend
+        working-directory: backend
+        run: npm ci
+      - name: Build backend and migrate
+        working-directory: backend
+        run: |
+          npm run build
+          npm run migration:run
+
+      - name: Install frontend
+        working-directory: frontend
+        run: npm ci
+      - name: Build frontend
+        working-directory: frontend
+        run: npm run build
+      # The mocked specs only route the endpoints they assert on. With a live API,
+      # unrouted calls get a real 401 and end the mocked session, so this run
+      # happens before the API starts, as it does on a developer machine.
+      - name: Playwright (mocked API)
+        working-directory: frontend
+        run: npx playwright test
+
+      - name: Start API
+        working-directory: backend
+        run: |
+          nohup node dist/main.js > "$RUNNER_TEMP/api.log" 2>&1 &
+          timeout 90 bash -c 'until curl -sf "$API/health" > /dev/null; do sleep 2; done'
+      - name: Generated API client matches the backend contract
+        working-directory: frontend
+        run: |
+          npm run api:generate
+          if ! git diff --exit-code --stat -- src/generated || [ -n "$(git status --porcelain -- src/generated)" ]; then
+            echo "::error::frontend/src/generated is out of date. Run npm run api:generate against the current backend and commit the result."
+            exit 1
+          fi
+
+      - name: Create E2E users
+        working-directory: backend
+        run: |
+          admin_email="admin.ci@example.test"
+          admin_password="$(openssl rand -hex 16)"
+          client_password="$(openssl rand -hex 16)"
+          trainer_password="$(openssl rand -hex 16)"
+          echo "::add-mask::$admin_password"
+          echo "::add-mask::$client_password"
+          echo "::add-mask::$trainer_password"
+
+          INITIAL_ADMIN_EMAIL="$admin_email" INITIAL_ADMIN_PASSWORD="$admin_password" \
+          INITIAL_ADMIN_FIRST_NAME=Ci INITIAL_ADMIN_LAST_NAME=Admin \
+            npm run seed:admin
+
+          token="$(curl -sSf -X POST "$API/auth/login" -H 'Content-Type: application/json' \
+            -d "{\"email\":\"$admin_email\",\"password\":\"$admin_password\"}" | jq -r .accessToken)"
+          echo "::add-mask::$token"
+
+          curl -sSf -o /dev/null -X POST "$API/clients" \
+            -H "Authorization: Bearer $token" -H 'Content-Type: application/json' \
+            -d "{\"email\":\"client.ci@example.test\",\"password\":\"$client_password\",\"firstName\":\"Ci\",\"lastName\":\"Client\",\"primaryGoal\":\"GENERAL_FITNESS\",\"experienceLevel\":\"BEGINNER\"}"
+          curl -sSf -o /dev/null -X POST "$API/trainers" \
+            -H "Authorization: Bearer $token" -H 'Content-Type: application/json' \
+            -d "{\"email\":\"trainer.ci@example.test\",\"password\":\"$trainer_password\",\"firstName\":\"Ci\",\"lastName\":\"Trainer\"}"
+
+          {
+            echo "E2E_EMAIL=client.ci@example.test"
+            echo "E2E_PASSWORD=$client_password"
+            echo "E2E_TRAINER_EMAIL=trainer.ci@example.test"
+            echo "E2E_TRAINER_PASSWORD=$trainer_password"
+          } >> "$GITHUB_ENV"
+      - name: Playwright (real API smoke)
+        working-directory: frontend
+        run: npx playwright test --grep "real backend|when credentials are provided"
+
+      - name: API log
+        if: failure()
+        run: tail -n 200 "$RUNNER_TEMP/api.log" || true
+      - name: Upload Playwright results
+        if: failure()
+        uses: actions/upload-artifact@v5
+        with:
+          name: playwright-results
+          path: frontend/test-results
+          if-no-files-found: ignore
+          retention-days: 7
