@@ -29,6 +29,7 @@ import { Roles } from '../auth/decorators/roles.decorator';
 import { AuthenticatedUser } from '../auth/types/authenticated-user';
 import { UserRole } from '../users/enums/user-role.enum';
 import { CreateWorkoutTemplateDto } from './dto/create-workout-template.dto';
+import { DuplicateWorkoutTemplateDto } from './dto/duplicate-workout-template.dto';
 import { ListWorkoutTemplatesQueryDto } from './dto/list-workout-templates-query.dto';
 import { ReplaceWorkoutTemplateExercisesDto } from './dto/replace-workout-template-exercises.dto';
 import { UpdateWorkoutTemplateDto } from './dto/update-workout-template.dto';
@@ -61,6 +62,27 @@ export class WorkoutTemplatesController {
     @CurrentUser() user: AuthenticatedUser,
   ): Promise<WorkoutTemplateResponseDto> {
     return this.templates.create(dto, user);
+  }
+
+  @Post(':id/duplicate')
+  @Roles(UserRole.ADMIN, UserRole.TRAINER)
+  @HttpCode(HttpStatus.CREATED)
+  @ApiParam({ name: 'id', description: 'Source workout template UUID' })
+  @ApiOperation({
+    summary:
+      'Copy a template the caller can read (any ACTIVE template, or their own DRAFT/ARCHIVED) into a new DRAFT owned by the caller, with the same ordered prescriptions. The source is not modified.',
+  })
+  @ApiCreatedResponse({ type: WorkoutTemplateResponseDto })
+  @ApiUnauthorizedResponse()
+  @ApiForbiddenResponse()
+  @ApiNotFoundResponse()
+  @ApiBadRequestResponse()
+  duplicate(
+    @Param('id', new ParseUUIDPipe({ version: '4' })) id: string,
+    @Body() dto: DuplicateWorkoutTemplateDto,
+    @CurrentUser() user: AuthenticatedUser,
+  ): Promise<WorkoutTemplateResponseDto> {
+    return this.templates.duplicate(id, dto, user);
   }
 
   @Get()

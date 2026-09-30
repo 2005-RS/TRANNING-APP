@@ -430,6 +430,22 @@ describe('Trainer workspace', () => {
     });
   });
 
+  it('duplicates a template into a new draft and opens the copy', async () => {
+    useWorkoutTemplateBuilder('populated-draft');
+    const user = userEvent.setup();
+    renderTrainer(`/trainer/training/${TRAINER_TEMPLATE_B_ID}`);
+    expect(await screen.findByRole('heading', { name: 'Push Strength' }, { timeout })).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: trainerWorkspaceCopy.templates.duplicate }));
+    expect(
+      await screen.findByRole('heading', { name: 'Push Strength (copy)' }, { timeout }),
+    ).toBeInTheDocument();
+    expect(trainerMockState.lastTemplateDuplicate).toEqual({
+      id: TRAINER_TEMPLATE_B_ID,
+      body: { name: 'Push Strength (copy)' },
+    });
+    expect(trainerMockState.lastTemplateReplace).toBeNull();
+  });
+
   it('does not persist signed exercise media URLs in web storage', async () => {
     useWorkoutTemplateBuilder('populated-draft');
     renderTrainer(`/trainer/training/${TRAINER_TEMPLATE_B_ID}`);

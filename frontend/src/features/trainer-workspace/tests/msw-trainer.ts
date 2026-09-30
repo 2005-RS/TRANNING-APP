@@ -30,6 +30,7 @@ import {
   TRAINER_CREATED_EXERCISE_ID,
   TRAINER_EXERCISE_ID,
   TRAINER_NUTRITION_PLAN_ID,
+  TRAINER_TEMPLATE_COPY_ID,
   TRAINER_UPLOADED_MEDIA_ID,
 } from '@/features/trainer-workspace/tests/fixtures';
 import type {
@@ -78,6 +79,7 @@ type TrainerMockState = {
   lastNutritionReplace: ReplaceNutritionPlanMealsDto | null;
   lastTrainingCreate: unknown;
   lastTemplateCreate: unknown;
+  lastTemplateDuplicate: { id: string; body: { name?: string } } | null;
   lastTemplateReplace: ReplaceWorkoutTemplateExercisesDto | null;
   lastUploadRequest: Record<string, unknown> | null;
   lastStoragePosted: boolean;
@@ -108,6 +110,7 @@ export const trainerMockState: TrainerMockState = {
   lastNutritionReplace: null,
   lastTrainingCreate: null,
   lastTemplateCreate: null,
+  lastTemplateDuplicate: null,
   lastTemplateReplace: null,
   lastUploadRequest: null,
   lastStoragePosted: false,
@@ -138,6 +141,7 @@ export function resetTrainerMockState(): void {
   trainerMockState.lastNutritionReplace = null;
   trainerMockState.lastTrainingCreate = null;
   trainerMockState.lastTemplateCreate = null;
+  trainerMockState.lastTemplateDuplicate = null;
   trainerMockState.lastTemplateReplace = null;
   trainerMockState.lastUploadRequest = null;
   trainerMockState.lastStoragePosted = false;
@@ -542,6 +546,17 @@ export const trainerHandlers = [
       ...structuredClone(draftTemplateDetail),
       ...body,
       items: [],
+    };
+    return HttpResponse.json(trainerMockState.template, { status: 201 });
+  }),
+  http.post(`${API}/workout-templates/:id/duplicate`, async ({ params, request }) => {
+    const body = (await request.json()) as { name?: string };
+    trainerMockState.lastTemplateDuplicate = { id: String(params.id), body };
+    trainerMockState.template = {
+      ...structuredClone(trainerMockState.template),
+      id: TRAINER_TEMPLATE_COPY_ID,
+      name: body.name ?? `${trainerMockState.template.name} (copy)`,
+      status: WorkoutTemplateResponseDtoStatus.DRAFT,
     };
     return HttpResponse.json(trainerMockState.template, { status: 201 });
   }),

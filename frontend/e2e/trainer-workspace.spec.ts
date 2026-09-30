@@ -93,6 +93,7 @@ const overview = {
 
 const emptyPage = { data: [], meta: { page: 1, limit: 20, totalItems: 0, totalPages: 0 } };
 const templateId = 't1111111-t111-4111-8111-t11111111111';
+const duplicatedTemplateId = 't4444444-t444-4444-8444-t44444444444';
 const exerciseId = 'e1111111-e111-4111-8111-e11111111111';
 const exerciseBId = 'e2222222-e222-4222-8222-e22222222222';
 const adminExerciseId = 'e9999999-e999-4999-8999-e99999999999';
@@ -371,6 +372,33 @@ async function mockAuthenticatedTrainer(page: Page) {
   await page.route('**/api/v1/workout-templates**', async (route) => {
     const pathname = new URL(route.request().url()).pathname;
     const isList = /\/api\/v1\/workout-templates\/?$/.test(pathname);
+    if (route.request().method() === 'POST' && pathname.endsWith('/duplicate')) {
+      const body = (route.request().postDataJSON() ?? {}) as { name?: string };
+      await route.fulfill({
+        status: 201,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          ...e2eTemplate,
+          id: duplicatedTemplateId,
+          name: body.name ?? `${e2eTemplate.name} (copy)`,
+          status: 'DRAFT',
+        }),
+      });
+      return;
+    }
+    if (route.request().method() === 'GET' && pathname.endsWith(`/${duplicatedTemplateId}`)) {
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          ...e2eTemplate,
+          id: duplicatedTemplateId,
+          name: `${e2eTemplate.name} (copy)`,
+          status: 'DRAFT',
+        }),
+      });
+      return;
+    }
     if (route.request().method() === 'GET' && isList) {
       await route.fulfill({
         status: 200,
@@ -733,6 +761,16 @@ test.describe('trainer workspace', () => {
     await expect(dialog.getByRole('button', { name: /Add exercise/ }).first()).toBeVisible();
     await dialog.press('Escape');
     await expect(dialog).toHaveCount(0);
+  });
+
+  test('trainer duplicates a template into a new draft', async ({ page }) => {
+    test.setTimeout(45_000);
+    await mockAuthenticatedTrainer(page);
+    await page.goto(`/trainer/training/${templateId}`, { waitUntil: 'domcontentloaded', timeout: 30_000 });
+    await expect(page.getByRole('heading', { name: 'Push Strength' })).toBeVisible({ timeout: 20_000 });
+    await page.getByRole('button', { name: 'Duplicate' }).click();
+    await expect(page.getByRole('heading', { name: 'Push Strength (copy)' })).toBeVisible({ timeout: 20_000 });
+    await expect(page).toHaveURL(new RegExp(`/trainer/training/${duplicatedTemplateId}`));
   });
 
   test('trainer exercise library shows cards, opens detail, and keeps create in a sheet', async ({ page }) => {

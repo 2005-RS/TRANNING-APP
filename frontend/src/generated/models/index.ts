@@ -161,6 +161,7 @@ export * from './currentWorkoutSessionResponseDto';
 export * from './currentWorkoutSessionResponseDtoWorkoutSession';
 export * from './dashboardNotificationsSummaryDto';
 export * from './dashboardNutritionTotalsDto';
+export * from './duplicateWorkoutTemplateDto';
 export * from './durationProgressSectionDto';
 export * from './durationProgressSectionDtoBestDuration';
 export * from './durationProgressSectionDtoPrescriptionType';
