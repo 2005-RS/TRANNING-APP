@@ -15,8 +15,9 @@ permissions:
 
 env:
   NODE_VERSION: '22'
-  MINIO_IMAGE: minio/minio:RELEASE.2025-04-22T22-12-26Z
-  MC_IMAGE: minio/mc:RELEASE.2025-04-16T18-13-26Z
+  # minio/minio and minio/mc were removed from Docker Hub; this is the
+  # maintained Chainguard build of the same server, pinned by digest.
+  MINIO_IMAGE: chainguard/minio@sha256:71674988a1c7ddd5724928633199152b11e4ddefd6c6ce2d60772ff4a8f22ca9
 
 jobs:
   backend:
@@ -41,7 +42,7 @@ jobs:
           --health-timeout 5s
           --health-retries 10
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
@@ -82,18 +83,10 @@ jobs:
       OBJECT_STORAGE_SECRET_ACCESS_KEY: ci-minio-secret
       OBJECT_STORAGE_ENDPOINT: http://localhost:9100
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: Start MinIO
-        run: |
-          docker run -d --name minio -p 9100:9000 \
-            -e MINIO_ROOT_USER="$OBJECT_STORAGE_ACCESS_KEY_ID" \
-            -e MINIO_ROOT_PASSWORD="$OBJECT_STORAGE_SECRET_ACCESS_KEY" \
-            "$MINIO_IMAGE" server /data
-          timeout 60 bash -c 'until curl -sf http://localhost:9100/minio/health/live; do sleep 2; done'
-          docker run --rm --network host --entrypoint /bin/sh "$MC_IMAGE" -c "
-            mc alias set local http://localhost:9100 '$OBJECT_STORAGE_ACCESS_KEY_ID' '$OBJECT_STORAGE_SECRET_ACCESS_KEY' &&
-            mc mb --ignore-existing local/$OBJECT_STORAGE_BUCKET &&
-            mc anonymous set none local/$OBJECT_STORAGE_BUCKET"
+        working-directory: .
+        run: bash .github/scripts/start-minio.sh
       - uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
@@ -112,7 +105,7 @@ jobs:
     env:
       VITE_API_URL: http://localhost:3000
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
@@ -178,18 +171,9 @@ jobs:
       VITE_API_URL: http://localhost:3000
       API: http://localhost:3000/api/v1
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: Start MinIO
-        run: |
-          docker run -d --name minio -p 9100:9000 \
-            -e MINIO_ROOT_USER="$OBJECT_STORAGE_ACCESS_KEY_ID" \
-            -e MINIO_ROOT_PASSWORD="$OBJECT_STORAGE_SECRET_ACCESS_KEY" \
-            "$MINIO_IMAGE" server /data
-          timeout 60 bash -c 'until curl -sf http://localhost:9100/minio/health/live; do sleep 2; done'
-          docker run --rm --network host --entrypoint /bin/sh "$MC_IMAGE" -c "
-            mc alias set local http://localhost:9100 '$OBJECT_STORAGE_ACCESS_KEY_ID' '$OBJECT_STORAGE_SECRET_ACCESS_KEY' &&
-            mc mb --ignore-existing local/$OBJECT_STORAGE_BUCKET &&
-            mc anonymous set none local/$OBJECT_STORAGE_BUCKET"
+        run: bash .github/scripts/start-minio.sh
       - uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
@@ -268,7 +252,7 @@ jobs:
         run: tail -n 200 "$RUNNER_TEMP/api.log" || true
       - name: Upload Playwright results
         if: failure()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: playwright-results
           path: frontend/test-results
