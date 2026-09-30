@@ -4,7 +4,7 @@ Fecha: 2026-09-30. Rama: `Eli` (mayúsculas exactas). Remoto: `origin/Eli`.
 
 Este documento cierra la sesión de trabajo de F14 / línea A. No avanza `docs/frontend/current-task.md` ni el estado VERIFIED del roadmap: esa decisión sigue siendo humana. El reporte técnico en inglés de la fase está en [f14-report.md](./f14-report.md).
 
-**Estado de entrega al escribir este archivo:** el código de la sesión ya estaba en `origin/Eli` hasta `5cc70f4`. Quedaba un desfase de contrato (summary de `/health`) que hacía fallar CI. Este cierre regenera el cliente Orval y documenta resultados reales. **No hay despliegue a producción.**
+**Estado de entrega:** el código de la sesión y el cliente Orval están en `origin/Eli`. El desfase de contrato (summary de `/health`) se corrigió en `ca6814f`. CI verde en `a6e555d` ([run 36750584132](https://github.com/2005-RS/TRANNING-APP/actions/runs/36750584132)). Commits posteriores de solo documentación no cambian comportamiento. **No hay despliegue a producción.**
 
 ---
 
@@ -116,9 +116,11 @@ Workflow: `.github/workflows/ci.yml` (push). Concurrencia `cancel-in-progress: t
 | `098b59c` A7 | success | — |
 | `72bf3ec` A8.1 | success | — |
 | `16231a3` A8.2 | success | — |
-| `326fbb5` A8.3 | success | Último run **completo en verde** de esta sesión. |
-| `902fad9` A8.4 | **cancelled** | Cancelado al empujar A6 (concurrencia). No hay veredicto propio de A8.4. |
+| `326fbb5` A8.3 | success | Suite completa verde (incluye contrato Orval y E2E). |
+| `902fad9` A8.4 | **cancelled** | Cancelado al empujar A6 (concurrencia). No hay veredicto propio de A8.4; el código quedó cubierto por el HEAD. |
 | `5cc70f4` A6 | **failure** | Ver detalle abajo. [Run 36749053406](https://github.com/2005-RS/TRANNING-APP/actions/runs/36749053406) |
+| `ca6814f` cliente health | (mismo push que el tip) | GitHub dispara CI en el tip; no hay run separado. |
+| `a6e555d` HEAD | **success** | [Run 36750584132](https://github.com/2005-RS/TRANNING-APP/actions/runs/36750584132). Cuatro jobs en verde, incluido E2E. |
 
 Jobs del run A6 (`5cc70f4`):
 
@@ -136,7 +138,7 @@ Pasos del job E2E en A6:
 - Create E2E users: **skipped** (no se ejecutó).
 - Playwright real API smoke: **skipped** (no se ejecutó).
 
-Por tanto: **no se puede presentar el run A6 como validación E2E completa.** El smoke real no corrió. El cliente regenerado debe volver a pasar ese job en un commit posterior.
+El run A6 **no** es validación E2E completa (el smoke real no llegó a correr). Jobs del HEAD `a6e555d` (run 36750584132): Backend lint/test/e2e **success**, MinIO e2e **success**, Frontend lint/test/build **success**, E2E Playwright + real API **success** (incluye el paso de contrato Orval).
 
 ### 3.2 Local (estación de Eli, Windows)
 
@@ -186,16 +188,15 @@ Verificación de “¿está en producción?”: no aplica.
 
 ### Imprescindible (bloquea un release real)
 
-1. **CI verde en el HEAD de `Eli`**, incluyendo el paso de contrato Orval y el smoke Playwright con API real. El HEAD previo `5cc70f4` está rojo por el cliente generado.
-2. **Merge a `main` por GitHub UI** (flujo del equipo). Esta entrega **no** fusiona `main`.
-3. **Origen HTTPS único** (SPA + `/api` + `/socket.io` detrás del mismo host). Sin eso la cookie de refresh `SameSite=Lax` no es segura/correcta.
-4. **Build de frontend con `VITE_API_URL` público https** (build-arg). No desplegar el artefacto de CI (localhost).
-5. **`TRUST_PROXY=true`** detrás del proxy.
-6. **Secretos de producción** (JWT ≥ 32, DB, S3, SMTP, `DEEPSEEK_API_KEY`). Nunca en git ni en `VITE_*`.
-7. **Migraciones explícitas** (`synchronize: false`, no auto-run al boot), backup Postgres + bucket juntos.
-8. **`MAIL_TRANSPORT=smtp`** y `APP_PUBLIC_URL` https; si no, recuperar contraseña no entrega correo.
-9. **`AUTH_E2E_SKIP_THROTTLE` ausente** (producción rechaza el arranque si está definido).
-10. **Catálogo de ejercicios**: el pack Vital no está en git. Una base recién migrada no tiene ejercicios hasta el import privado.
+1. **Merge a `main` por GitHub UI** (flujo del equipo). Esta entrega **no** fusiona `main`. CI del HEAD `a6e555d` ya está verde (el `5cc70f4` de A6 sigue rojo en el historial).
+2. **Origen HTTPS único** (SPA + `/api` + `/socket.io` detrás del mismo host). Sin eso la cookie de refresh `SameSite=Lax` no es segura/correcta.
+3. **Build de frontend con `VITE_API_URL` público https** (build-arg). No desplegar el artefacto de CI (localhost).
+4. **`TRUST_PROXY=true`** detrás del proxy.
+5. **Secretos de producción** (JWT ≥ 32, DB, S3, SMTP, `DEEPSEEK_API_KEY`). Nunca en git ni en `VITE_*`.
+6. **Migraciones explícitas** (`synchronize: false`, no auto-run al boot), backup Postgres + bucket juntos.
+7. **`MAIL_TRANSPORT=smtp`** y `APP_PUBLIC_URL` https; si no, recuperar contraseña no entrega correo.
+8. **`AUTH_E2E_SKIP_THROTTLE` ausente** (producción rechaza el arranque si está definido).
+9. **Catálogo de ejercicios**: el pack Vital no está en git. Una base recién migrada no tiene ejercicios hasta el import privado.
 
 ### Opcional / no bloquea el código de línea A
 
@@ -318,16 +319,16 @@ git clone -b Eli https://github.com/2005-RS/TRANNING-APP.git
 
 Hasta el cierre, en `Eli`, de más reciente a más antiguo en el tramo F14:
 
-1. `5cc70f4` — A6 Produccion y release: imagen SPA, health de storage y reporte F14
-2. `902fad9` — A8.4 Contador de no leidas en el dashboard de Admin
-3. `326fbb5` — A8.3 Duplicar plantilla de entrenamiento
-4. `16231a3` — A8.2 Editor de perfil del Trainer
-5. `72bf3ec` — A8.1 Recuperar contrasena: flujo por email con token de un solo uso
-6. `098b59c` — test(e2e): real-backend Admin, Trainer and notification workflows (A7)
-7. `84beb3b` — fix(errors): classify failures by kind, add app error boundary, lock E2E throttle switch out of production
-8. `a9dfb5d` — perf(f14): add bundle analysis, record Lighthouse baseline, stop idle photo skeletons
-9. `7735f7c` — feat(a11y): gate E2E on serious axe violations and fix keyboard focus
-
-Más los commits de este cierre (cliente health + este reporte), que deben aparecer en `git log origin/Eli` tras el push.
+1. `a6e555d` — docs: reporte de entrega de la linea A en espanol
+2. `ca6814f` — fix(api): regenerar cliente Orval tras el summary de health de A6
+3. `5cc70f4` — A6 Produccion y release: imagen SPA, health de storage y reporte F14
+4. `902fad9` — A8.4 Contador de no leidas en el dashboard de Admin
+5. `326fbb5` — A8.3 Duplicar plantilla de entrenamiento
+6. `16231a3` — A8.2 Editor de perfil del Trainer
+7. `72bf3ec` — A8.1 Recuperar contrasena: flujo por email con token de un solo uso
+8. `098b59c` — test(e2e): real-backend Admin, Trainer and notification workflows (A7)
+9. `84beb3b` — fix(errors): classify failures by kind, add app error boundary, lock E2E throttle switch out of production
+10. `a9dfb5d` — perf(f14): add bundle analysis, record Lighthouse baseline, stop idle photo skeletons
+11. `7735f7c` — feat(a11y): gate E2E on serious axe violations and fix keyboard focus
 
 Rama en GitHub: https://github.com/2005-RS/TRANNING-APP/tree/Eli
