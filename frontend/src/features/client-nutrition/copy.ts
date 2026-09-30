@@ -25,6 +25,8 @@ export const clientNutritionCopySource = {
     fat: 'Fat',
     none: 'No daily targets are set on this plan.',
     macroChart: 'Share of prescribed protein, carbohydrate, and fat targets',
+    plannedProgress: 'Planned meal calories versus the prescribed daily target',
+    plannedOfTarget: '{{planned}} planned of {{target}} prescribed',
   },
   totals: {
     title: 'Plan information',
@@ -42,8 +44,9 @@ export const clientNutritionCopySource = {
     savedHint: 'Values from the saved meal plan. Differences are planned amounts minus targets.',
   },
   meals: {
-    title: 'Meals',
-    description: 'Foods and portions in the assigned plan.',
+    title: 'Day plan',
+    description: 'Assigned meals, grouped from breakfast through dinner.',
+    glance: 'Meal summary',
     empty: 'No meals are listed on this plan yet.',
     noFoods: 'No foods listed.',
     notes: 'Notes',

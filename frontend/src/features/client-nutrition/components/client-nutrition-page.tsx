@@ -1,7 +1,7 @@
 import { NutritionError } from '@/features/client-nutrition/components/nutrition-error';
 import { NutritionSkeleton } from '@/features/client-nutrition/components/nutrition-skeleton';
 import { DailyTargets } from '@/features/client-nutrition/components/daily-targets';
-import { MealCard } from '@/features/client-nutrition/components/meal-list';
+import { MealDayBoard } from '@/features/client-nutrition/components/meal-day-board';
 import { PlanHero } from '@/features/client-nutrition/components/plan-hero';
 import { PlanTotals } from '@/features/client-nutrition/components/plan-totals';
 import { clientNutritionCopy } from '@/features/client-nutrition/copy';
@@ -38,7 +38,7 @@ export function ClientNutritionPage() {
       ) : plan ? (
         <div className="space-y-5">
           <PlanHero plan={plan} />
-          <DailyTargets targets={plan.targets} />
+          <DailyTargets plan={plan} />
           <section className="space-y-3" aria-labelledby="nutrition-meals-heading">
             <div className="px-1">
               <h2 id="nutrition-meals-heading" className="text-lg font-semibold tracking-tight">
@@ -48,15 +48,7 @@ export function ClientNutritionPage() {
                 {clientNutritionCopy.meals.description}
               </p>
             </div>
-            {meals.length > 0 ? (
-              meals.map((meal) => <MealCard key={meal.id} meal={meal} />)
-            ) : (
-              <section className="client-surface-card">
-                <p className="text-sm leading-relaxed text-muted-foreground">
-                  {clientNutritionCopy.meals.empty}
-                </p>
-              </section>
-            )}
+            <MealDayBoard meals={meals} />
           </section>
           <PlanTotals plan={plan} />
         </div>
