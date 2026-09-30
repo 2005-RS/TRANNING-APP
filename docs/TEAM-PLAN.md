@@ -6,13 +6,30 @@ Actualizado: 2026-09-29
 
 - F00–F12 están verificadas.
 - F13 (pulido visual) tiene sus tres etapas completas: sitio público y login, Client, y Trainer/Admin. Commits `e4e605b` y `1e1111d`.
-- `main` contiene todo. Antes de empezar, cada quien actualiza su rama desde `main`:
+- `main` contiene todo, y la rama remota `Eli` ya está actualizada al mismo commit que `main`.
+
+### Primeros pasos para Eli (una sola vez)
 
 ```bash
+git status                    # si hay cambios sin commit: git stash
 git fetch origin
-git checkout <tu-rama>        # Eli: Eli · Ronny: ronny
-git merge origin/main         # es fast-forward, no hay conflictos
+git checkout Eli
+git pull origin Eli           # es fast-forward, no hay conflictos
+git stash pop                 # solo si hiciste stash arriba
 ```
+
+Después:
+1. Leer este documento y `AGENTS.md`.
+2. Instalar dependencias con `npm install` en `backend/` y en `frontend/` (hay cambios nuevos).
+3. Correr las migraciones con `npm run migration:run` en `backend/`.
+4. Empezar por **A1**.
+
+### Flujo diario (ambos)
+
+1. Antes de empezar el día: `git fetch origin && git merge origin/main`, en tu rama.
+2. Trabajar solo en tu línea.
+3. Hacer un PR a `main` por cada tarea.
+4. Cuando el otro hace merge a `main`, traerlo a tu rama el mismo día. Así los conflictos quedan chicos.
 
 Desde aquí se trabaja en **dos líneas en paralelo**:
 

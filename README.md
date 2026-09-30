@@ -2,6 +2,10 @@
 
 Training Platform — plataforma de entrenamiento, seguimiento y nutrición.
 
+> **Equipo: empiecen aquí →** [`docs/TEAM-PLAN.md`](docs/TEAM-PLAN.md) explica quién hace qué y qué archivos son de cada línea.
+> - **Línea A (Eli):** terminar el sistema: F14, CI, E2E, release y funciones faltantes.
+> - **Línea B (Ronny):** landing y módulo de nutrición.
+
 ```
 backend/   API NestJS + TypeORM + PostgreSQL + MinIO (S3 privado)
 frontend/  SPA React 19 + Vite + TypeScript + TanStack (cliente generado con Orval)

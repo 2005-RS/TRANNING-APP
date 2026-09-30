@@ -6,3 +6,6 @@ dist
 coverage
 /assets/import/vital-animations/**
 !/assets/import/vital-animations/.gitkeep
+
+# Claude Code personal settings
+.claude/settings.local.json

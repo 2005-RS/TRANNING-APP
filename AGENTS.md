@@ -8,6 +8,12 @@ Cursor loads these automatically from `.cursor/rules/`. Other agents must read t
 2. [`.cursor/rules/frontend-standards.mdc`](.cursor/rules/frontend-standards.mdc) — governs `frontend/**` and `docs/frontend/**`.
 3. [`.cursor/rules/backend-standards.mdc`](.cursor/rules/backend-standards.mdc) — governs `backend/**`.
 
+**Team split:** work runs on two parallel lines with file ownership. Read [`docs/TEAM-PLAN.md`](docs/TEAM-PLAN.md) first:
+- Line A (Eli): F14, CI, E2E, release and known gaps.
+- Line B (Ronny): landing and nutrition.
+
+Do not edit files owned by the other line. Change shared files only in small PRs.
+
 Canonical frontend docs live in [`docs/frontend/`](docs/frontend/) (start with `current-task.md` and `frontend-roadmap.md`). Task-specific skills live in [`.cursor/skills/`](.cursor/skills/).
 
 If documentation and source conflict, source wins.
