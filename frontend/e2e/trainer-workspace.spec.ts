@@ -242,6 +242,21 @@ async function mockAuthenticatedTrainer(page: Page) {
       body: JSON.stringify(trainerUser),
     });
   });
+  await page.route('**/api/v1/trainers/me', async (route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({
+        id: '5f0e1d2c-3b4a-4f5e-8d7c-6b5a4f3e2d1c',
+        user: { ...trainerUser, status: 'ACTIVE' },
+        phone: null,
+        professionalTitle: 'Strength coach',
+        bio: null,
+        createdAt: '2026-09-01T10:00:00.000Z',
+        updatedAt: '2026-09-01T10:00:00.000Z',
+      }),
+    });
+  });
   await page.route('**/api/v1/trainers/me/dashboard**', async (route) => {
     await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(dashboard) });
   });
@@ -804,6 +819,7 @@ test.describe('trainer workspace', () => {
       [`/trainer/training/${templateId}`, 'Push Strength'],
       ['/trainer/exercises', 'Exercises'],
       [`/trainer/exercises/${exerciseId}`, 'Bench Press'],
+      ['/trainer/profile', 'Profile'],
     ];
     for (const [path, heading] of routes) {
       await page.goto(path, { waitUntil: 'domcontentloaded', timeout: 30_000 });
