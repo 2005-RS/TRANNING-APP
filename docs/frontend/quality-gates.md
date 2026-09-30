@@ -77,6 +77,23 @@ Critical paths that must keep coverage as features land:
 - Workout set submit (F05+)
 - IDOR-facing UI (hiding is not security)
 
+## Continuous integration
+
+`.github/workflows/ci.yml` runs on every pull request to `main` and on every push to `main`. Four jobs run in parallel:
+
+| Job | What it runs |
+| --- | --- |
+| Backend (lint, build, unit, e2e) | `npm run lint`, `npm run build`, `npm test`, `npm run test:e2e` against a PostgreSQL 16 service (`training_test`, in-memory object storage) |
+| Backend (MinIO storage e2e) | `npm run test:e2e:minio` against PostgreSQL and a real MinIO container |
+| Frontend (lint, test, build) | `npm run lint`, `npm test`, `npm run build` |
+| E2E (Playwright + real API) | Starts the API with PostgreSQL and MinIO, seeds an ADMIN, creates one CLIENT and one TRAINER through the API, checks that `npm run api:generate` leaves `src/generated/` unchanged, builds, then runs `npx playwright test` |
+
+In the E2E job the credential-dependent smoke tests run instead of skipping: `E2E_EMAIL` / `E2E_PASSWORD` and `E2E_TRAINER_EMAIL` / `E2E_TRAINER_PASSWORD` are random per run and never stored. Every secret in the workflow belongs to a throwaway API that only exists inside that job.
+
+If the contract step fails, the backend OpenAPI changed without regenerating the client: run `npm run api:generate` against the current backend and commit `src/generated/` in its own PR.
+
+A red CI blocks the merge. Making the checks required is a repository setting (branch ruleset on `main`), not part of the workflow file.
+
 ## Backend
 
 Do not run backend migrations, backend test suites, or API redesign as part of an unauthorized frontend phase.
