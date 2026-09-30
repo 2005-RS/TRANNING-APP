@@ -1,6 +1,7 @@
 import {
   DeleteObjectCommand,
   GetObjectCommand,
+  HeadBucketCommand,
   HeadObjectCommand,
   S3Client,
 } from '@aws-sdk/client-s3';
@@ -127,6 +128,14 @@ export class S3CompatibleObjectStorageAdapter implements ObjectStorageService {
         url,
         expiresAt: new Date(Date.now() + expiresInSeconds * 1000),
       };
+    } catch {
+      throw new ObjectStorageUnavailableException();
+    }
+  }
+
+  async ping(): Promise<void> {
+    try {
+      await this.client.send(new HeadBucketCommand({ Bucket: this.bucket }));
     } catch {
       throw new ObjectStorageUnavailableException();
     }

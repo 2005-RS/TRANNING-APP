@@ -9,6 +9,7 @@ import {
   HealthCheckService,
   TypeOrmHealthIndicator,
 } from '@nestjs/terminus';
+import { StorageHealthIndicator } from './storage.health';
 
 @ApiTags('health')
 @Public()
@@ -18,12 +19,14 @@ export class HealthController {
   constructor(
     private readonly health: HealthCheckService,
     private readonly postgres: TypeOrmHealthIndicator,
+    private readonly storage: StorageHealthIndicator,
   ) {}
 
   @Get()
   @HealthCheck()
   @ApiOperation({
-    summary: 'Application availability and PostgreSQL connectivity',
+    summary:
+      'Application availability, PostgreSQL connectivity, and object-storage bucket reachability',
   })
   check(): Promise<HealthCheckResult> {
     return this.health.check([
@@ -36,6 +39,7 @@ export class HealthController {
           });
         }
       },
+      () => this.storage.pingCheck('storage'),
     ]);
   }
 }

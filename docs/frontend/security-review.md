@@ -23,7 +23,7 @@ topology, where the SPA and `/api` share one origin behind a reverse proxy:
 
 ```
 default-src 'self';
-script-src 'self' 'sha256-RWrlFZkoCn3m6md6APqL6TAzBwzkjMFkcaG2OI5Cd2s=';
+script-src 'self' 'sha256-gq8zQQX10dMH/2iO9XKuI+tsm3uYzrZXWjG9bKrPmDQ=';
 style-src 'self' 'unsafe-inline';
 img-src 'self' <STORAGE_ORIGIN>;
 media-src 'self' <STORAGE_ORIGIN>;

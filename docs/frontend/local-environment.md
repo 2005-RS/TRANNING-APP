@@ -63,3 +63,7 @@ Fingerprint the generated client: `node scripts/hash-generated.mjs` (SHA-256 ove
 - `e2e/global-setup.ts` fetches the base URL and requires `<meta name="app-id" content="training-app">` before any test runs.
 - Servers on other ports (for example another project's `5173`) are never contacted by the canonical suite.
 - Build first: the quality gate runs `npm run build` before Playwright.
+
+## Production
+
+Local ports and `VITE_API_URL=http://localhost:3000` are development only. Production uses a single https origin, a separate frontend image build, and `TRUST_PROXY=true` behind the proxy. See [deploy.md](./deploy.md).
