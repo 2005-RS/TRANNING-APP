@@ -310,7 +310,7 @@ Trainer **complements** Client. Do not duplicate Client gym UX inside Trainer. T
 
 ## F13 — Motion / 3D / Premium Polish
 
-**Status:** CURRENT / IN PROGRESS — stages 1–2 done, stage 3 not started
+**Status:** CURRENT — stages 1–3 done, awaiting external acceptance
 
 **Objective:** Performance-conscious visual refinement. Functional 3D only where useful. Rive only for special celebratory moments if justified.
 

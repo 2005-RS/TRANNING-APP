@@ -192,12 +192,70 @@ html:has(.client-workout-focus) {
   border: 1px solid var(--border);
   background: var(--card);
   padding: 1rem;
+  box-shadow: 0 1px 0 color-mix(in oklab, var(--foreground) 5%, transparent),
+    0 8px 18px -17px color-mix(in oklab, var(--foreground) 32%, transparent);
 }
 
 @media (min-width: 640px) {
   .workspace-surface {
     padding: 1.25rem;
   }
+}
+
+.workspace-surface.workspace-surface--flush {
+  padding: 0;
+}
+
+/* Tint-only states for nav items, tabs, link rows and text links. */
+.workspace-interactive {
+  transition:
+    border-color var(--motion-fast) ease,
+    background-color var(--motion-fast) ease,
+    box-shadow var(--motion-fast) ease,
+    color var(--motion-fast) ease,
+    opacity var(--motion-instant) ease;
+}
+
+.workspace-interactive[aria-current='page'],
+.workspace-interactive[aria-pressed='true'],
+.workspace-interactive[aria-selected='true'] {
+  background: color-mix(in oklab, var(--primary) 10%, var(--card));
+  color: var(--foreground);
+}
+
+@media (hover: hover) {
+  .workspace-interactive:hover:not(:disabled):not([aria-current='page']):not([aria-pressed='true']):not([aria-selected='true']) {
+    background: color-mix(in oklab, var(--primary) 5%, var(--card));
+    color: var(--foreground);
+  }
+}
+
+/* Inset outline so the indicator is never clipped by overflow containers. */
+.workspace-interactive:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: -2px;
+  box-shadow: none;
+  color: var(--foreground);
+}
+
+/* Bordered cards additionally get the border/shadow treatment. */
+.workspace-interactive.workspace-interactive--card[aria-current='page'],
+.workspace-interactive.workspace-interactive--card[aria-pressed='true'],
+.workspace-interactive.workspace-interactive--card[aria-selected='true'] {
+  border-color: color-mix(in oklab, var(--primary) 48%, var(--border));
+}
+
+@media (hover: hover) {
+  .workspace-interactive.workspace-interactive--card:hover:not(:disabled):not([aria-current='page']):not([aria-pressed='true']):not([aria-selected='true']) {
+    border-color: color-mix(in oklab, var(--primary) 34%, var(--border));
+    box-shadow: 0 8px 18px -16px color-mix(in oklab, var(--foreground) 52%, transparent);
+  }
+}
+
+.workspace-interactive:disabled,
+.workspace-interactive[aria-disabled='true'] {
+  cursor: not-allowed;
+  opacity: 0.55;
 }
 
 .client-app-shell .client-surface-card {

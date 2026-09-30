@@ -36,10 +36,10 @@ export function ClientWorkspaceNav({ clientId }: { clientId: string }) {
                 params={{ clientId }}
                 aria-current={active ? 'page' : undefined}
                 className={cn(
-                  'inline-flex min-h-10 items-center rounded-md px-3 text-sm',
+                  'workspace-interactive inline-flex min-h-10 items-center rounded-md px-3 text-sm',
                   active
-                    ? 'bg-muted font-medium text-foreground'
-                    : 'text-muted-foreground hover:bg-muted hover:text-foreground',
+                    ? 'font-medium text-foreground'
+                    : 'text-muted-foreground',
                 )}
               >
                 {workspace[tab.key]}

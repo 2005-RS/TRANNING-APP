@@ -185,7 +185,7 @@ export function AdminExercisesPage() {
         />
       ) : (
         <>
-          <AdminTableSurface>
+          <AdminTableSurface className="hidden md:block">
             <table className="w-full text-left text-sm">
               <caption className="sr-only">{copy.exercises.title}</caption>
               <thead>
@@ -198,7 +198,7 @@ export function AdminExercisesPage() {
               </thead>
               <tbody>
                 {query.data.data.map((exercise) => (
-                  <tr key={exercise.id} className="border-b border-border/70 last:border-0 hover:bg-muted/40">
+                  <tr key={exercise.id} className="border-b border-border/70 last:border-0">
                     <td className="max-w-0 px-4 py-3">
                       <Link
                         to="/admin/exercises/$exerciseId"
@@ -223,6 +223,31 @@ export function AdminExercisesPage() {
               </tbody>
             </table>
           </AdminTableSurface>
+          <ul className="workspace-surface workspace-surface--flush divide-y divide-border md:hidden">
+            {query.data.data.map((exercise) => (
+              <li key={exercise.id} className="p-4">
+                <Link
+                  to="/admin/exercises/$exerciseId"
+                  params={{ exerciseId: exercise.id }}
+                  className="workspace-interactive -mx-1 inline-flex min-h-10 items-center rounded-md px-1 font-medium"
+                >
+                  {exercise.name}
+                </Link>
+                <dl className="mt-2 grid grid-cols-2 gap-2 text-sm">
+                  <div>
+                    <dt className="text-muted-foreground">{copy.exercises.equipment}</dt>
+                    <dd>{copy.equipment[exercise.equipmentType]}</dd>
+                  </div>
+                  <div>
+                    <dt className="text-muted-foreground">{copy.common.status}</dt>
+                    <dd className="mt-1">
+                      <AdminStatusBadge status={exercise.status} />
+                    </dd>
+                  </div>
+                </dl>
+              </li>
+            ))}
+          </ul>
           <PaginationBar
             meta={query.data.meta}
             onPage={(page) => void navigate({ search: { ...search, page }, replace: true })}
@@ -687,7 +712,7 @@ function ExerciseMediaPanel({
 
   return (
     <AdminSurface aria-labelledby="exercise-media-heading">
-      <h2 id="exercise-media-heading" className="text-base font-semibold tracking-tight">
+      <h2 id="exercise-media-heading" className="text-lg font-semibold tracking-tight">
         {copy.exercises.media}
       </h2>
       <p className="mt-1 max-w-2xl text-sm text-muted-foreground">{copy.exercises.mediaHint}</p>

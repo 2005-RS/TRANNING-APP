@@ -15,9 +15,9 @@ export function NativeSelect({
   return (
     <select
       className={cn(
-        'flex h-10 min-h-10 w-full rounded-md border border-border bg-background px-3 text-sm text-foreground',
-        'disabled:cursor-not-allowed disabled:opacity-50',
+        'flex h-10 min-h-10 w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground',
         'aria-invalid:border-danger aria-invalid:ring-1 aria-invalid:ring-danger/50',
+        'disabled:cursor-not-allowed disabled:opacity-50',
         className,
       )}
       {...props}

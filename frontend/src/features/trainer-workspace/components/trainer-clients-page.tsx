@@ -226,7 +226,7 @@ export function TrainerClientsPage() {
                   to="/trainer/clients/$clientId"
                   params={{ clientId: row.clientProfileId }}
                   aria-label={`${copy.open} ${row.clientName}`}
-                  className="workspace-surface block space-y-2 no-underline"
+                  className="workspace-surface workspace-interactive workspace-interactive--card block space-y-2 no-underline"
                 >
                   <p className="font-medium text-foreground">{row.clientName}</p>
                   <p className="text-sm text-muted-foreground">

@@ -71,7 +71,7 @@ export function TrainerClientWorkspaceLayout() {
             {disabled ? <StatusBadge status={client.user.status} /> : null}
             <Link
               to="/trainer/clients"
-              className="inline-flex min-h-10 items-center rounded-md px-3 text-sm text-muted-foreground hover:bg-muted hover:text-foreground"
+              className="workspace-interactive inline-flex min-h-10 items-center rounded-md px-3 text-sm text-muted-foreground"
             >
               {trainerWorkspaceCopy.workspace.backToClients}
             </Link>

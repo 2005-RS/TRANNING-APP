@@ -143,7 +143,7 @@ export function AdminTrainersPage() {
         />
       ) : (
         <>
-          <AdminTableSurface>
+          <AdminTableSurface className="hidden md:block">
             <table className="w-full text-left text-sm">
               <caption className="sr-only">{copy.trainers.title}</caption>
               <thead>
@@ -159,7 +159,7 @@ export function AdminTrainersPage() {
               </thead>
               <tbody>
                 {query.data.data.map((trainer) => (
-                  <tr key={trainer.id} className="border-b border-border/70 last:border-0 hover:bg-muted/40">
+                  <tr key={trainer.id} className="border-b border-border/70 last:border-0">
                     <td className="max-w-0 px-4 py-3">
                       <Link
                         to="/admin/trainers/$trainerId"
@@ -181,6 +181,31 @@ export function AdminTrainersPage() {
               </tbody>
             </table>
           </AdminTableSurface>
+          <ul className="workspace-surface workspace-surface--flush divide-y divide-border md:hidden">
+            {query.data.data.map((trainer) => (
+              <li key={trainer.id} className="p-4">
+                <Link
+                  to="/admin/trainers/$trainerId"
+                  params={{ trainerId: trainer.id }}
+                  className="workspace-interactive -mx-1 inline-flex min-h-10 items-center rounded-md px-1 font-medium"
+                >
+                  {fullName(trainer.user)}
+                </Link>
+                <dl className="mt-2 grid grid-cols-2 gap-2 text-sm">
+                  <div>
+                    <dt className="text-muted-foreground">{copy.trainers.professionalTitle}</dt>
+                    <dd>{optionalText(trainer.professionalTitle, copy.notSet)}</dd>
+                  </div>
+                  <div>
+                    <dt className="text-muted-foreground">{copy.common.status}</dt>
+                    <dd className="mt-1">
+                      <AdminStatusBadge status={trainer.user.status} />
+                    </dd>
+                  </div>
+                </dl>
+              </li>
+            ))}
+          </ul>
           <PaginationBar
             meta={query.data.meta}
             onPage={(page) => void navigate({ search: { ...search, page }, replace: true })}
@@ -279,7 +304,7 @@ export function AdminTrainerDetailPage() {
     >
       <div className="grid gap-4 lg:grid-cols-[1.4fr_1fr]">
         <AdminSurface aria-labelledby="trainer-profile-heading">
-          <h2 id="trainer-profile-heading" className="text-base font-semibold tracking-tight">
+          <h2 id="trainer-profile-heading" className="text-lg font-semibold tracking-tight">
             {copy.trainers.detailTitle}
           </h2>
           <dl className="mt-4 grid gap-4 sm:grid-cols-2">
@@ -298,7 +323,7 @@ export function AdminTrainerDetailPage() {
           </dl>
         </AdminSurface>
         <AdminSurface aria-labelledby="trainer-clients-heading" className="self-start">
-          <h2 id="trainer-clients-heading" className="text-base font-semibold tracking-tight">
+          <h2 id="trainer-clients-heading" className="text-lg font-semibold tracking-tight">
             {copy.assignments.title}
           </h2>
           <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{copy.trainers.assignedClientsNote}</p>

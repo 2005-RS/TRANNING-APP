@@ -79,7 +79,7 @@ export function TrainerFoodsPage() {
         <TrainerEmptyState title={copy.emptyTitle} body={copy.emptyBody} />
       ) : (
         <>
-          <WorkspaceSurface className="overflow-x-auto p-0">
+          <WorkspaceSurface className="workspace-surface--flush hidden overflow-x-auto md:block">
             <table className="w-full min-w-[36rem] text-left text-sm">
               <thead>
                 <tr className="border-b border-border text-muted-foreground">
@@ -105,6 +105,26 @@ export function TrainerFoodsPage() {
               </tbody>
             </table>
           </WorkspaceSurface>
+          <ul className="workspace-surface workspace-surface--flush divide-y divide-border md:hidden">
+            {query.data.data.map((food) => (
+              <li key={food.id} className="p-4">
+                <p className="font-medium">{food.name}</p>
+                <dl className="mt-2 grid grid-cols-2 gap-2 text-sm">
+                  <div>
+                    <dt className="text-muted-foreground">{copy.brand}</dt>
+                    <dd>{food.brand ?? trainerWorkspaceCopy.notSet}</dd>
+                  </div>
+                  <div>
+                    <dt className="text-muted-foreground">{copy.per100}</dt>
+                    <dd className="font-mono tabular-nums">
+                      {formatKcal(food.nutritionPer100g.caloriesKcal)} · {formatGrams(food.nutritionPer100g.proteinG)}
+                    </dd>
+                  </div>
+                </dl>
+                <div className="mt-3"><StatusBadge status={food.status} /></div>
+              </li>
+            ))}
+          </ul>
           <PaginationBar
             meta={query.data.meta}
             onPage={(page) => void navigate({ search: { ...search, page }, replace: true })}
@@ -162,7 +182,7 @@ function CreateFoodForm() {
   });
   return (
     <WorkspaceSurface>
-      <h2 className="text-base font-semibold">{copy.create}</h2>
+      <h2 className="text-lg font-semibold tracking-tight">{copy.create}</h2>
       <form
         className="mt-4 grid gap-3 sm:grid-cols-2"
         onSubmit={(event) => {

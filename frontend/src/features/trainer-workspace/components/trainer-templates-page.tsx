@@ -196,9 +196,7 @@ function TemplateRow({ template }: { template: WorkoutTemplateSummaryResponseDto
         params={{ templateId: template.id }}
         aria-label={`${copy.openTemplate} ${template.name}`}
         className={cn(
-          'group flex min-h-12 items-center gap-3 px-4 py-3 no-underline outline-none',
-          'transition-colors duration-[var(--motion-fast)]',
-          'hover:bg-muted/50 focus-visible:bg-muted/50',
+          'workspace-interactive group flex min-h-12 items-center gap-3 px-4 py-3 no-underline',
         )}
       >
         <div className="min-w-0 flex-1 space-y-0.5">

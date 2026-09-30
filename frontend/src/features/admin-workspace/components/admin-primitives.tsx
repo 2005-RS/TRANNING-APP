@@ -28,7 +28,7 @@ import { Skeleton } from '@/shared/ui/skeleton';
 export function AdminSurface({ className, ...props }: HTMLAttributes<HTMLElement>) {
   return (
     <section
-      className={cn('rounded-lg border border-border bg-card p-4 shadow-sm sm:p-5', className)}
+      className={cn('workspace-surface', className)}
       {...props}
     />
   );
@@ -37,7 +37,7 @@ export function AdminSurface({ className, ...props }: HTMLAttributes<HTMLElement
 export function AdminTableSurface({ className, ...props }: HTMLAttributes<HTMLDivElement>) {
   return (
     <div
-      className={cn('overflow-x-auto rounded-lg border border-border bg-card shadow-sm', className)}
+      className={cn('workspace-surface workspace-surface--flush overflow-x-auto', className)}
       {...props}
     />
   );
@@ -55,7 +55,13 @@ export function Detail({ label, value, className }: { label: string; value: Reac
 export function AdminStatusBadge({ status }: { status: keyof ReturnType<typeof useAdminWorkspaceCopy>['status'] | string }) {
   const copy = useAdminWorkspaceCopy();
   const label = status in copy.status ? copy.status[status as keyof typeof copy.status] : status;
-  const variant = status === 'ACTIVE' || status === 'READY' ? 'secondary' : status === 'DISABLED' || status === 'ARCHIVED' ? 'outline' : 'muted';
+  const variant = status === 'ACTIVE' || status === 'READY' || status === 'REVIEWED'
+    ? 'default'
+    : status === 'DRAFT' || status === 'SUBMITTED' || status === 'IN_PROGRESS' || status === 'PENDING_UPLOAD'
+      ? 'secondary'
+      : status === 'DISABLED' || status === 'ARCHIVED' || status === 'CANCELLED'
+        ? 'outline'
+        : 'muted';
   return <Badge variant={variant}>{label}</Badge>;
 }
 
@@ -66,9 +72,9 @@ export function NativeSelect({
   return (
     <select
       className={cn(
-        'flex h-10 min-h-10 w-full rounded-md border border-border bg-background px-3 text-sm text-foreground',
-        'disabled:cursor-not-allowed disabled:opacity-50',
+        'flex h-10 min-h-10 w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground',
         'aria-invalid:border-danger aria-invalid:ring-1 aria-invalid:ring-danger/50',
+        'disabled:cursor-not-allowed disabled:opacity-50',
         className,
       )}
       {...props}
@@ -82,8 +88,8 @@ export function TextArea({ className, ...props }: TextareaHTMLAttributes<HTMLTex
       className={cn(
         'min-h-24 w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground',
         'placeholder:text-muted-foreground',
-        'disabled:cursor-not-allowed disabled:opacity-50',
         'aria-invalid:border-danger aria-invalid:ring-1 aria-invalid:ring-danger/50',
+        'disabled:cursor-not-allowed disabled:opacity-50',
         className,
       )}
       {...props}
@@ -154,7 +160,7 @@ export function AdminPageScaffold({
   return (
     <PageContainer className="space-y-6">
       {backLink ? <div className="-mb-3">{backLink}</div> : null}
-      <PageHeader className="mb-6">
+      <PageHeader>
         <div className="min-w-0 space-y-2">
           <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
             <PageTitle className="break-words">{title}</PageTitle>

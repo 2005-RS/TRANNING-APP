@@ -32,10 +32,10 @@ export function ProductivitySidebarNav({
                 aria-current={active ? 'page' : undefined}
                 onClick={onNavigate}
                 className={cn(
-                  'flex min-h-10 items-center gap-3 rounded-md px-3 text-sm',
+                  'workspace-interactive flex min-h-10 items-center gap-3 rounded-md px-3 text-sm',
                   active
-                    ? 'bg-muted font-medium text-foreground'
-                    : 'text-muted-foreground hover:bg-muted hover:text-foreground',
+                    ? 'font-medium text-foreground'
+                    : 'text-muted-foreground',
                 )}
               >
                 <Icon

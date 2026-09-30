@@ -145,7 +145,7 @@ export function TrainerClientOverviewPage() {
           <Link
             to="/trainer/clients/$clientId/progress"
             params={{ clientId }}
-            className="text-sm text-muted-foreground hover:text-foreground"
+            className="workspace-interactive rounded-md px-1 text-sm text-muted-foreground"
           >
             {copy.goProgress}
           </Link>

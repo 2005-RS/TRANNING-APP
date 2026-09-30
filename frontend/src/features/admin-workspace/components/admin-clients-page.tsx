@@ -191,7 +191,7 @@ export function AdminClientsPage() {
         />
       ) : (
         <>
-          <AdminTableSurface>
+          <AdminTableSurface className="hidden md:block">
             <table className="w-full text-left text-sm">
               <caption className="sr-only">{copy.clients.title}</caption>
               <thead>
@@ -210,7 +210,7 @@ export function AdminClientsPage() {
               </thead>
               <tbody>
                 {query.data.data.map((client) => (
-                  <tr key={client.id} className="border-b border-border/70 last:border-0 hover:bg-muted/40">
+                  <tr key={client.id} className="border-b border-border/70 last:border-0">
                     <td className="max-w-0 px-4 py-3">
                       <Link
                         to="/admin/clients/$clientId"
@@ -233,6 +233,31 @@ export function AdminClientsPage() {
               </tbody>
             </table>
           </AdminTableSurface>
+          <ul className="workspace-surface workspace-surface--flush divide-y divide-border md:hidden">
+            {query.data.data.map((client) => (
+              <li key={client.id} className="p-4">
+                <Link
+                  to="/admin/clients/$clientId"
+                  params={{ clientId: client.id }}
+                  className="workspace-interactive -mx-1 inline-flex min-h-10 items-center rounded-md px-1 font-medium"
+                >
+                  {fullName(client.user)}
+                </Link>
+                <dl className="mt-2 grid grid-cols-2 gap-2 text-sm">
+                  <div>
+                    <dt className="text-muted-foreground">{copy.clients.primaryGoal}</dt>
+                    <dd>{copy.goals[client.primaryGoal]}</dd>
+                  </div>
+                  <div>
+                    <dt className="text-muted-foreground">{copy.common.status}</dt>
+                    <dd className="mt-1">
+                      <AdminStatusBadge status={client.user.status} />
+                    </dd>
+                  </div>
+                </dl>
+              </li>
+            ))}
+          </ul>
           <PaginationBar
             meta={query.data.meta}
             onPage={(page) => void navigate({ search: { ...search, page }, replace: true })}
@@ -352,7 +377,7 @@ export function AdminClientDetailPage() {
     >
       <div className="grid gap-4 lg:grid-cols-[1.3fr_1fr]">
         <AdminSurface aria-labelledby="client-profile-heading">
-          <h2 id="client-profile-heading" className="text-base font-semibold tracking-tight">
+          <h2 id="client-profile-heading" className="text-lg font-semibold tracking-tight">
             {copy.clients.detailTitle}
           </h2>
           <dl className="mt-4 grid gap-4 sm:grid-cols-2">
@@ -375,7 +400,7 @@ export function AdminClientDetailPage() {
 
         <div className="space-y-4">
           <AdminSurface aria-labelledby="client-assignment-heading">
-            <h2 id="client-assignment-heading" className="text-base font-semibold tracking-tight">
+            <h2 id="client-assignment-heading" className="text-lg font-semibold tracking-tight">
               {copy.clients.assignment}
             </h2>
             <div className="mt-4" aria-live="polite">
@@ -440,7 +465,7 @@ export function AdminClientDetailPage() {
           </AdminSurface>
 
           <AdminSurface aria-labelledby="client-history-heading">
-            <h2 id="client-history-heading" className="text-base font-semibold tracking-tight">
+            <h2 id="client-history-heading" className="text-lg font-semibold tracking-tight">
               {copy.assignments.history}
             </h2>
             {historyQuery.isPending ? (

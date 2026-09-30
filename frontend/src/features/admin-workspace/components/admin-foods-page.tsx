@@ -132,7 +132,7 @@ export function AdminFoodsPage() {
         />
       ) : (
         <>
-          <AdminTableSurface>
+          <AdminTableSurface className="hidden md:block">
             <table className="w-full text-left text-sm">
               <caption className="sr-only">
                 {copy.foods.title}. {copy.foods.per100Hint}
@@ -151,7 +151,7 @@ export function AdminFoodsPage() {
               </thead>
               <tbody>
                 {query.data.data.map((food) => (
-                  <tr key={food.id} className="border-b border-border/70 last:border-0 hover:bg-muted/40">
+                  <tr key={food.id} className="border-b border-border/70 last:border-0">
                     <td className="max-w-0 px-4 py-3">
                       <Link
                         to="/admin/foods/$foodId"
@@ -184,6 +184,31 @@ export function AdminFoodsPage() {
               </tbody>
             </table>
           </AdminTableSurface>
+          <ul className="workspace-surface workspace-surface--flush divide-y divide-border md:hidden">
+            {query.data.data.map((food) => (
+              <li key={food.id} className="p-4">
+                <Link
+                  to="/admin/foods/$foodId"
+                  params={{ foodId: food.id }}
+                  className="workspace-interactive -mx-1 inline-flex min-h-10 items-center rounded-md px-1 font-medium"
+                >
+                  {food.name}
+                </Link>
+                <dl className="mt-2 grid grid-cols-2 gap-2 text-sm">
+                  <div>
+                    <dt className="text-muted-foreground">{copy.foods.calories}</dt>
+                    <dd className="font-mono tabular-nums">{numberText(food.nutritionPer100g.caloriesKcal)}</dd>
+                  </div>
+                  <div>
+                    <dt className="text-muted-foreground">{copy.common.status}</dt>
+                    <dd className="mt-1">
+                      <AdminStatusBadge status={food.status} />
+                    </dd>
+                  </div>
+                </dl>
+              </li>
+            ))}
+          </ul>
           <p className="text-xs text-muted-foreground">{copy.foods.per100Hint}</p>
           <PaginationBar
             meta={query.data.meta}
@@ -282,7 +307,7 @@ export function AdminFoodDetailPage() {
     >
       <div className="grid gap-4 lg:grid-cols-[1.2fr_1fr]">
         <AdminSurface aria-labelledby="food-nutrition-heading">
-          <h2 id="food-nutrition-heading" className="text-base font-semibold tracking-tight">
+          <h2 id="food-nutrition-heading" className="text-lg font-semibold tracking-tight">
             {copy.foods.per100}
           </h2>
           <dl className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3">
@@ -297,7 +322,7 @@ export function AdminFoodDetailPage() {
           </dl>
         </AdminSurface>
         <AdminSurface aria-labelledby="food-detail-heading">
-          <h2 id="food-detail-heading" className="text-base font-semibold tracking-tight">
+          <h2 id="food-detail-heading" className="text-lg font-semibold tracking-tight">
             {copy.foods.detailTitle}
           </h2>
           <dl className="mt-4 grid gap-4 sm:grid-cols-2">

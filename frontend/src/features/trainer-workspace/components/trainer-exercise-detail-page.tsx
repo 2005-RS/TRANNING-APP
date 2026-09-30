@@ -90,13 +90,13 @@ export function TrainerExerciseDetailPage() {
 
       {exercise.description ? (
         <WorkspaceSurface>
-          <h2 className="text-base font-semibold">{copy.descriptionLabel}</h2>
+          <h2 className="text-lg font-semibold tracking-tight">{copy.descriptionLabel}</h2>
           <p className="mt-2 text-sm leading-relaxed">{exercise.description}</p>
         </WorkspaceSurface>
       ) : null}
       {exercise.instructions ? (
         <WorkspaceSurface>
-          <h2 className="text-base font-semibold">{copy.instructions}</h2>
+          <h2 className="text-lg font-semibold tracking-tight">{copy.instructions}</h2>
           <p className="mt-2 whitespace-pre-wrap text-sm leading-relaxed">{exercise.instructions}</p>
         </WorkspaceSurface>
       ) : null}

@@ -1,4 +1,6 @@
 import { useEffect, type ReactNode, useState } from 'react';
+import { motion } from 'motion/react';
+import { useRouterState } from '@tanstack/react-router';
 import { BrandMark } from '@/features/auth/components/brand-mark';
 import { useNavigationCopy } from '@/features/navigation/copy';
 import type { NavItem } from '@/features/navigation/nav-config';
@@ -17,6 +19,12 @@ import {
   SheetHeader,
   SheetTitle,
 } from '@/shared/ui/sheet';
+import {
+  motionTransition,
+  revealHidden,
+  revealVisible,
+  useReducedMotion,
+} from '@/shared/lib/motion';
 
 export function ProductivityShell({
   roleLabel,
@@ -31,6 +39,8 @@ export function ProductivityShell({
 }) {
   const navigationCopy = useNavigationCopy();
   const meta = useCurrentRouteMeta();
+  const pathname = useRouterState({ select: (state) => state.location.pathname });
+  const reduceMotion = useReducedMotion();
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const badges = { [notificationsPath]: <NavUnreadBadge /> };
 
@@ -59,7 +69,14 @@ export function ProductivityShell({
             onOpenNavigation={() => setMobileNavOpen(true)}
           />
           <main id="main-content" className="min-h-0 flex-1">
-            {children}
+            <motion.div
+              key={pathname}
+              initial={revealHidden(reduceMotion)}
+              animate={revealVisible}
+              transition={motionTransition('fast', reduceMotion)}
+            >
+              {children}
+            </motion.div>
           </main>
         </div>
       </div>

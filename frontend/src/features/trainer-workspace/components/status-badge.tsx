@@ -12,6 +12,8 @@ export function StatusBadge({ status }: { status: string }) {
           status === 'IN_PROGRESS' ||
           status === 'PENDING_UPLOAD'
         ? 'secondary'
-        : 'muted';
+        : status === 'ARCHIVED' || status === 'DISABLED' || status === 'CANCELLED'
+          ? 'outline'
+          : 'muted';
   return <Badge variant={variant}>{statusLabel(status)}</Badge>;
 }

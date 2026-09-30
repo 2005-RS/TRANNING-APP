@@ -189,40 +189,67 @@ export function TrainerDashboardPage() {
             {dashboard.recentCompletedSessions.length === 0 ? (
               <p className="mt-3 text-sm text-muted-foreground">{copy.recentSessionsEmpty}</p>
             ) : (
-              <div className="mt-4 overflow-x-auto">
-                <table className="w-full min-w-[36rem] text-left text-sm">
-                  <thead>
-                    <tr className="border-b border-border text-muted-foreground">
-                      <th className="py-2 pr-3 font-medium">Client</th>
-                      <th className="py-2 pr-3 font-medium">Workout</th>
-                      <th className="py-2 pr-3 font-medium">Completed</th>
-                      <th className="py-2 font-medium">Sets</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {dashboard.recentCompletedSessions.map((session) => (
-                      <tr key={session.workoutSessionId} className="border-b border-border/70">
-                        <td className="py-2.5 pr-3">
-                          <Link
-                            to="/trainer/clients/$clientId"
-                            params={{ clientId: session.clientProfileId }}
-                            className="font-medium text-foreground hover:underline"
-                          >
-                            {session.clientName}
-                          </Link>
-                        </td>
-                        <td className="py-2.5 pr-3">{session.workoutName}</td>
-                        <td className="py-2.5 pr-3 font-mono tabular-nums text-muted-foreground">
-                          {formatIsoDateTime(session.completedAt)}
-                        </td>
-                        <td className="py-2.5 font-mono tabular-nums">
-                          {formatCount(session.performedSetCount, copy.sets, copy.sets)}
-                        </td>
+              <>
+                <div className="mt-4 hidden overflow-x-auto md:block">
+                  <table className="w-full min-w-[36rem] text-left text-sm">
+                    <thead>
+                      <tr className="border-b border-border text-muted-foreground">
+                        <th className="py-2 pr-3 font-medium">Client</th>
+                        <th className="py-2 pr-3 font-medium">Workout</th>
+                        <th className="py-2 pr-3 font-medium">Completed</th>
+                        <th className="py-2 font-medium">Sets</th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+                    </thead>
+                    <tbody>
+                      {dashboard.recentCompletedSessions.map((session) => (
+                        <tr key={session.workoutSessionId} className="border-b border-border/70">
+                          <td className="py-2.5 pr-3">
+                            <Link
+                              to="/trainer/clients/$clientId"
+                              params={{ clientId: session.clientProfileId }}
+                              className="font-medium text-foreground hover:underline"
+                            >
+                              {session.clientName}
+                            </Link>
+                          </td>
+                          <td className="py-2.5 pr-3">{session.workoutName}</td>
+                          <td className="py-2.5 pr-3 font-mono tabular-nums text-muted-foreground">
+                            {formatIsoDateTime(session.completedAt)}
+                          </td>
+                          <td className="py-2.5 font-mono tabular-nums">
+                            {formatCount(session.performedSetCount, copy.sets, copy.sets)}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+                <ul className="mt-4 divide-y divide-border md:hidden">
+                  {dashboard.recentCompletedSessions.map((session) => (
+                    <li key={session.workoutSessionId} className="py-3">
+                      <Link
+                        to="/trainer/clients/$clientId"
+                        params={{ clientId: session.clientProfileId }}
+                        className="workspace-interactive -mx-1 inline-flex min-h-10 items-center rounded-md px-1 font-medium"
+                      >
+                        {session.clientName}
+                      </Link>
+                      <dl className="mt-2 grid grid-cols-2 gap-2 text-sm">
+                        <div>
+                          <dt className="text-muted-foreground">Workout</dt>
+                          <dd>{session.workoutName}</dd>
+                        </div>
+                        <div>
+                          <dt className="text-muted-foreground">Sets</dt>
+                          <dd className="font-mono tabular-nums">
+                            {formatCount(session.performedSetCount, copy.sets, copy.sets)}
+                          </dd>
+                        </div>
+                      </dl>
+                    </li>
+                  ))}
+                </ul>
+              </>
             )}
           </WorkspaceSurface>
         </div>
@@ -257,7 +284,7 @@ function AttentionList({
   return (
     <WorkspaceSurface className={className} aria-labelledby={`${title}-heading`}>
       <div className="flex items-baseline justify-between gap-3">
-        <h2 id={`${title}-heading`} className="text-base font-semibold tracking-tight">
+        <h2 id={`${title}-heading`} className="text-lg font-semibold tracking-tight">
           {title}
         </h2>
         <p className="font-mono text-lg tabular-nums">{count}</p>
@@ -272,7 +299,7 @@ function AttentionList({
               <Link
                 to={item.to}
                 params={{ clientId: item.clientId }}
-                className="flex min-h-10 items-center justify-between gap-3 rounded-md px-1 hover:bg-muted"
+                className="workspace-interactive flex min-h-10 items-center justify-between gap-3 rounded-md px-1"
               >
                 <span className="truncate font-medium">{item.name}</span>
                 {item.meta ? (

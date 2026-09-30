@@ -44,6 +44,10 @@ export function AdminAssignmentsPage() {
   });
   const filtered = Boolean(search.search);
 
+  function openAssignment(clientId: string, name: string, currentTrainer: TrainerResponseDto | null) {
+    setTarget({ client: { id: clientId, name, disabled: false }, currentTrainer });
+  }
+
   function clearFilters() {
     setDraftSearch('');
     void navigate({ search: {}, replace: true });
@@ -105,7 +109,7 @@ export function AdminAssignmentsPage() {
         />
       ) : (
         <>
-          <AdminTableSurface>
+          <AdminTableSurface className="hidden md:block">
             <table className="w-full text-left text-sm">
               <caption className="sr-only">{copy.assignments.title}</caption>
               <thead>
@@ -121,20 +125,28 @@ export function AdminAssignmentsPage() {
                 {query.data.data.map((client) => (
                   <AssignmentRow
                     key={client.id}
+                    layout="table"
                     clientId={client.id}
                     name={fullName(client.user)}
                     email={client.user.email}
-                    onManage={(currentTrainer) =>
-                      setTarget({
-                        client: { id: client.id, name: fullName(client.user), disabled: false },
-                        currentTrainer,
-                      })
-                    }
+                    onManage={(currentTrainer) => openAssignment(client.id, fullName(client.user), currentTrainer)}
                   />
                 ))}
               </tbody>
             </table>
           </AdminTableSurface>
+          <ul className="workspace-surface workspace-surface--flush divide-y divide-border md:hidden">
+            {query.data.data.map((client) => (
+              <AssignmentRow
+                key={client.id}
+                layout="list"
+                clientId={client.id}
+                name={fullName(client.user)}
+                email={client.user.email}
+                onManage={(currentTrainer) => openAssignment(client.id, fullName(client.user), currentTrainer)}
+              />
+            ))}
+          </ul>
           <p className="text-xs text-muted-foreground">{copy.assignments.activeOnlyNote}</p>
           <PaginationBar
             meta={query.data.meta}
@@ -159,11 +171,13 @@ export function AdminAssignmentsPage() {
 }
 
 function AssignmentRow({
+  layout,
   clientId,
   name,
   email,
   onManage,
 }: {
+  layout: 'table' | 'list';
   clientId: string;
   name: string;
   email: string;
@@ -174,8 +188,70 @@ function AssignmentRow({
     query: { staleTime: STALE_TIME_MS, refetchOnWindowFocus: false },
   });
   const trainer = assignment.data?.trainer ?? null;
+  const trainerContent = assignment.isPending ? (
+    <Skeleton className="h-5 w-32" aria-label={copy.assignments.loadingTrainer} role="status" />
+  ) : assignment.isError ? (
+    <span className="inline-flex items-center gap-2 text-muted-foreground">
+      {copy.assignments.trainerUnavailable}
+      <Button
+        variant="ghost"
+        size="icon"
+        className="size-8"
+        aria-label={copy.retry}
+        disabled={assignment.isFetching}
+        onClick={() => void assignment.refetch()}
+      >
+        <RotateCw className="size-4" aria-hidden />
+      </Button>
+    </span>
+  ) : trainer ? (
+    <Link
+      to="/admin/trainers/$trainerId"
+      params={{ trainerId: trainer.id }}
+      className="block break-words font-medium text-foreground underline-offset-4 hover:underline focus-visible:underline sm:truncate"
+    >
+      {fullName(trainer.user)}
+    </Link>
+  ) : (
+    <Badge variant="outline" className="border-warning/60 text-foreground">
+      {copy.clients.unassigned}
+    </Badge>
+  );
+  const action = assignment.isSuccess ? (
+    <Button
+      variant={trainer ? 'outline' : 'default'}
+      size="sm"
+      aria-label={`${trainer ? copy.assignments.change : copy.assignments.assign}: ${name}`}
+      onClick={() => onManage(trainer)}
+    >
+      {trainer ? copy.assignments.change : copy.assignments.assign}
+    </Button>
+  ) : null;
+
+  if (layout === 'list') {
+    return (
+      <li className="p-4">
+        <Link
+          to="/admin/clients/$clientId"
+          params={{ clientId }}
+          className="workspace-interactive -mx-1 inline-flex min-h-10 max-w-full items-center break-words rounded-md px-1 font-medium"
+        >
+          {name}
+        </Link>
+        <span className="block truncate text-xs text-muted-foreground">{email}</span>
+        <dl className="mt-3 text-sm">
+          <dt className="text-muted-foreground">{copy.assignments.trainer}</dt>
+          <dd className="mt-1" aria-busy={assignment.isPending || undefined}>
+            {trainerContent}
+          </dd>
+        </dl>
+        {action ? <div className="mt-3">{action}</div> : null}
+      </li>
+    );
+  }
+
   return (
-    <tr className="border-b border-border/70 last:border-0 hover:bg-muted/40">
+    <tr className="border-b border-border/70 last:border-0">
       <td className="px-3 py-3 sm:max-w-0 sm:px-4">
         <Link
           to="/admin/clients/$clientId"
@@ -187,48 +263,9 @@ function AssignmentRow({
         <span className="hidden truncate text-xs text-muted-foreground sm:block">{email}</span>
       </td>
       <td className="px-3 py-3 sm:max-w-0 sm:px-4" aria-busy={assignment.isPending || undefined}>
-        {assignment.isPending ? (
-          <Skeleton className="h-5 w-32" aria-label={copy.assignments.loadingTrainer} role="status" />
-        ) : assignment.isError ? (
-          <span className="inline-flex items-center gap-2 text-muted-foreground">
-            {copy.assignments.trainerUnavailable}
-            <Button
-              variant="ghost"
-              size="icon"
-              className="size-8"
-              aria-label={copy.retry}
-              disabled={assignment.isFetching}
-              onClick={() => void assignment.refetch()}
-            >
-              <RotateCw className="size-4" aria-hidden />
-            </Button>
-          </span>
-        ) : trainer ? (
-          <Link
-            to="/admin/trainers/$trainerId"
-            params={{ trainerId: trainer.id }}
-            className="block break-words font-medium text-foreground underline-offset-4 hover:underline sm:truncate"
-          >
-            {fullName(trainer.user)}
-          </Link>
-        ) : (
-          <Badge variant="outline" className="border-warning/60 text-foreground">
-            {copy.clients.unassigned}
-          </Badge>
-        )}
+        {trainerContent}
       </td>
-      <td className="px-3 py-3 text-right sm:px-4">
-        {assignment.isSuccess ? (
-          <Button
-            variant={trainer ? 'outline' : 'default'}
-            size="sm"
-            aria-label={`${trainer ? copy.assignments.change : copy.assignments.assign}: ${name}`}
-            onClick={() => onManage(trainer)}
-          >
-            {trainer ? copy.assignments.change : copy.assignments.assign}
-          </Button>
-        ) : null}
-      </td>
+      <td className="px-3 py-3 text-right sm:px-4">{action}</td>
     </tr>
   );
 }

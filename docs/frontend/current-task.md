@@ -12,13 +12,13 @@ Premium visual refinement of the public website, login, and the Client, Trainer,
 
 ## Status
 
-**F13 Stage 2 COMPLETE** — stage 3 not started
+**F13 stages 1–3 DONE** — awaiting external acceptance of F13
 
 ## Stages (user-agreed, 2026-09-25)
 
 1. **Public website + login.** Redesign, plus the animated background on the home hero and the login hero. ✅
 2. **Client app.** Motion and surface polish. No looping background. ✅
-3. **Trainer + Admin.** Restrained productivity polish. No decorative motion.
+3. **Trainer + Admin.** Restrained productivity polish. No decorative motion. ✅
 
 Show each stage in the browser before starting the next.
 

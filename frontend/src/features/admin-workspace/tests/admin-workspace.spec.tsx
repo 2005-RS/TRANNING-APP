@@ -31,6 +31,12 @@ function renderAdmin(entry = '/admin/dashboard') {
   return render(<TestApp initialEntry={entry} status="AUTHENTICATED" user={adminA} />);
 }
 
+// List pages render the desktop table and the md:hidden mobile list together
+// in jsdom, so row assertions are scoped to the table.
+function withinListTable<T>(query: (table: ReturnType<typeof within>) => T, waitTimeout = timeout) {
+  return waitFor(() => query(within(screen.getByRole('table'))), { timeout: waitTimeout });
+}
+
 function assignCurrentTrainer() {
   adminMockState.assignment = {
     id: 'abababab-abab-4aba-8aba-abababababab',
@@ -116,10 +122,10 @@ describe('Admin workspace', () => {
       await user.type(within(dialog).getByLabelText(copy.common.firstName), 'Neo');
       await user.type(within(dialog).getByLabelText(copy.common.lastName), 'Trainer');
       await user.click(within(dialog).getByRole('button', { name: copy.create }));
-      expect(await screen.findByRole('link', { name: 'Neo Trainer' }, { timeout: 10_000 })).toBeInTheDocument();
+      expect(await withinListTable((table) => table.getByRole('link', { name: 'Neo Trainer' }), 10_000)).toBeInTheDocument();
       await user.type(screen.getByLabelText(copy.trainers.searchLabel), 'tess');
       await user.click(screen.getByRole('button', { name: copy.search }));
-      expect(await screen.findByRole('link', { name: 'Tess Trainer' }, { timeout })).toBeInTheDocument();
+      expect(await withinListTable((table) => table.getByRole('link', { name: 'Tess Trainer' }))).toBeInTheDocument();
       expect(screen.queryByRole('link', { name: 'Neo Trainer' })).not.toBeInTheDocument();
     }, 15_000);
 
@@ -163,7 +169,7 @@ describe('Admin workspace', () => {
       expect(screen.queryByText(copy.trainers.emptyTitle)).not.toBeInTheDocument();
       const clearButtons = screen.getAllByRole('button', { name: copy.clearFilters });
       await user.click(clearButtons[clearButtons.length - 1]!);
-      expect(await screen.findByRole('link', { name: 'Tess Trainer' }, { timeout })).toBeInTheDocument();
+      expect(await withinListTable((table) => table.getByRole('link', { name: 'Tess Trainer' }))).toBeInTheDocument();
     });
 
     it('disables a trainer after confirmation', async () => {
@@ -196,7 +202,7 @@ describe('Admin workspace', () => {
       await user.type(within(create).getByLabelText(copy.common.firstName), 'Beatrice');
       await user.type(within(create).getByLabelText(copy.common.lastName), 'Client');
       await user.click(within(create).getByRole('button', { name: copy.create }));
-      expect(await screen.findByRole('link', { name: 'Beatrice Client' }, { timeout })).toBeInTheDocument();
+      expect(await withinListTable((table) => table.getByRole('link', { name: 'Beatrice Client' }))).toBeInTheDocument();
     });
 
     it('assigns a trainer and ends the assignment while keeping history', async () => {
@@ -270,11 +276,12 @@ describe('Admin workspace', () => {
     it('lists assignments with a loading state instead of a false Unassigned', async () => {
       adminMockState.assignmentReadDelayMs = 1500;
       renderAdmin('/admin/assignments');
-      expect(await screen.findByRole('link', { name: 'Ada Client' }, { timeout })).toBeInTheDocument();
-      expect(screen.getByRole('status', { name: copy.assignments.loadingTrainer })).toBeInTheDocument();
+      expect(await withinListTable((table) => table.getByRole('link', { name: 'Ada Client' }))).toBeInTheDocument();
+      const table = within(screen.getByRole('table'));
+      expect(table.getByRole('status', { name: copy.assignments.loadingTrainer })).toBeInTheDocument();
       expect(screen.queryByText(copy.clients.unassigned)).not.toBeInTheDocument();
-      expect(await screen.findByText(copy.clients.unassigned, undefined, { timeout })).toBeInTheDocument();
-      expect(screen.getByRole('button', { name: `${copy.assignments.assign}: Ada Client` })).toBeInTheDocument();
+      expect(await table.findByText(copy.clients.unassigned, undefined, { timeout })).toBeInTheDocument();
+      expect(table.getByRole('button', { name: `${copy.assignments.assign}: Ada Client` })).toBeInTheDocument();
       expect(screen.queryByRole('button', { name: /review/i })).not.toBeInTheDocument();
     });
 
@@ -282,7 +289,7 @@ describe('Admin workspace', () => {
       adminMockState.assignmentReadStatus = 500;
       renderAdmin('/admin/assignments');
       expect(
-        await screen.findByText(copy.assignments.trainerUnavailable, undefined, { timeout: 10_000 }),
+        await withinListTable((table) => table.getByText(copy.assignments.trainerUnavailable), 10_000),
       ).toBeInTheDocument();
       expect(screen.queryByText(copy.clients.unassigned)).not.toBeInTheDocument();
       expect(screen.queryByRole('button', { name: `${copy.assignments.assign}: Ada Client` })).not.toBeInTheDocument();
@@ -345,7 +352,7 @@ describe('Admin workspace', () => {
     it('requests archived exercises only when the Archived status is chosen', async () => {
       const user = userEvent.setup();
       renderAdmin('/admin/exercises');
-      expect(await screen.findByRole('link', { name: 'Vital bench press' }, { timeout })).toBeInTheDocument();
+      expect(await withinListTable((table) => table.getByRole('link', { name: 'Vital bench press' }))).toBeInTheDocument();
       expect(adminMockState.lastExercisesStatusParam).toBeNull();
       await user.selectOptions(screen.getByLabelText(copy.common.status), 'ARCHIVED');
       await waitFor(() => expect(adminMockState.lastExercisesStatusParam).toBe('ARCHIVED'));

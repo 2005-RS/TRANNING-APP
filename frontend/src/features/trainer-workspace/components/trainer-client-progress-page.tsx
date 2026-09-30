@@ -172,7 +172,7 @@ export function TrainerClientProgressPage() {
                   to="/trainer/clients/$clientId/progress/exercises/$exerciseId"
                   params={{ clientId, exerciseId: item.exerciseId }}
                   search={{ period }}
-                  className="flex min-h-12 items-center justify-between gap-3 py-2 hover:bg-muted/60"
+                  className="workspace-interactive flex min-h-12 items-center justify-between gap-3 py-2"
                 >
                   <span className="font-medium">{item.exerciseName}</span>
                   <span className="font-mono text-sm tabular-nums text-muted-foreground">
