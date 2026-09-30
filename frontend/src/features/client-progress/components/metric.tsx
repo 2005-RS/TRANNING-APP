@@ -24,7 +24,7 @@ export function Metric({
       >
         {value}
       </dd>
-      {hint ? <p className="text-xs leading-snug text-muted-foreground">{hint}</p> : null}
+      {hint ? <dd className="text-xs leading-snug text-muted-foreground">{hint}</dd> : null}
     </div>
   );
 }

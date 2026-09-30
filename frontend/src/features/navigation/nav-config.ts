@@ -12,6 +12,7 @@ import {
   Ruler,
   TrendingUp,
   UserCog,
+  UserRound,
   Users,
   Utensils,
 } from 'lucide-react';
@@ -146,6 +147,12 @@ export function getTrainerNav(): NavItem[] {
       label: trainerCopy.notifications.label,
       icon: Bell,
       meta: getRouteMeta('/trainer/notifications'),
+    },
+    {
+      to: '/trainer/profile',
+      label: trainerCopy.profile.label,
+      icon: UserRound,
+      meta: getRouteMeta('/trainer/profile'),
     },
   ];
 }

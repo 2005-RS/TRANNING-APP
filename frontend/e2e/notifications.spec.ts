@@ -1,4 +1,5 @@
 import { expect, test, type Page, type Route } from '@playwright/test';
+import { expectNoSeriousA11yViolations } from './axe';
 
 const clientUser = {
   id: '11111111-1111-4111-8111-111111111111',
@@ -219,6 +220,29 @@ test.describe('notifications', () => {
       `/trainer/clients/${clientProfileId}/check-ins/${submittedCheckInId}`,
     );
     await assertNoHorizontalOverflow(page);
+  });
+
+  test('inboxes have no serious accessibility violations', async ({ page }) => {
+    test.setTimeout(60_000);
+    await mockSession(page, clientUser, clientInbox());
+    await page.goto('/client/notifications', { waitUntil: 'domcontentloaded', timeout: 30_000 });
+    await expect(page.getByRole('list', { name: 'Notifications' }).getByRole('listitem')).toHaveCount(3, {
+      timeout: 20_000,
+    });
+    await expectNoSeriousA11yViolations(page, 'client inbox');
+
+    await page.getByRole('button', { name: 'Unread', exact: true }).click();
+    await page.getByRole('button', { name: 'Mark all as read' }).click();
+    await expect(page.getByRole('heading', { name: 'You are all caught up' })).toBeVisible();
+    await expectNoSeriousA11yViolations(page, 'client inbox, empty');
+  });
+
+  test('trainer inbox has no serious accessibility violations', async ({ page }) => {
+    test.setTimeout(60_000);
+    await mockSession(page, trainerUser, trainerInbox());
+    await page.goto('/trainer/notifications', { waitUntil: 'domcontentloaded', timeout: 30_000 });
+    await expect(page.getByText('A Client submitted a check-in for review.')).toBeVisible({ timeout: 20_000 });
+    await expectNoSeriousA11yViolations(page, 'trainer inbox');
   });
 
   for (const width of [320, 375, 430, 768, 1024, 1440] as const) {

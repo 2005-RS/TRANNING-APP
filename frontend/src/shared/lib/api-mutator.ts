@@ -1,7 +1,7 @@
 import { clearAccessToken, getAccessToken, setAccessToken } from './access-token';
 import { getApiOrigin } from './api-origin';
 import { AUTH_API, isAuthRefreshExcluded } from './auth-paths';
-import { ApiError, isApiErrorBody } from '../errors/api-error';
+import { ApiError, NetworkError, isApiErrorBody } from '../errors/api-error';
 
 type RefreshResponse = {
   accessToken: string;
@@ -27,6 +27,14 @@ let onAuthFailure: (() => void) | null = null;
 
 function isAbortError(error: unknown): boolean {
   return error instanceof Error && error.name === 'AbortError';
+}
+
+/** A caller's own abort passes through so query cancellation stays silent. */
+function toRequestFailure(error: unknown, callerSignal: AbortSignal | null | undefined): unknown {
+  if (isAbortError(error) && callerSignal?.aborted) {
+    return error;
+  }
+  return error instanceof TypeError || isAbortError(error) ? new NetworkError() : error;
 }
 
 function withTimeout(signal: AbortSignal | undefined, timeoutMs: number): AbortSignal {
@@ -161,17 +169,14 @@ export async function apiFetch<T>(
   try {
     response = await execute(headers);
   } catch (error) {
-    if (isAbortError(error) && !init.signal?.aborted) {
-      throw new TypeError('The request could not be completed.');
-    }
-    throw error;
+    throw toRequestFailure(error, init.signal);
   }
   let hasRetriedAfterRefresh = false;
 
   if (shouldAttemptRefresh(resolvedUrl, response.status)) {
     const outcome = await refreshSession();
     if (outcome.status === 'unavailable') {
-      throw new TypeError('The request could not be completed.');
+      throw new NetworkError();
     }
     if (outcome.status === 'authenticated') {
       hasRetriedAfterRefresh = true;
@@ -185,10 +190,7 @@ export async function apiFetch<T>(
       try {
         response = await execute(retryHeaders);
       } catch (error) {
-        if (isAbortError(error) && !init.signal?.aborted) {
-          throw new TypeError('The request could not be completed.');
-        }
-        throw error;
+        throw toRequestFailure(error, init.signal);
       }
     }
   }
@@ -209,5 +211,6 @@ export async function apiFetch<T>(
     return undefined as T;
   }
 
-  return (await response.json()) as T;
+  const text = await response.text();
+  return (text ? JSON.parse(text) : undefined) as T;
 }

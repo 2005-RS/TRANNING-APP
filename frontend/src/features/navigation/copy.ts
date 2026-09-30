@@ -112,6 +112,11 @@ export const trainerCopySource = {
     title: 'Notifications',
     description: 'Updates about your assigned Clients.',
   },
+  profile: {
+    label: 'Profile',
+    title: 'Profile',
+    description: 'Title, bio, and phone shown to your Clients.',
+  },
 } as const;
 
 export const adminCopySource = {

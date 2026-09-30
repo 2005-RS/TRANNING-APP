@@ -2,6 +2,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import tailwindcss from '@tailwindcss/vite';
 import react from '@vitejs/plugin-react';
+import { visualizer } from 'rollup-plugin-visualizer';
 import { defineConfig, loadEnv, type Plugin } from 'vite';
 import {
   OpenApiIdentityError,
@@ -66,6 +67,9 @@ export default defineConfig(({ mode }) => {
       }),
       tailwindcss(),
       trainingApiIdentityCheck(apiOrigin),
+      mode === 'analyze'
+        ? visualizer({ filename: 'dist/bundle-stats.html', template: 'treemap', gzipSize: true })
+        : null,
     ],
     resolve: {
       alias: {

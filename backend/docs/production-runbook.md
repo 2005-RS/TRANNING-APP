@@ -4,14 +4,17 @@ Vendor-neutral operations guide for Backend V1. Do not put real passwords in thi
 
 ## Recommended topology
 
-Browser --HTTPS--> Frontend  
-Frontend --HTTPS--> NestJS API  
+Browser --HTTPS--> reverse proxy (TLS)
+
+- `/` → SPA (see `docs/frontend/deploy.md` and `frontend/Dockerfile`)
+- `/api` and `/socket.io` → NestJS API
+
 NestJS API --> PostgreSQL  
 NestJS API --> private S3-compatible object storage  
 
-Optional reverse proxy / load balancer in front of Nest. Nest does not terminate TLS.
+The SPA and API must share one https origin. The refresh cookie is HttpOnly with path `/api/v1/auth` and there is no CSRF token; split origins would require `SameSite=None`. Full table of variables, seeds, and the release checklist: [`docs/frontend/deploy.md`](../../docs/frontend/deploy.md).
 
-Set `TRUST_PROXY=true` only when a trusted proxy is actually forwarding client protocol/IP. Default is false.
+Nest does not terminate TLS. Set `TRUST_PROXY=true` whenever a trusted proxy is forwarding client protocol/IP. Leaving it `false` behind a proxy breaks Secure cookies (`req.secure`) and the IP used by throttling. Default `false` is only for a process that sees the real client connection.
 
 ## Required environment
 
@@ -21,6 +24,7 @@ Production-required:
 
 - `NODE_ENV=production`
 - `PORT`
+- `TRUST_PROXY=true` when a reverse proxy terminates TLS / forwards client IP
 - `DATABASE_HOST`, `DATABASE_PORT`, `DATABASE_NAME`, `DATABASE_USER`, `DATABASE_PASSWORD`
 - `DATABASE_SSL=true` for managed PostgreSQL that requires TLS
 - `CORS_ORIGIN` explicit https origins (never `*`)
@@ -34,7 +38,6 @@ Production-required:
 
 Optional:
 
-- `TRUST_PROXY`
 - `HTTP_JSON_BODY_LIMIT_BYTES` (default 262144)
 - `SWAGGER_ENABLED` (default false in production)
 - `DATABASE_POOL_MAX` (default 10)
@@ -67,7 +70,7 @@ Do **not** auto-run migrations on application boot.
    ```
 
 3. If migrations succeed, start the API (`node dist/main.js` or the container CMD).
-4. Confirm `GET /api/v1/health` returns 200 with `info.postgres.status=up`.
+4. Confirm `GET /api/v1/health` returns 200 with `info.postgres.status=up` and `info.storage.status=up`.
 5. Route traffic.
 
 Rollback: restore PostgreSQL from a tested backup, then deploy the previous application image. `migration:revert` is for the `training_test` database during development, not a production rollback strategy.
@@ -93,7 +96,7 @@ Never bake `.env` into the image. Never copy secrets into the build context.
 `GET /api/v1/health`
 
 - Unauthenticated and not rate-limited
-- PostgreSQL ping only
+- PostgreSQL ping and object-storage bucket ping (`HeadBucket` / in-memory no-op)
 - Does not expose hostnames, credentials, SQL, or stack traces
 
 Graceful shutdown: `app.enableShutdownHooks()`. SIGTERM/SIGINT stop accepting work and close the Nest/TypeORM lifecycle.
@@ -164,9 +167,11 @@ The leftover `training-app-*` container and volume from the old Compose project 
 | Refresh cookie missing | Path is `/api/v1/auth`. Secure/SameSite vs HTTP |
 | 403 vs 404 | Wrong role is 403. Foreign resource is 404 |
 | Swagger 404 in production | Default. Set `SWAGGER_ENABLED=true` only if required |
-| Health 503 | PostgreSQL unreachable. Response stays sanitized |
+| Health 503 | PostgreSQL or object storage unreachable. Response stays sanitized |
 | Slow queries | Temporarily set `DATABASE_SLOW_QUERY_MS` or use `EXPLAIN ANALYZE` on a copy |
 
 ## Admin seed
 
 `npm run seed:admin` is explicit and does not run on boot. Production refuses `admin@example.com` / example.com and known default passwords. The password is never logged.
+
+The production image is pruned (`npm prune --omit=dev`). `seed:admin` and `import:exercise-library` are `ts-node` scripts, so they are **not** runnable inside that image. Run them from a source checkout or a CI job with a full `npm ci`. The Vital Animations pack is not in git (`/assets/import/vital-animations/**`); a newly migrated database has no exercise catalog until an operator imports it. Details: [`docs/frontend/deploy.md`](../../docs/frontend/deploy.md).

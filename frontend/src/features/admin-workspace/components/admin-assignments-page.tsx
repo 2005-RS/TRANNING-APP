@@ -24,9 +24,12 @@ import { Skeleton } from '@/shared/ui/skeleton';
 
 const STALE_TIME_MS = 60_000;
 
+// The last target stays mounted after closing so the sheet can animate out and
+// the browser can return focus to the row button that opened it.
 type AssignmentTarget = {
   client: { id: string; name: string; disabled: boolean };
   currentTrainer: TrainerResponseDto | null;
+  open: boolean;
 };
 
 export function AdminAssignmentsPage() {
@@ -45,7 +48,7 @@ export function AdminAssignmentsPage() {
   const filtered = Boolean(search.search);
 
   function openAssignment(clientId: string, name: string, currentTrainer: TrainerResponseDto | null) {
-    setTarget({ client: { id: clientId, name, disabled: false }, currentTrainer });
+    setTarget({ client: { id: clientId, name, disabled: false }, currentTrainer, open: true });
   }
 
   function clearFilters() {
@@ -156,10 +159,10 @@ export function AdminAssignmentsPage() {
       )}
       {target ? (
         <AssignmentSheet
-          open
+          open={target.open}
           onOpenChange={(open) => {
             if (!open) {
-              setTarget(null);
+              setTarget({ ...target, open: false });
             }
           }}
           client={target.client}

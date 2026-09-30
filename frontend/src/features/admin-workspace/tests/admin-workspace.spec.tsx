@@ -10,6 +10,7 @@ import { adminWorkspaceCopy, adminWorkspaceCopySource } from '@/features/admin-w
 import { greetingHeadline } from '@/features/client-dashboard/lib/greeting';
 import { trainerWorkspaceCopy } from '@/features/trainer-workspace/copy';
 import { changeAppLanguage } from '@/i18n/language';
+import { commonCopy } from '@/i18n/locales/common-live';
 import { esAdminWorkspace } from '@/i18n/locales/es/admin';
 import {
   ADMIN_CLIENT_ID,
@@ -67,7 +68,7 @@ describe('Admin workspace', () => {
   });
 
   describe('dashboard', () => {
-    it('shows a skeleton, then coverage and counts without inbox or private metrics', async () => {
+    it('shows a skeleton, then coverage, counts, and the signed-in admin unread total', async () => {
       adminMockState.delayMs = 800;
       renderAdmin();
       expect(
@@ -77,7 +78,12 @@ describe('Admin workspace', () => {
       expect(screen.getByRole('heading', { name: copy.dashboard.coverageTitle })).toBeInTheDocument();
       expect(screen.getByText(copy.dashboard.activeTrainers)).toBeInTheDocument();
       expect(screen.getByText(copy.dashboard.pendingCheckIns)).toBeInTheDocument();
-      expect(screen.queryByText('99')).not.toBeInTheDocument();
+      expect(screen.getByText(copy.dashboard.unreadNotifications)).toBeInTheDocument();
+      expect(screen.getByText('99')).toBeInTheDocument();
+      expect(screen.getByRole('link', { name: copy.dashboard.openInbox })).toHaveAttribute(
+        'href',
+        '/admin/notifications',
+      );
       expect(screen.queryByText(/body fat|kg|progress photo/i)).not.toBeInTheDocument();
       expect(screen.queryByRole('link', { name: /check-in/i })).not.toBeInTheDocument();
     }, 15_000);
@@ -86,6 +92,18 @@ describe('Admin workspace', () => {
       renderAdmin();
       const cta = await screen.findByRole('link', { name: copy.dashboard.reviewUnassigned }, { timeout });
       expect(cta).toHaveAttribute('href', '/admin/assignments');
+    });
+
+    it('still links to the inbox when the signed-in admin has no unread items', async () => {
+      adminMockState.unreadCount = 0;
+      renderAdmin();
+      expect(
+        await screen.findByText(copy.dashboard.unreadNotifications, undefined, { timeout }),
+      ).toBeInTheDocument();
+      expect(screen.getByRole('link', { name: copy.dashboard.openInbox })).toHaveAttribute(
+        'href',
+        '/admin/notifications',
+      );
     });
 
     it('switches language without refetching the dashboard', async () => {
@@ -105,7 +123,7 @@ describe('Admin workspace', () => {
     it('shows network errors without logging out', async () => {
       adminMockState.failNetwork = true;
       renderAdmin();
-      expect(await screen.findByRole('heading', { name: 'Something went wrong' }, { timeout })).toBeInTheDocument();
+      expect(await screen.findByRole('heading', { name: commonCopy.errors.networkTitle }, { timeout })).toBeInTheDocument();
       expect(screen.getByRole('button', { name: copy.retry })).toBeInTheDocument();
     });
   });

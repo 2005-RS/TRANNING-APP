@@ -36,4 +36,6 @@ export interface ObjectStorageService {
   headObject(key: string): Promise<StoredObjectMetadata | null>;
   deleteObject(key: string): Promise<void>;
   createReadUrl(key: string, expiresInSeconds: number): Promise<SignedReadUrl>;
+  /** Cheap connectivity check (HeadBucket / in-memory no-op). Never returns credentials. */
+  ping(): Promise<void>;
 }

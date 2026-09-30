@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useId, useState } from 'react';
 import { useNavigate } from '@tanstack/react-router';
 import { useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
@@ -338,8 +338,8 @@ function ExerciseEditor({
           <Field label={copy.rest} value={rest} onChange={setRest} />
           <Field label={copy.load} value={load} onChange={setLoad} />
           <div className="space-y-1 sm:col-span-3">
-            <Label>{copy.notes}</Label>
-            <TextArea value={notes} onChange={(event) => setNotes(event.target.value)} />
+            <Label htmlFor={`${exercise.id}-notes`}>{copy.notes}</Label>
+            <TextArea id={`${exercise.id}-notes`} value={notes} onChange={(event) => setNotes(event.target.value)} />
           </div>
           <div className="flex items-end">
             <Button type="submit" size="sm" disabled={update.isPending}>
@@ -366,10 +366,11 @@ function Field({
   value: string;
   onChange: (value: string) => void;
 }) {
+  const id = useId();
   return (
     <div className="space-y-1">
-      <Label>{label}</Label>
-      <Input value={value} inputMode="decimal" onChange={(event) => onChange(event.target.value)} />
+      <Label htmlFor={id}>{label}</Label>
+      <Input id={id} value={value} inputMode="decimal" onChange={(event) => onChange(event.target.value)} />
     </div>
   );
 }

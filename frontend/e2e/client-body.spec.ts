@@ -1,4 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
+import { expectNoSeriousA11yViolations } from './axe';
 
 const clientUser = {
   id: '11111111-1111-4111-8111-111111111111',
@@ -165,6 +166,15 @@ test.describe('client body progress', () => {
       page.getByRole('heading', { name: 'No measurements yet.' }),
     ).toBeVisible({ timeout: 20_000 });
     await expect(page.getByText('0 kg')).toHaveCount(0);
+  });
+
+  test('body progress has no serious accessibility violations', async ({ page }) => {
+    test.setTimeout(60_000);
+    await page.setViewportSize({ width: 390, height: 844 });
+    await mockAuthenticatedBody(page);
+    await page.goto('/client/body', { waitUntil: 'domcontentloaded', timeout: 30_000 });
+    await expect(page.getByText('81.25 kg')).toBeVisible({ timeout: 20_000 });
+    await expectNoSeriousA11yViolations(page, '/client/body');
   });
 
   const viewports = [320, 375, 430, 768, 1024, 1440] as const;

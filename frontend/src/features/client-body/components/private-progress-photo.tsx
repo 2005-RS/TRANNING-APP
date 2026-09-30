@@ -47,7 +47,10 @@ export function PrivateProgressPhoto({
 
   let content: ReactNode;
 
-  if (!enabled || access.isPending) {
+  if (!enabled) {
+    // Still, not a skeleton: nothing is loading until the frame nears the viewport.
+    content = <div role="img" aria-label={label} className="aspect-[3/4] rounded-xl bg-muted" />;
+  } else if (access.isPending) {
     content = (
       <div
         role="status"

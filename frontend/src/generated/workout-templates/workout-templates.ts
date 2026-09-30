@@ -30,6 +30,7 @@ import type {
 
 import type {
   CreateWorkoutTemplateDto,
+  DuplicateWorkoutTemplateDto,
   PaginatedWorkoutTemplatesResponseDto,
   ReplaceWorkoutTemplateExercisesDto,
   UpdateWorkoutTemplateDto,
@@ -224,6 +225,78 @@ export function useWorkoutTemplatesList<TData = Awaited<ReturnType<typeof workou
 
 
 /**
+ * @summary Copy a template the caller can read (any ACTIVE template, or their own DRAFT/ARCHIVED) into a new DRAFT owned by the caller, with the same ordered prescriptions. The source is not modified.
+ */
+export const getWorkoutTemplatesDuplicateUrl = (id: string,) => {
+
+
+  
+
+  return `/api/v1/workout-templates/${id}/duplicate`
+}
+
+export const workoutTemplatesDuplicate = async (id: string,
+    duplicateWorkoutTemplateDto: DuplicateWorkoutTemplateDto, options?: RequestInit): Promise<WorkoutTemplateResponseDto> => {
+  
+  return apiFetch<WorkoutTemplateResponseDto>(getWorkoutTemplatesDuplicateUrl(id),
+  {      
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      duplicateWorkoutTemplateDto,)
+  }
+);}
+
+
+
+
+export const getWorkoutTemplatesDuplicateMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof workoutTemplatesDuplicate>>, TError,{id: string;data: DuplicateWorkoutTemplateDto}, TContext>, request?: SecondParameter<typeof apiFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof workoutTemplatesDuplicate>>, TError,{id: string;data: DuplicateWorkoutTemplateDto}, TContext> => {
+
+const mutationKey = ['workoutTemplatesDuplicate'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof workoutTemplatesDuplicate>>, {id: string;data: DuplicateWorkoutTemplateDto}> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  workoutTemplatesDuplicate(id,data,requestOptions)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type WorkoutTemplatesDuplicateMutationResult = NonNullable<Awaited<ReturnType<typeof workoutTemplatesDuplicate>>>
+    export type WorkoutTemplatesDuplicateMutationBody = DuplicateWorkoutTemplateDto
+    export type WorkoutTemplatesDuplicateMutationError = void
+
+    /**
+ * @summary Copy a template the caller can read (any ACTIVE template, or their own DRAFT/ARCHIVED) into a new DRAFT owned by the caller, with the same ordered prescriptions. The source is not modified.
+ */
+export const useWorkoutTemplatesDuplicate = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof workoutTemplatesDuplicate>>, TError,{id: string;data: DuplicateWorkoutTemplateDto}, TContext>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof workoutTemplatesDuplicate>>,
+        TError,
+        {id: string;data: DuplicateWorkoutTemplateDto},
+        TContext
+      > => {
+
+      const mutationOptions = getWorkoutTemplatesDuplicateMutationOptions(options);
+
+      return useMutation(mutationOptions, queryClient);
+    }
+    /**
  * @summary Get a template and ordered prescriptions. ACTIVE is shared. DRAFT and ARCHIVED are visible to ADMIN and the creator TRAINER only.
  */
 export const getWorkoutTemplatesGetByIdUrl = (id: string,) => {

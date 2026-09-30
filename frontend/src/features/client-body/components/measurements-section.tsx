@@ -20,7 +20,16 @@ export function MeasurementsSection({
 }) {
   const { create, update } = useBodyMeasurementMutations();
   const [formOpen, setFormOpen] = useState(false);
+  // Each open gets a fresh form. The closed sheet stays mounted so it can
+  // animate out and the browser can return focus to the button that opened it.
+  const [formSession, setFormSession] = useState(0);
   const [editing, setEditing] = useState<BodyMeasurementResponseDto | null>(null);
+
+  function openForm(measurement: BodyMeasurementResponseDto | null) {
+    setEditing(measurement);
+    setFormSession((session) => session + 1);
+    setFormOpen(true);
+  }
   const latest = measurements[0] ?? null;
   const rest = measurements.slice(1);
 
@@ -47,10 +56,7 @@ export function MeasurementsSection({
         </div>
         <Button
           className="min-h-12 shrink-0"
-          onClick={() => {
-            setEditing(null);
-            setFormOpen(true);
-          }}
+          onClick={() => openForm(null)}
         >
           {clientBodyCopy.measurements.add}
         </Button>
@@ -71,20 +77,14 @@ export function MeasurementsSection({
             <MeasurementCard
               measurement={latest}
               latest
-              onEdit={(item) => {
-                setEditing(item);
-                setFormOpen(true);
-              }}
+              onEdit={openForm}
             />
           ) : null}
           {rest.map((item) => (
             <MeasurementCard
               key={item.id}
               measurement={item}
-              onEdit={(selected) => {
-                setEditing(selected);
-                setFormOpen(true);
-              }}
+              onEdit={openForm}
             />
           ))}
           {totalPages > 1 ? (
@@ -113,16 +113,11 @@ export function MeasurementsSection({
         </div>
       )}
 
-      {formOpen ? (
+      {formSession > 0 ? (
         <MeasurementFormSheet
-          key={editing?.id ?? 'create'}
+          key={formSession}
           open={formOpen}
-          onOpenChange={(open) => {
-            setFormOpen(open);
-            if (!open) {
-              setEditing(null);
-            }
-          }}
+          onOpenChange={setFormOpen}
           measurement={editing}
           onCreate={onCreate}
           onUpdate={onUpdate}

@@ -1,4 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
+import { expectNoSeriousA11yViolations } from './axe';
 
 const clientUser = {
   id: '11111111-1111-4111-8111-111111111111',
@@ -247,6 +248,40 @@ test.describe('client workout', () => {
     });
     await expect(page.getByRole('textbox', { name: 'Reps' })).toBeEnabled();
     await page.getByRole('button', { name: 'Log set' }).click();
+    await expect(page.getByRole('timer')).toBeVisible();
+  });
+
+  test('focus mode has no serious accessibility violations in dark, light, and resting states', async ({
+    page,
+  }) => {
+    test.setTimeout(60_000);
+    await page.setViewportSize({ width: 390, height: 844 });
+    await mockClientWorkout(page);
+    await page.goto(`/client/workout/${sessionId}`, { waitUntil: 'domcontentloaded', timeout: 30_000 });
+    await expect(page.getByRole('heading', { name: 'Lower A' })).toBeVisible({ timeout: 20_000 });
+    await expectNoSeriousA11yViolations(page, 'focus mode, dark');
+
+    await page.getByRole('button', { name: /Appearance, Dark/ }).click();
+    await expect(page.getByRole('button', { name: /Appearance, Light/ })).toBeVisible();
+    await expectNoSeriousA11yViolations(page, 'focus mode, light');
+
+    await page.getByRole('button', { name: 'Log set' }).click();
+    await expect(page.getByRole('timer')).toBeVisible();
+    await expectNoSeriousA11yViolations(page, 'focus mode, resting');
+  });
+
+  test('focus mode logs a set from the keyboard', async ({ page }) => {
+    test.setTimeout(45_000);
+    await mockClientWorkout(page);
+    await page.goto(`/client/workout/${sessionId}`, { waitUntil: 'domcontentloaded', timeout: 30_000 });
+    const reps = page.getByRole('textbox', { name: 'Reps' });
+    await expect(reps).toHaveValue('8', { timeout: 20_000 });
+    await reps.focus();
+    await page.keyboard.press('Control+A');
+    await page.keyboard.type('9');
+    const logSet = page.getByRole('button', { name: 'Log set' });
+    await logSet.focus();
+    await page.keyboard.press('Enter');
     await expect(page.getByRole('timer')).toBeVisible();
   });
 

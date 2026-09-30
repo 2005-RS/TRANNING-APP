@@ -1,6 +1,7 @@
 import { useId, useState } from 'react';
 import { useForm } from '@tanstack/react-form';
 import { useQueryClient } from '@tanstack/react-query';
+import { useNavigate } from '@tanstack/react-router';
 import { CircleAlert } from 'lucide-react';
 import { toast } from 'sonner';
 import type { CreateWorkoutTemplateDto } from '@/generated/models';
@@ -33,6 +34,7 @@ export function CreateTemplateSheet({
   const trainerWorkspaceCopy = useTrainerWorkspaceCopy();
   const copy = trainerWorkspaceCopy.templates;
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
   const create = useWorkoutTemplatesCreate();
   const formErrorId = useId();
   const [formError, setFormError] = useState<string | null>(null);
@@ -46,11 +48,13 @@ export function CreateTemplateSheet({
         description: value.description?.trim() || undefined,
       };
       try {
-        await create.mutateAsync({ data });
+        const created = await create.mutateAsync({ data });
         await invalidateTrainerTemplates(queryClient);
         form.reset();
         toast.success(copy.created);
         onOpenChange(false);
+        // New templates are drafts, which the default Active library view does not list.
+        void navigate({ to: '/trainer/training/$templateId', params: { templateId: created.id } });
       } catch (err) {
         setFormError(mapApiError(err).description);
       }

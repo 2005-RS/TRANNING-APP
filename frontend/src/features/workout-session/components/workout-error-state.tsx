@@ -15,7 +15,7 @@ export function WorkoutErrorState({
 }) {
   const mapped = mapApiError(error);
   const description =
-    mapped.description === 'The request could not be completed.'
+    mapped.kind === 'network'
       ? workoutCopy.error.network
       : mapped.description;
 

@@ -1,7 +1,7 @@
 import { useState } from 'react';
-import { Link } from '@tanstack/react-router';
+import { Link, useNavigate } from '@tanstack/react-router';
 import { useQueryClient } from '@tanstack/react-query';
-import { ChevronLeft, Dumbbell, Plus } from 'lucide-react';
+import { ChevronLeft, Copy, Dumbbell, Plus } from 'lucide-react';
 import { toast } from 'sonner';
 import {
   UpdateWorkoutTemplateStatusDtoStatus,
@@ -10,6 +10,7 @@ import {
   type WorkoutTemplateExerciseResponseDto,
 } from '@/generated/models';
 import {
+  useWorkoutTemplatesDuplicate,
   useWorkoutTemplatesGetById,
   useWorkoutTemplatesReplaceExercises,
   useWorkoutTemplatesUpdateStatus,
@@ -34,10 +35,12 @@ import { buttonVariants } from '@/shared/ui/button-variants';
 import { PageActions, PageContainer, PageDescription, PageHeader, PageTitle } from '@/shared/ui/page';
 
 const copy = trainerWorkspaceCopy.templates;
+const TEMPLATE_NAME_MAX_LENGTH = 150;
 
 export function TrainerTemplateDetailPage() {
   const templateId = useTrainerRouteId('templateId');
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
   const [error, setError] = useState<string | null>(null);
   const [sheet, setSheet] = useState<PrescriptionSheetMode | null>(null);
   const query = useWorkoutTemplatesGetById(templateId, {
@@ -45,6 +48,7 @@ export function TrainerTemplateDetailPage() {
   });
   const replace = useWorkoutTemplatesReplaceExercises();
   const updateStatus = useWorkoutTemplatesUpdateStatus();
+  const duplicate = useWorkoutTemplatesDuplicate();
 
   if (query.isPending) {
     return <TrainerPageSkeleton label={copy.loadingLabel} />;
@@ -69,7 +73,23 @@ export function TrainerTemplateDetailPage() {
   const canEdit = template.status !== WorkoutTemplateResponseDtoStatus.ARCHIVED;
   const canEmpty = template.status === WorkoutTemplateResponseDtoStatus.DRAFT;
   const inputs = template.items.map((item) => itemToInput(item));
-  const busy = replace.isPending || updateStatus.isPending;
+  const busy = replace.isPending || updateStatus.isPending || duplicate.isPending;
+
+  async function handleDuplicate() {
+    setError(null);
+    const name = copy.copyName(template.name);
+    try {
+      const created = await duplicate.mutateAsync({
+        id: templateId,
+        data: name.length <= TEMPLATE_NAME_MAX_LENGTH ? { name } : {},
+      });
+      await invalidateTrainerTemplates(queryClient);
+      toast.success(copy.duplicated);
+      void navigate({ to: '/trainer/training/$templateId', params: { templateId: created.id } });
+    } catch (err) {
+      setError(mapApiError(err).description);
+    }
+  }
 
   async function saveItems(next: WorkoutTemplateExerciseInputDto[], success: string = copy.saveExercises) {
     setError(null);
@@ -161,6 +181,15 @@ export function TrainerTemplateDetailPage() {
           </p>
         </div>
         <PageActions className="w-full sm:w-auto">
+          <Button
+            className="w-full sm:w-auto"
+            variant="outline"
+            disabled={busy}
+            onClick={() => void handleDuplicate()}
+          >
+            <Copy className="size-4" aria-hidden />
+            {copy.duplicate}
+          </Button>
           {canEdit ? (
             <Button
               className="w-full sm:w-auto"

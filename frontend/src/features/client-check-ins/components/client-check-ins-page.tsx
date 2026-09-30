@@ -19,6 +19,14 @@ import { PageContainer, PageDescription, PageHeader, PageTitle } from '@/shared/
 export function ClientCheckInsPage() {
   const [page, setPage] = useState(1);
   const [createOpen, setCreateOpen] = useState(false);
+  // Each open gets a fresh form. The closed sheet stays mounted so it can
+  // animate out and the browser can return focus to the button that opened it.
+  const [createSession, setCreateSession] = useState(0);
+
+  function openCreate() {
+    setCreateSession((session) => session + 1);
+    setCreateOpen(true);
+  }
   const navigate = useNavigate();
   const listQuery = useClientCheckInList(page);
   const { create } = useClientCheckInMutations();
@@ -72,7 +80,7 @@ export function ClientCheckInsPage() {
                   {clientCheckInsCopy.current.emptyBody}
                 </p>
               </div>
-              <Button className="min-h-14 w-full" onClick={() => setCreateOpen(true)}>
+              <Button className="min-h-14 w-full" onClick={openCreate}>
                 {clientCheckInsCopy.current.start}
               </Button>
             </section>
@@ -93,7 +101,7 @@ export function ClientCheckInsPage() {
                   ? 'min-h-11 w-full text-muted-foreground'
                   : 'min-h-12 w-full'
               }
-              onClick={() => setCreateOpen(true)}
+              onClick={openCreate}
             >
               {clientCheckInsCopy.current.start}
             </Button>
@@ -101,8 +109,9 @@ export function ClientCheckInsPage() {
         </div>
       )}
 
-      {createOpen ? (
+      {createSession > 0 ? (
         <CreateCheckInSheet
+          key={createSession}
           open={createOpen}
           onOpenChange={setCreateOpen}
           onCreate={onCreate}

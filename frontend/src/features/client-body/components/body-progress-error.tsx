@@ -13,7 +13,7 @@ export function BodyProgressError({
 }) {
   const mapped = mapApiError(error);
   const description =
-    mapped.description === 'The request could not be completed.'
+    mapped.kind === 'network'
       ? clientBodyCopy.error.network
       : mapped.description;
 

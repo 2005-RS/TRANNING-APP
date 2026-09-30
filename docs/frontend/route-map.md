@@ -79,7 +79,7 @@ Layout: sidebar. No decorative 3D.
 | Path | Purpose | API |
 | --- | --- | --- |
 | `/admin` | Redirect to dashboard | |
-| `/admin/dashboard` | Counts only. Does not surface `notifications.unreadCount` (F12). | `GET /admin/dashboard` (`adminDashboardGetSystem`) |
+| `/admin/dashboard` | Operational counts plus the signed-in admin's `notifications.unreadCount`, with a link to the inbox. | `GET /admin/dashboard` (`adminDashboardGetSystem`) |
 | `/admin/trainers` | List/create | `GET/POST /trainers` |
 | `/admin/trainers/$trainerId` | Detail, edit, status | `GET/PATCH /trainers/:id`, `PATCH .../status` |
 | `/admin/clients` | List/create | `GET/POST /clients` |

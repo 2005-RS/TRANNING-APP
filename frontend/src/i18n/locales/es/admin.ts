@@ -97,6 +97,9 @@ export const esAdminWorkspace: LooseCopy<typeof adminWorkspaceCopySource> = {
     programsTitle: 'Programas y actividad',
     sessionsInWindow: 'Sesiones completadas, últimos {{days}} días',
     pendingCheckInsHint: 'Seguimientos enviados que esperan revisión del entrenador.',
+    unreadNotifications: 'Notificaciones no leídas',
+    unreadNotificationsHint: 'Solo tus no leídas. No es el total de todos los administradores.',
+    openInbox: 'Abrir bandeja',
   },
   trainers: {
     title: 'Entrenadores',

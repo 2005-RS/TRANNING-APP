@@ -361,18 +361,14 @@ Whenever a Client-facing feature ships, keep the Trainer-facing counterpart for 
 Recorded for later phases. Not permission to fake frontend data or change backend in an unauthorized task:
 
 - No register UI/flow
-- No password-reset flow
 - CLIENT generic exercise/media access may be limited — re-check generated contract per feature
 - Trainer cannot create Clients if the contract remains unchanged
-- No workout-template clone/duplicate operation
 - Owning TRAINER can upload exercise media on exercises they created; ADMIN-owned catalog media stays read-only
 - Trainer body review is read-only; photo access may 403
-- Dashboard `notifications.unreadCount` exists; F12 owns inbox UI
-- Admin dashboard does not render `notifications.unreadCount`
+- Dashboard `notifications.unreadCount` exists; F12 owns inbox UI. Client and Trainer dashboards do not render that field. The Admin dashboard shows the signed-in admin's count.
 - Admin F11 does not clone Trainer Client-context inspection (`/admin/clients/$clientId/**` progress/body/nutrition/training/check-in). Identity, assignment, and catalogs are in F11; nested fitness inspection would duplicate coaching UX
 - ADMIN may mutate workout templates via OpenAPI; F11 UI does not ship a template builder
 - Assignment table loads current trainer per Client (no bulk assignment list endpoint)
-- `GET/PATCH /trainers/me` profile editor is not in the F10 sidebar
 
 ## Advancement
 

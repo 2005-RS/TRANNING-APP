@@ -1,4 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
+import { expectNoSeriousA11yViolations } from './axe';
 
 const clientUser = {
   id: '11111111-1111-4111-8111-111111111111',
@@ -192,6 +193,19 @@ test.describe('client check-ins', () => {
     await expect(page.getByRole('heading', { name: 'Check-ins' })).toBeVisible({
       timeout: 20_000,
     });
+  });
+
+  test('check-ins list and form have no serious accessibility violations', async ({ page }) => {
+    test.setTimeout(60_000);
+    await page.setViewportSize({ width: 390, height: 844 });
+    await mockAuthenticatedCheckIns(page);
+    await page.goto('/client/check-ins', { waitUntil: 'domcontentloaded', timeout: 30_000 });
+    await expect(page.getByText('Draft in progress')).toBeVisible({ timeout: 20_000 });
+    await expectNoSeriousA11yViolations(page, '/client/check-ins');
+
+    await page.getByRole('link', { name: 'Continue check-in' }).click();
+    await expect(page.getByRole('button', { name: 'Submit check-in' })).toBeVisible({ timeout: 20_000 });
+    await expectNoSeriousA11yViolations(page, '/client/check-ins/$checkInId');
   });
 
   const viewports = [320, 375, 430, 768, 1024, 1440] as const;
