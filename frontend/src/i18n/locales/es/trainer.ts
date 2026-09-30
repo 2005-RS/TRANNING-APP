@@ -271,7 +271,7 @@ export const esTrainerWorkspace: LooseCopy<typeof trainerWorkspaceCopySource> = 
     archiveHint: 'Al archivar, esta plantilla se retira. Puedes reactivarla más adelante.',
     archivedHint: 'Esta plantilla está archivada. Reactívala para editar los ejercicios.',
     statusFilter: 'Estado',
-    statusAll: 'Todos',
+    showDrafts: 'Ver borradores',
     updated: 'Actualizado',
     open: 'Abrir',
     openTemplate: 'Abrir plantilla',

@@ -93,9 +93,12 @@ export function TrainerTemplatesPage() {
           <LayoutList className="size-8 text-muted-foreground" aria-hidden />
           <h2 className="mt-4 text-lg font-semibold tracking-tight">{copy.emptyTitle}</h2>
           <p className="mt-2 max-w-md text-sm leading-relaxed text-muted-foreground">{copy.emptyBody}</p>
-          <Button className="mt-6" onClick={() => setCreateOpen(true)}>
-            {copy.emptyCreate}
-          </Button>
+          <div className="mt-6 flex flex-wrap justify-center gap-2">
+            <Button onClick={() => setCreateOpen(true)}>{copy.emptyCreate}</Button>
+            <Button variant="outline" onClick={() => applySearch({ status: WorkoutTemplatesListStatus.DRAFT })}>
+              {copy.showDrafts}
+            </Button>
+          </div>
         </WorkspaceSurface>
       ) : (
         <section className="space-y-3" aria-labelledby="template-library-heading">
@@ -128,15 +131,15 @@ export function TrainerTemplatesPage() {
                   <Label htmlFor="template-status">{copy.statusFilter}</Label>
                   <NativeSelect
                     id="template-status"
-                    value={search.status ?? ''}
+                    value={search.status ?? WorkoutTemplatesListStatus.ACTIVE}
                     onChange={(event) => {
                       applySearch({
-                        status: event.target.value || undefined,
+                        status:
+                          event.target.value === WorkoutTemplatesListStatus.ACTIVE ? undefined : event.target.value,
                         search: searchDraft.trim() || undefined,
                       });
                     }}
                   >
-                    <option value="">{copy.statusAll}</option>
                     <option value={WorkoutTemplatesListStatus.DRAFT}>
                       {trainerWorkspaceCopy.status.DRAFT}
                     </option>

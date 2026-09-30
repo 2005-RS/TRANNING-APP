@@ -247,6 +247,8 @@ jobs:
             -d "{\"email\":\"trainer.ci@example.test\",\"password\":\"$trainer_password\",\"firstName\":\"Ci\",\"lastName\":\"Trainer\"}"
 
           {
+            echo "E2E_ADMIN_EMAIL=$admin_email"
+            echo "E2E_ADMIN_PASSWORD=$admin_password"
             echo "E2E_EMAIL=client.ci@example.test"
             echo "E2E_PASSWORD=$client_password"
             echo "E2E_TRAINER_EMAIL=trainer.ci@example.test"

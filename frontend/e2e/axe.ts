@@ -10,14 +10,17 @@ const BLOCKING_IMPACTS = new Set(['serious', 'critical']);
 export async function expectNoSeriousA11yViolations(page: Page, label: string) {
   // Contrast is measured on the settled page. Mid-transition colors (a sheet
   // fading in, a theme switch) otherwise produce ratios no user ever sees.
-  await page.evaluate(() =>
-    Promise.all(
+  // Entry transitions start a frame after mount, so they are collected after
+  // two frames rather than immediately.
+  await page.evaluate(async () => {
+    await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+    await Promise.all(
       document
         .getAnimations()
         .filter((animation) => animation.effect?.getTiming().iterations !== Infinity)
         .map((animation) => animation.finished.catch(() => undefined)),
-    ),
-  );
+    );
+  });
   const results = await new AxeBuilder({ page })
     .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa'])
     .analyze();

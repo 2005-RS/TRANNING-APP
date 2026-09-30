@@ -271,7 +271,7 @@ export const trainerWorkspaceCopySource = {
     archiveHint: 'Archiving retires this template. You can reactivate it later.',
     archivedHint: 'This template is archived. Reactivate it to edit exercises.',
     statusFilter: 'Status',
-    statusAll: 'All',
+    showDrafts: 'Show drafts',
     updated: 'Updated',
     open: 'Open',
     openTemplate: 'Open template',
