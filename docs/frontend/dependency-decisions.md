@@ -34,6 +34,7 @@ Legend: **FOUNDATION** (F01) · **FEATURE-DEPENDENT** · **DEFERRED** · **OPTIO
 | Vitest | FOUNDATION | Unit tests | F01 | Jest — Vite-native Vitest wins | None |
 | Testing Library | FOUNDATION | Component tests | F01 | Enzyme — dead | None |
 | Playwright | FEATURE-DEPENDENT | E2E auth/workout | F02 or F14 | Cypress — Playwright is specified | CI browsers |
+| @axe-core/playwright | FEATURE-DEPENDENT (dev only) | WCAG 2.2 A/AA gate in E2E; `e2e/axe.ts` fails only on serious/critical findings | F14 (A3) | Manual audits only — regress silently; `jest-axe` — jsdom has no layout, so contrast and focus checks are meaningless | Rule updates can add findings on upgrade — pin with the lockfile and review the diff |
 | MSW | FEATURE-DEPENDENT | Mock OpenAPI in tests | F01 or F02 | Nock — worse for fetch | Stale mocks if not regenerated |
 | Redux | REJECTED | No global event bus needed | — | — | Duplicates Query/Router |
 | Zustand | REJECTED for F01–F03 | Memory token is a tiny module, not a store library | Reconsider only with proof | Context for token is enough | Extra abstraction |

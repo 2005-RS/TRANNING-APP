@@ -1,4 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
+import { expectNoSeriousA11yViolations } from './axe';
 
 const adminUser = {
   id: '44444444-4444-4444-8444-444444444444',
@@ -848,6 +849,56 @@ test.describe('admin workspace', () => {
     });
     await page.goto('/admin/dashboard', { waitUntil: 'domcontentloaded' });
     await expect(page.getByRole('button', { name: 'Try again' })).toBeVisible({ timeout: 20_000 });
+  });
+
+  test('admin routes have no serious accessibility violations', async ({ page }) => {
+    test.setTimeout(120_000);
+    await mockAuthenticatedAdmin(page);
+    for (const [path, heading] of [
+      ['/admin/dashboard', 'Admin Dashboard'],
+      ['/admin/trainers', 'Trainers'],
+      [`/admin/trainers/${trainerId}`, 'Tess Trainer'],
+      ['/admin/clients', 'Clients'],
+      [`/admin/clients/${clientId}`, 'Ada Client'],
+      ['/admin/assignments', 'Assignments'],
+      ['/admin/exercises', 'Exercises'],
+      [`/admin/exercises/${exerciseId}`, 'Vital bench press'],
+      ['/admin/foods', 'Foods'],
+      [`/admin/foods/${foodId}`, 'Greek yogurt'],
+    ] as const) {
+      await page.goto(path, { waitUntil: 'domcontentloaded', timeout: 30_000 });
+      await expect(page.getByRole('heading', { name: heading, level: 1 })).toBeVisible({ timeout: 20_000 });
+      await expectNoSeriousA11yViolations(page, path);
+    }
+
+    await page.goto('/admin/trainers', { waitUntil: 'domcontentloaded', timeout: 30_000 });
+    await page.getByRole('button', { name: 'New trainer' }).click();
+    await expect(page.getByRole('dialog', { name: 'New trainer' })).toBeVisible();
+    await expectNoSeriousA11yViolations(page, 'New trainer sheet');
+  });
+
+  test('admin tables, pagination, and sheets are operable from the keyboard', async ({ page }) => {
+    test.setTimeout(60_000);
+    await mockAuthenticatedAdmin(page);
+    await page.goto('/admin/assignments', { waitUntil: 'domcontentloaded', timeout: 30_000 });
+    await expect(page.getByRole('heading', { name: 'Assignments', level: 1 })).toBeVisible({ timeout: 20_000 });
+
+    const assign = page.getByRole('button', { name: 'Assign: Ada Client' });
+    await assign.focus();
+    await page.keyboard.press('Enter');
+    const dialog = page.getByRole('dialog', { name: 'Assign trainer' });
+    await expect(dialog).toBeVisible();
+    await expect(dialog.locator(':focus')).toHaveCount(1);
+    await page.keyboard.press('Escape');
+    await expect(dialog).toHaveCount(0);
+    await expect(assign).toBeFocused();
+
+    await page.goto('/admin/trainers', { waitUntil: 'domcontentloaded', timeout: 30_000 });
+    await expect(page.getByRole('heading', { name: 'Trainers', level: 1 })).toBeVisible({ timeout: 20_000 });
+    const trainerLink = page.getByRole('link', { name: 'Tess Trainer' });
+    await trainerLink.focus();
+    await page.keyboard.press('Enter');
+    await expect(page.getByRole('heading', { name: 'Tess Trainer', level: 1 })).toBeVisible();
   });
 
   const viewports = [320, 375, 430, 768, 1024, 1280, 1440] as const;

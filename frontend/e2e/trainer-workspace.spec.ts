@@ -1,4 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
+import { expectNoSeriousA11yViolations } from './axe';
 
 const trainerUser = {
   id: '33333333-3333-4333-8333-333333333333',
@@ -785,6 +786,119 @@ test.describe('trainer workspace', () => {
     await expect(dialog.getByLabel('Template name')).toBeVisible();
     await dialog.press('Escape');
     await expect(dialog).toHaveCount(0);
+  });
+
+  test('trainer routes have no serious accessibility violations', async ({ page }) => {
+    test.setTimeout(120_000);
+    await mockAuthenticatedTrainer(page);
+    const routes: Array<[string, RegExp | string]> = [
+      ['/trainer/dashboard', 'Dashboard'],
+      ['/trainer/clients', 'Clients'],
+      [`/trainer/clients/${clientId}`, 'Ada Client'],
+      [`/trainer/clients/${clientId}/progress`, 'Ada Client'],
+      [`/trainer/clients/${clientId}/body`, 'Ada Client'],
+      [`/trainer/clients/${clientId}/training`, 'Ada Client'],
+      [`/trainer/clients/${clientId}/check-ins`, 'Ada Client'],
+      [`/trainer/clients/${clientId}/check-ins/${checkInId}`, 'Ada Client'],
+      ['/trainer/training', 'Training'],
+      [`/trainer/training/${templateId}`, 'Push Strength'],
+      ['/trainer/exercises', 'Exercises'],
+      [`/trainer/exercises/${exerciseId}`, 'Bench Press'],
+    ];
+    for (const [path, heading] of routes) {
+      await page.goto(path, { waitUntil: 'domcontentloaded', timeout: 30_000 });
+      await expect(page.getByRole('heading', { name: heading, exact: true }).first()).toBeVisible({
+        timeout: 20_000,
+      });
+      await expectNoSeriousA11yViolations(page, path);
+    }
+  });
+
+  test('training plan exercise editor has no serious accessibility violations', async ({ page }) => {
+    test.setTimeout(60_000);
+    await mockAuthenticatedTrainer(page);
+    const planId = 'dddddddd-dddd-4ddd-8ddd-dddddddddddd';
+    await page.route(`**/api/v1/clients/${clientId}/training-plans/${planId}**`, async (route) => {
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          id: planId,
+          name: 'Strength block',
+          status: 'ACTIVE',
+          clientProfileId: clientId,
+          createdByUserId: trainerUser.id,
+          createdAt: '2026-09-24T00:00:00Z',
+          updatedAt: '2026-09-24T00:00:00Z',
+          workouts: [
+            {
+              id: 'plan-workout-one',
+              sourceWorkoutTemplateId: templateId,
+              name: 'Push Strength',
+              position: 0,
+              scheduledDay: 'MONDAY',
+              exercises: [
+                {
+                  id: 'plan-exercise-one',
+                  exerciseId,
+                  exerciseName: 'Bench Press',
+                  position: 0,
+                  sets: 3,
+                  prescriptionType: 'REPS',
+                  repsMin: 6,
+                  repsMax: 8,
+                  restSeconds: 120,
+                  targetLoadKg: 60,
+                  notes: null,
+                },
+              ],
+            },
+          ],
+        }),
+      });
+    });
+    await page.goto(`/trainer/clients/${clientId}/training/${planId}`, {
+      waitUntil: 'domcontentloaded',
+      timeout: 30_000,
+    });
+    await expect(page.getByRole('heading', { name: 'Strength block' })).toBeVisible({ timeout: 20_000 });
+    await expect(page.getByRole('textbox', { name: /notes/i })).toBeVisible();
+    await expectNoSeriousA11yViolations(page, 'training plan detail');
+  });
+
+  test('trainer workspace is operable from the keyboard', async ({ page }) => {
+    test.setTimeout(60_000);
+    await mockAuthenticatedTrainer(page);
+    await page.goto('/trainer/training', { waitUntil: 'domcontentloaded', timeout: 30_000 });
+    await expect(page.getByRole('heading', { name: 'Training', exact: true })).toBeVisible({ timeout: 20_000 });
+
+    const newTemplate = page.getByRole('button', { name: 'New template' });
+    await newTemplate.focus();
+    await page.keyboard.press('Enter');
+    const sheet = page.getByRole('dialog', { name: 'Create workout template' });
+    await expect(sheet).toBeVisible();
+    await expect(sheet.locator(':focus')).toHaveCount(1);
+    await page.keyboard.press('Escape');
+    await expect(sheet).toHaveCount(0);
+    await expect(newTemplate).toBeFocused();
+
+    const accountMenu = page.getByRole('button', { name: 'Account menu' });
+    await accountMenu.focus();
+    await page.keyboard.press('Enter');
+    const menu = page.getByRole('menu');
+    await expect(menu).toBeVisible();
+    await page.keyboard.press('ArrowDown');
+    await expect(menu.locator(':focus')).toHaveCount(1);
+    await page.keyboard.press('Escape');
+    await expect(menu).toHaveCount(0);
+    await expect(accountMenu).toBeFocused();
+
+    await page.goto('/trainer/clients', { waitUntil: 'domcontentloaded', timeout: 30_000 });
+    await expect(page.getByRole('heading', { name: 'Clients' })).toBeVisible({ timeout: 20_000 });
+    const openClient = page.getByRole('link', { name: 'Open Ada Client' }).first();
+    await openClient.focus();
+    await page.keyboard.press('Enter');
+    await expect(page.getByRole('heading', { name: 'Ada Client' })).toBeVisible();
   });
 
   test('real backend trainer smoke', async ({ page }) => {
