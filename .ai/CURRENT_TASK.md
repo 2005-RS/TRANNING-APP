@@ -5,132 +5,321 @@ STATUS: APPROVED
 
 ## Title
 
-F13 Stage 2 — Client Motion and Surface Polish
+F13 Stage 3 — Trainer/Admin Visual Polish
 
-## Goal
+## Context
 
-The Client app (`/client/**`) feels finished and consistent: one quiet page entrance per route, a clear surface hierarchy (background < surface < elevated < interactive < selected), and coherent hover / focus-visible / pressed states. It is the same app, not a redesign. Frontend presentation only. No looping motion anywhere in Client.
+- F13 Stage 1 (public site and login) and Stage 2 (Client motion and surface polish, commit `e4e605b`) are done, validated and pushed. Stage 2 is the quality reference. **Do not modify Client** (`/client/**`, `client-*` features, `.client-*` CSS, `client-app-shell.tsx`, `client-bottom-nav.tsx`).
+- This is a restrained productivity polish, not a redesign. Trainer and Admin are dense work tools. Clarity, hierarchy and consistent states matter more than motion.
+
+## Objective
+
+Bring every Trainer and Admin screen to the same level of finish as Client. That means:
+- one quiet page entrance coordinated from the shell;
+- a consistent surface hierarchy;
+- coherent hover, focus-visible, active, selected and disabled states;
+- consistent status badges;
+- a real mobile strategy for dense tables.
+
+Existing behaviour stays exactly the same.
 
 ## Existing state (verified in code; do not re-audit)
 
-- Motion lib is `motion/react`, already installed. Helpers in `frontend/src/shared/lib/motion.ts`: `useReducedMotion`, `MOTION_DURATION_S` (instant .12 / fast .18 / panel .26), `MOTION_EASE`, `motionTransition(token, reduce)`, `revealHidden(reduce)`, `revealVisible`. CSS tokens in `frontend/src/styles/index.css`: `--motion-instant/-fast/-panel` (`--motion-cinematic` is public/login only, never Client). A global `prefers-reduced-motion` rule already lives in `index.css` (~line 154).
-- `frontend/src/shared/ui/section-reveal.tsx` (`SectionReveal`) wraps children in a fade+6px rise using those helpers.
-- **Double entrance today:** `frontend/src/app/shells/client-app-shell.tsx` already wraps `{children}` in a `motion.div key={pathname}` (fade+6px, hardcoded `0.18` and `[0.16,1,0.3,1]`, not the helpers). On top of that, pages add their own reveals:
-  - `SectionReveal`: `client-dashboard/components/dashboard-greeting.tsx`, `primary-training-card.tsx`, and twice in `workout-session/components/training-hub-page.tsx`.
-  - Ad-hoc `motion.*` with hardcoded durations (0.2 / 0.24 / 0.28) and inline `y: 6|8`: `client-check-ins/components/check-in-overview-cards.tsx`, `client-check-in-detail-page.tsx` (~L114), `trainer-feedback.tsx`.
-  - `workout-focus-page.tsx`: terminal-state `motion.section` (~L223) and `AnimatePresence` swapping `rest-timer` / `set-logger` (~L272-302); `rest-timer.tsx` has a `motion.p`.
-- Client surfaces are the `.client-surface-card` class (+ `--flush`) and `dashboard-hero-card` (`--action`, `--calm`) in `index.css` (~L175-230), wrapped by `client-dashboard/components/dashboard-card.tsx` (`DashboardCard tone=default|hero|hero-calm`). Shadow today is a 1px hairline only. `.client-app-shell` / `.client-app-chrome` set the shell/header/bottom-nav backgrounds. `shared/ui/card.tsx` (`Card`, `shadow-sm`) and `button-variants.ts` (`transition-colors` only) are shared with Trainer/Admin.
-- Client nav: `features/navigation/client-bottom-nav.tsx` (bottom bar + `ClientMoreSheetList`), `nav-link.tsx`. Client header is inside `client-app-shell.tsx`. Focus Mode is detected by `isClientWorkoutFocusPath` (`navigation/route-meta.ts`); it hides bottom nav / bell / assistant and sets `.client-workout-focus`.
-- Nearly every Client feature already uses `client-surface-card`: client-dashboard, workout-session, client-progress, client-nutrition, client-body, client-check-ins, plus `notifications/components/notifications-inbox.tsx`. Changing the shared CSS class therefore also touches Notifications; that is acceptable but must not regress it.
+### Shell and navigation (shared by Trainer and Admin)
+- `app/shells/trainer-app-shell.tsx` and `admin-app-shell.tsx` are thin wrappers around **`app/shells/productivity-shell.tsx`**. It contains:
+  - a desktop sidebar (`lg+`, `--sidebar-width`, `bg-card`);
+  - `ShellHeader` (`app/shells/shell-header.tsx`, hamburger below `lg`);
+  - a mobile left `Sheet` holding `ProductivitySidebarNav`;
+  - `<main id="main-content">`;
+  - `TrainingAssistant placement="productivity"`.
+- **There is no page entrance at all today.** Trainer/Admin do not use `motion/react`, `SectionReveal` or `infinite` anywhere. The only motion is `trainer-templates-page.tsx` (~L200–218): a row colour transition and a chevron nudge, both already token-based and reduced-motion safe.
+- Navigation:
+  - `features/navigation/productivity-sidebar.tsx`: `NavLink`. Active item is `bg-muted font-medium`; inactive items get `hover:bg-muted`. There is no primary-tinted selected state and no explicit focus-visible styling beyond the global ring.
+  - `trainer-workspace/components/client-workspace-nav.tsx`: the client-workspace tabs (`/trainer/clients/$clientId/*`), same pattern, `overflow-x-auto`.
+  - Items come from `nav-config.ts` (do not change).
 
-## Scope (may modify)
+### Surfaces
+- Trainer uses the `.workspace-surface` CSS class (`styles/index.css` ~L190: `radius-lg`, border, `bg-card`, `p-4`/`sm:p-5`, **no shadow**) through `WorkspaceSurface` (`trainer-workspace/components/workspace-surface.tsx`, 22 consumers). Notifications also uses `.workspace-surface` for TRAINER/ADMIN (`notifications-inbox.tsx` `surfaceClass(density)`; CLIENT uses `client-surface-card`).
+- Admin uses inline Tailwind instead:
+  - `AdminSurface` = `rounded-lg border bg-card p-4 shadow-sm sm:p-5`;
+  - `AdminTableSurface` = `overflow-x-auto rounded-lg border bg-card shadow-sm`, in `admin-workspace/components/admin-primitives.tsx`.
 
-- `frontend/src/styles/index.css` — Client surface classes only (`.client-surface-card*`, `.dashboard-hero-card*`, `.client-app-*`), plus at most one small shared page-entrance utility. Do not touch `.login-hero-*`, `.hero-enter`, `.trace-field`, boot styles.
-- `frontend/src/shared/lib/motion.ts`, `frontend/src/shared/ui/section-reveal.tsx` — only to consolidate onto one entrance pattern.
-- `frontend/src/app/shells/client-app-shell.tsx` — presentation/motion only (use the helpers instead of the hardcoded values; keep `key={pathname}` behavior, Focus Mode logic, sheet, assistant).
-- `frontend/src/features/navigation/client-bottom-nav.tsx` (and `nav-link.tsx` only if needed) — active/pressed/focus-visible polish.
-- Client features, presentation files only (`components/**`): `client-dashboard`, `workout-session`, `client-progress` (`components/**`, `charts/chart-theme.ts` only for token-based color/animation-flag tweaks, no data changes), `client-nutrition`, `client-body`, `client-check-ins`.
-- `frontend/src/shared/ui/{card,button-variants}.ts(x)` — only if a change is needed and is verified harmless for Trainer/Admin (prefer Client-scoped classes instead).
-- Docs (minimal edits, see Documentation).
+  → Trainer and Admin surfaces are **inconsistent** (shadow vs no shadow, class vs inline).
+- Page layout: `shared/ui/page.tsx` (`PageContainer density='productivity'` default, `PageHeader`, `PageTitle`, `PageIntro`, `ContentSkeleton`). Admin wraps it in `AdminPageScaffold` (with `backLink` and `meta`).
+
+### Duplicated primitives (keep separate; align visuals only)
+- `NativeSelect` / `TextArea`: `workspace-surface.tsx` and `admin-primitives.tsx`.
+- `PaginationBar`: `trainer-workspace/components/pagination-bar.tsx` and `admin-primitives.tsx`.
+- `ConfirmSheet`: `trainer-workspace/components/confirm-sheet.tsx` and `admin-workspace/components/confirm-sheet.tsx`.
+- Empty/error/skeleton states:
+  - Trainer: `trainer-states.tsx`, `trainer-skeleton.tsx`;
+  - Admin: `AdminErrorState`, `AdminEmptyState`, `AdminListEmptyState`, `AdminPageSkeleton`, `AdminListSkeleton` in `admin-primitives.tsx`.
+
+### Status badges (inconsistent)
+- `trainer-workspace/components/status-badge.tsx`: ACTIVE/REVIEWED/READY → `default`; SUBMITTED/DRAFT/IN_PROGRESS/PENDING_UPLOAD → `secondary`; everything else → `muted`.
+- `AdminStatusBadge` (`admin-primitives.tsx`): ACTIVE/READY → `secondary`; DISABLED/ARCHIVED → `outline`; everything else → `muted`.
+- Both wrap the shared `shared/ui/badge.tsx`, which is also used by client-check-ins, notifications and shells.
+
+### Tables (dense lists)
+| File | Table min-width | Mobile alternative |
+|---|---|---|
+| `trainer-clients-page.tsx` | `min-w-[48rem]` | **yes**: `md:hidden` `<ul>` list (~L222). **This is the reference pattern.** |
+| `trainer-dashboard-page.tsx` | `min-w-[36rem]` | no (horizontal scroll only) |
+| `trainer-foods-page.tsx` | `min-w-[36rem]` | no |
+| `admin-trainers-page.tsx`, `admin-clients-page.tsx`, `admin-assignments-page.tsx`, `admin-exercises-page.tsx`, `admin-foods-page.tsx` | inside `AdminTableSurface` | no |
+
+- Admin rows use `<tr className="… hover:bg-muted/40">` even though only the name cell holds a `Link`. The whole row looks clickable but is not. This breaks "hover only on interactive elements".
+- Other lists are link rows, for example `trainer-templates-page.tsx` `TemplateRow`: `hover:bg-muted/50 focus-visible:bg-muted/50`, with `outline-none` compensated by a background.
+
+### Sheets
+- All Trainer/Admin sheets are `side="right"` with width/background/padding classes only:
+  - `confirm-sheet` ×2, `create-template-sheet`, `prescription-sheet`, the `trainer-exercises-page` sheet, `admin-form` `AdminFormSheet`, `assignment-sheet`.
+  - None of them repeats the Stage 2 Body bug (a `display` utility on `SheetContent`), so there is nothing to fix there. Do not add `flex`/`grid`/`block` to a `SheetContent` className. If a flex layout is needed, put it on an inner wrapper or use `open:flex`.
+
+### CSS tokens available
+- `--motion-instant` 120ms, `--motion-fast` 180ms, `--motion-panel` 260ms (`--motion-cinematic` is public/login only).
+- `--sidebar-width`, `--container-wide`, colour tokens, `--radius-*`, `color-mix(in oklab, …)`.
+- Global `prefers-reduced-motion` rule (~L154).
+- Motion helpers in `shared/lib/motion.ts`: `useReducedMotion`, `motionTransition(token, reduce)`, `revealHidden(reduce)`, `revealVisible`. `client-app-shell.tsx` shows how Stage 2 used them (read it; do not edit it).
+
+## Scope — routes and screens
+
+### Trainer (`routes/trainer/route.tsx`, components in `features/trainer-workspace/components/`)
+| Route | Component |
+|---|---|
+| `/trainer/dashboard` | `trainer-dashboard-page.tsx` (includes a table) |
+| `/trainer/clients` | `trainer-clients-page.tsx` (table + mobile list) |
+| `/trainer/clients/$clientId` (layout) | `trainer-client-workspace-layout.tsx` + `client-workspace-nav.tsx` (tabs) |
+| … `/` overview | `trainer-client-overview-page.tsx` |
+| … `/training`, `/training/$planId` | `trainer-client-training-page.tsx`, `trainer-training-plan-detail-page.tsx`, `prescription-sheet.tsx`, `exercise-picker.tsx`, `template-exercise-row.tsx` |
+| … `/progress`, `/progress/exercises/$exerciseId` | `trainer-client-progress-page.tsx`, `trainer-exercise-progress-page.tsx` |
+| … `/body` | `trainer-client-body-page.tsx`, `trainer-private-photo.tsx` (**visual only**; do not touch signed-URL logic) |
+| … `/nutrition`, `/nutrition/$planId` | `trainer-client-nutrition-page.tsx`, `trainer-nutrition-plan-detail-page.tsx`, `nutrition-meal-editor.tsx`, `nutrition-food-search.tsx` |
+| … `/check-ins` | `trainer-client-check-ins-page.tsx` |
+| `/trainer/check-ins`, `/trainer/check-ins/$checkInId` | `trainer-check-ins-queue-page.tsx`, `trainer-check-in-review-page.tsx` |
+| `/trainer/training`, `/trainer/training/$templateId` | `trainer-templates-page.tsx`, `trainer-template-detail-page.tsx`, `create-template-sheet.tsx` |
+| `/trainer/nutrition` | `trainer-foods-page.tsx` (includes a table) |
+| `/trainer/exercises`, `/trainer/exercises/$exerciseId` | `trainer-exercises-page.tsx`, `trainer-exercise-detail-page.tsx`, `exercise-media-manager.tsx`, `exercise-media-thumb.tsx` |
+| `/trainer/notifications` | `notifications/components/notifications-pages.tsx` → `notifications-inbox.tsx` (productivity branch only) |
+
+Shared inside Trainer: `workspace-surface.tsx`, `status-badge.tsx`, `pagination-bar.tsx`, `confirm-sheet.tsx`, `trainer-states.tsx`, `trainer-skeleton.tsx`.
+
+### Admin (`routes/admin/route.tsx`, components in `features/admin-workspace/components/`)
+| Route | Component |
+|---|---|
+| `/admin/dashboard` | `admin-dashboard-page.tsx` |
+| `/admin/trainers`, `/admin/trainers/$trainerId` | `admin-trainers-page.tsx` (`AdminTrainersPage`, `AdminTrainerDetailPage`) |
+| `/admin/clients`, `/admin/clients/$clientId` | `admin-clients-page.tsx` (list + detail + trainer assignment) |
+| `/admin/assignments` | `admin-assignments-page.tsx`, `assignment-sheet.tsx` |
+| `/admin/exercises`, `/admin/exercises/$exerciseId` | `admin-exercises-page.tsx` (list + detail + media) |
+| `/admin/foods`, `/admin/foods/$foodId` | `admin-foods-page.tsx` |
+| `/admin/notifications` | `notifications-inbox.tsx` (productivity branch only) |
+
+Shared inside Admin: `admin-primitives.tsx`, `admin-form.tsx`, `confirm-sheet.tsx`.
+
+**Admin-only features:** trainer management, the global client registry, assignments, and the global exercise/food catalogues. Admin does **not** reuse Trainer workspace components; the two share only the shell, the sidebar, `shared/ui/*` and the notifications inbox. Polish each workspace in its own files and align both through the shared CSS classes described below. Do not merge the duplicated primitives (that is a refactor and out of scope).
 
 ## Implementation requirements
 
-### 1. Page entrance: one pattern, one moment per route
-- The **shell's `motion.div key={pathname}` is the single page entrance.** Replace its hardcoded numbers with `revealHidden` / `revealVisible` / `motionTransition('fast' or 'panel', reduceMotion)`.
-- Remove nested entrance animation on Client pages so nothing animates twice: drop `SectionReveal` from `dashboard-greeting.tsx`, `primary-training-card.tsx`, both places in `training-hub-page.tsx`, and the ad-hoc `motion.section/div` entrances in `check-in-overview-cards.tsx`, `client-check-in-detail-page.tsx`, `trainer-feedback.tsx`. Render plain elements there. Keep `SectionReveal` file only if something outside Client still uses it (grep before deleting; otherwise leave it in place, do not delete).
-- Optional: within the shell entrance, header/context then main content may be staggered at most once (≤70ms, two steps, same idea as `.hero-enter`). No per-card cascade. No reveal per card, section, list row or button.
-- Content that appears after data loads (skeleton -> content) must not replay a second entrance animation. Use a plain swap.
-- Under `prefers-reduced-motion`: no translate, no delay, no entrance transform (`revealHidden` already returns `false`; any CSS keyframe added must be disabled in a `@media (prefers-reduced-motion: reduce)` block).
+### 1. Motion (same philosophy as Stage 2, more restrained)
+- Add **one page entrance in `productivity-shell.tsx`**: wrap `{children}` inside `<main>` in a `motion.div key={pathname}`. Use:
+  - `initial={revealHidden(reduceMotion)}`;
+  - `animate={revealVisible}`;
+  - `transition={motionTransition('fast', reduceMotion)}`.
 
-### 2. Surfaces (tokens only)
-- Define the hierarchy in `index.css` with existing tokens (`--background`, `--card`, `--border`, `--primary`, `--foreground`, `--ring`, `--radius-*`, `color-mix(in oklab, …)` as already used). No raw hex, no new palette, no blanket glassmorphism, no heavy shadows.
-  - background: `.client-app-shell`; surface: `.client-surface-card`; elevated: hero cards (`dashboard-hero-card--action|--calm`, sheets); interactive: clickable rows/cards; selected/active: primary-tinted border/background.
-- Make surface padding, radius, border and gap consistent across Client pages. Fix outliers found while touching files. Do not restructure layouts (dashboard grid in `client-dashboard-page.tsx` stays `lg:grid-cols-12` 7/5).
-- Interactive cards/rows (dashboard cards with links, training hub rows, exercise list rows, measurement cards, check-in cards, nutrition meal rows, period selector, rating scale): add a shared hover / active / selected treatment via a small CSS class (e.g. `client-surface-interactive`) using `transition` on `border-color, background-color, box-shadow` with `var(--motion-fast)` / `--motion-instant`. Hover only on `(hover: hover)`; nothing may depend on hover to be usable.
-- Every interactive element keeps a visible `:focus-visible` ring (global rule exists, do not override with `outline-none` without an equivalent ring). Pressed state: subtle (opacity/`scale(.98)` at most, `--motion-instant`), disabled stays clearly distinct.
+  Follow exactly what `client-app-shell.tsx` does. Read `pathname` with `useRouterState({ select: s => s.location.pathname })`, which `productivity-sidebar.tsx` already uses.
+- Key by **pathname only** (not search). Filters, pagination and search params must not replay the entrance.
+- Client-workspace tabs (`/trainer/clients/$clientId/*`) change pathname, so they replay the fast fade. That is acceptable. Check that it causes no layout jump and no loss of scroll position that would be worse than today.
+- No per-section, per-card, per-row, table or list reveals. No stagger. No `AnimatePresence` added to pages. No `infinite`/repeat. No ambient backgrounds, `canvas`, trace field or `SectionReveal`.
+- Hover/press only on real interactive elements. Allowed transitions: `border-color, background-color, box-shadow, color` at `var(--motion-fast)`, and pressed state at `--motion-instant` (opacity, or at most `scale(.98)`; prefer no scale on dense rows). No hardcoded `duration-150`/`200` where a token fits.
+- Skeleton → content is a plain swap with no second entrance.
+- `prefers-reduced-motion`: no translate and no entrance transform. `revealHidden` already returns `false`. Any CSS added must be neutralised in a `@media (prefers-reduced-motion: reduce)` block.
 
-### 3. Per-area guidance
-- **Dashboard** (`client-dashboard/components/*`): strengthen hierarchy: greeting -> primary training card (`tone="hero"`, the only strongest surface) -> supporting cards at default tone. Consistent card header/title/metric styles (Geist Mono for numbers via existing pattern). Do not change data, copy (`copy.ts`), formatters or `week-activity` logic. Skeleton (`dashboard-skeleton.tsx`) must keep the same layout as the loaded page to avoid layout shift.
-- **Navigation/shell** (`client-app-shell.tsx`, `client-bottom-nav.tsx`): clear active item (weight/colour already varies by `active`; add a token-based indicator, e.g. subtle pill/underline, transition ≤ `--motion-fast`), pressed state, focus-visible, min 44px targets kept, safe-area padding kept, header/bottom-nav backgrounds via existing `.client-app-chrome`. Do not change routes, items (`nav-config.ts`), unread badges, More sheet behavior.
-- **Workout / Focus Mode** (`workout-session/components/*`): **calm and distraction-free.** No decorative motion in Focus Mode. Keep only functional transitions: set-logger <-> rest-timer swap (keep `AnimatePresence`, `key`s and `mode`; may use `motionTransition('instant'|'fast')`), terminal-state card static or shell-entrance only. Rest timer must not pulse/loop. Improve surface clarity, large touch targets (`min-h-12` kept), selected/active states and contrast of the current exercise/set. Do not touch `hooks/**`, `lib/**`, timer logic, set payloads, confirm/cancel/finish flow, or `isClientWorkoutFocusPath` behavior. The training hub (`training-hub-page.tsx`) gets normal surface polish.
-- **Progress** (`client-progress/components/*`): consistent section surfaces, metric tiles (`metric.tsx`, `personal-best.tsx`), `period-selector.tsx` selected state, list rows (`exercise-list-section`, `exercise-history-list`). Leave `charts/progress-line-chart.tsx` data/props and `lib/**` untouched; chart colors stay via `chart-theme.ts` tokens; do not add chart animations beyond what exists.
-- **Nutrition** (`client-nutrition/components/*`): `plan-hero`, `daily-targets`, `plan-totals`, `meal-list`, `food-item` surfaces and macro display consistency. No copy/logic/`lib/**` changes.
-- **Body** (`client-body/components/*`): `measurement-card`, `measurements-section`, `photos-section`, `photo-gallery`, `photo-compare`, sheets. Do not touch `private-progress-photo.tsx` logic, signed URL/photo access hooks, upload flow, form schema, or anything that logs/persists URLs. Visual only.
-- **Check-ins** (`client-check-ins/components/*`): `check-in-overview-cards`, `check-in-status-badge`, `rating-scale` (selected/focus states), `check-in-form` surfaces, `trainer-feedback`, read-only view. Do not touch `lib/**`, `schemas/**`, payload/mapping/invalidate code, or logging behavior. Never log Check-In text.
+### 2. Surfaces and states (tokens only, workspace-scoped CSS)
+- In `styles/index.css`, **extend the existing `.workspace-surface` block only** (never the `.client-*` classes). Add small workspace-scoped classes:
+  - `.workspace-surface`: keep radius/border/padding. Add the same subtle hairline shadow approach as Stage 2, weaker if anything. Tokens and `color-mix` only; no raw hex.
+  - `.workspace-surface--flush` (no padding) for tables and lists.
+  - `.workspace-interactive`: for clickable rows/cards/links. Transition as above. `(hover: hover)` hover tint. `[aria-current='page']` / `[aria-pressed='true']` / `[aria-selected='true']` primary-tinted selected state. Disabled state clearly distinct. Selected must beat hover (the Stage 2 review MINOR noted hover overriding selected; avoid it here with `:not([aria-current='page'])` or equivalent).
+- Change `AdminSurface` and `AdminTableSurface` to use `workspace-surface` / `workspace-surface--flush` (plus `overflow-x-auto` where still needed). Trainer and Admin then share one visual surface. Remove the inline `shadow-sm` there.
+- Apply `workspace-interactive` to link rows and clickable cards in Trainer and Admin, for example `TemplateRow`, list rows on the exercises/foods/check-in queues, dashboard links and `md:hidden` mobile list items that are links. Do not apply it to non-interactive containers (lesson from Stage 2: no hover affordance on static `li`/`article`/cards).
+- **Admin table rows:** remove `hover:bg-muted/40` from `<tr>`, because the row is not clickable. Keep the name `Link` clearly styled: underline on hover/focus-visible, or the `workspace-interactive` colour treatment on the link itself. Do not make rows clickable; that would be a behaviour change.
+- Focus-visible: every interactive element keeps a visible ring. Where a file uses `outline-none` + `focus-visible:bg-*` (e.g. `TemplateRow`), make sure there is still an equivalent visible focus indicator. Prefer removing `outline-none` so the global ring applies.
+- Headers: consistent `PageIntro` / `AdminPageScaffold` spacing and title/description styles. Section headings inside surfaces share one style (size, weight, `text-muted-foreground` description). Numbers and metrics use the existing Geist Mono pattern where the Client already does.
+- Forms: align `NativeSelect` / `TextArea` in both files with `shared/ui/input.tsx` (height, radius, border, `aria-invalid` treatment and focus ring must look identical in Trainer and Admin). Labels stay visible and associated.
 
-### 4. Cross-cutting
-- No new dependency, no `canvas`/WebGL/particles, no `infinite` animation or `repeat: Infinity`, no looping/ambient background, no trace-field in Client. Skeleton/spinner shimmer that already exists is fine; add none.
-- Prefer CSS transitions/classes over new React state. No extra re-renders for decoration; no `useEffect` for animation.
-- Responsive: verify at ~375px, ~768px, ~1280px. No horizontal overflow, no clipped cards, bottom nav never covers content (main keeps its bottom padding), no hover-only affordances.
-- Keep existing Spanish/English copy exactly (`copy.ts`, i18n untouched).
-- Match the surrounding code: Tailwind utilities + the existing CSS classes; `cn()`; no second styling approach.
+### 3. Navigation
+- `productivity-sidebar.tsx`: active item gets a token-based selected state (subtle primary tint plus a `font-medium` foreground, or a thin leading indicator). Inactive items: hover tint only on `(hover: hover)`. Visible focus-visible. Keep `min-h-10`, the unread badge placement and `onNavigate`.
+- `client-workspace-nav.tsx`: the same selected/hover/focus language for the tabs. Keep `overflow-x-auto`, `min-w-max` and `aria-current`.
+- `shell-header.tsx`: presentation only if needed (border/background consistency with the sidebar). Do not change the hamburger, bell, language or user-menu behaviour.
+- The mobile nav `Sheet` in `productivity-shell.tsx` keeps its behaviour.
 
-## Implementation order (do not jump around)
+### 4. Status badges
+- Make `StatusBadge` (Trainer) and `AdminStatusBadge` (Admin) use **one consistent visual mapping**:
+  - ACTIVE / READY / REVIEWED = positive/primary;
+  - DRAFT / SUBMITTED / IN_PROGRESS / PENDING_UPLOAD = attention/secondary;
+  - ARCHIVED / DISABLED / CANCELLED = muted/outline.
 
-1. Read `docs/frontend/motion-and-3d.md` (Motion + Accessibility sections only) and `index.css` Client surface block.
-2. Entrance pattern: `shared/lib/motion.ts` + `client-app-shell.tsx`; then remove nested reveals (dashboard, training hub, check-ins) so only the shell animates.
-3. Surface CSS: hierarchy + `client-surface-interactive` class in `index.css`.
-4. Dashboard components.
-5. Client shell chrome + `client-bottom-nav.tsx`.
-6. Workout: training hub, then Focus Mode (`workout-focus-page`, `exercise-focus`, `set-logger`, `rest-timer`, `confirm-sheet`).
-7. Progress.
-8. Nutrition.
-9. Body.
-10. Check-ins.
-11. Final pass: grep `client-*` and shell for hardcoded `duration:`/`y: 6|8` leftovers, raw hex, `infinite`; confirm reduced-motion paths.
-12. Update docs (below), then write the implementer report and STOP.
+  Change only the variant mapping inside these two wrappers. Do **not** change `shared/ui/badge.tsx`, the status labels, `statusLabel()` or copy.
 
-## Files likely to change
+### 5. Dense tables: real responsive strategy
+- Follow the existing **`trainer-clients-page.tsx` pattern**: the table stays for `md+`, and below `md` an `md:hidden` stacked list shows the same rows. Each item shows the primary field (name, with its link), 2–3 key fields as a label/value pair, the status badge and the same actions.
+- Apply it to:
+  - `trainer-dashboard-page.tsx`;
+  - `trainer-foods-page.tsx`;
+  - `admin-trainers-page.tsx`;
+  - `admin-clients-page.tsx`;
+  - `admin-assignments-page.tsx`;
+  - `admin-exercises-page.tsx`;
+  - `admin-foods-page.tsx`.
+- Hide the table wrapper below `md`, exactly as `trainer-clients-page.tsx` does.
+- Render both from the **same row data and handlers**. No new queries, no new state, no duplicated mutation logic.
+- Horizontal scroll must never be the only way to reach data at 390px.
 
-`frontend/src/styles/index.css`, `frontend/src/shared/lib/motion.ts`, `frontend/src/shared/ui/section-reveal.tsx`, `frontend/src/app/shells/client-app-shell.tsx`, `frontend/src/features/navigation/client-bottom-nav.tsx`, and `components/**` under `frontend/src/features/{client-dashboard,workout-session,client-progress,client-nutrition,client-body,client-check-ins}` (about 45 presentational files; many will need only a class change). Docs: `docs/frontend/current-task.md`, `docs/frontend/frontend-roadmap.md`.
+### 6. Documentation (minimal; Codex does it)
+- `docs/frontend/current-task.md`: Status → `**F13 Stage 3 IN PROGRESS**`. In the Stages list add `← in progress` to stage 3. Nothing else.
+- `docs/frontend/frontend-roadmap.md` F13 block: `CURRENT / IN PROGRESS — stages 1–2 done, stage 3 in progress`. Nothing else.
 
-## Files that must NOT change
+## Implementation order
 
-- `backend/**`, `frontend/src/generated/**`, any API client/query/mutation/hook (`hooks/**`, `lib/**`, `schemas/**`, `query-policy.ts`, `copy.ts` in Client features).
-- Auth/session (`features/auth/**` logic, `AuthSessionProvider`, guards, `role-layouts.tsx` logic, `route-meta.ts`, `nav-config.ts`, `routes/**`).
-- Trainer/Admin (`features/trainer-*`, `admin*`, `productivity-sidebar.tsx`, their shells) except a shared file when strictly required and harmless.
-- Public site/login and trace field (`features/public-site/**`, `login-form.tsx`, `shared/ui/trace-field*`, `ambient-field*`, `.login-hero-*`, `.hero-enter`, `.trace-field`).
-- `package.json` / lockfiles, `.env*`, `.cursor/**`, `.ai/**` other than this file, `training-assistant` behavior.
+1. Read `client-app-shell.tsx` (motion reference, read-only), `shared/lib/motion.ts`, and the `.workspace-surface` block in `index.css`.
+2. `productivity-shell.tsx` entrance.
+3. CSS: `.workspace-surface` shadow, `--flush`, `.workspace-interactive` and the reduced-motion block.
+4. `productivity-sidebar.tsx`, `client-workspace-nav.tsx`, `shell-header.tsx` (only if needed).
+5. `admin-primitives.tsx` (surfaces, badge, selects, pagination, states) and `status-badge.tsx` / `workspace-surface.tsx` (Trainer).
+6. Trainer pages in route order, then Admin pages. Do the responsive tables within those steps.
+7. Final grep over `trainer-workspace`, `admin-workspace`, `productivity-*`, `shell-header`:
+   - no hardcoded `duration-[0-9]`;
+   - no `infinite`;
+   - no raw hex;
+   - no `hover:` on `tr`/non-interactive containers;
+   - no display utility on `SheetContent`.
+8. Docs, then the implementer report, then STOP.
+
+## Files likely to change (~35–40)
+
+- **Shell and nav (3–4):**
+  - `app/shells/productivity-shell.tsx`
+  - `features/navigation/productivity-sidebar.tsx`
+  - `features/trainer-workspace/components/client-workspace-nav.tsx`
+  - `app/shells/shell-header.tsx` (optional)
+- **CSS (1):** `styles/index.css` (workspace block only).
+- **Trainer (~18–20):**
+  - Primitives: `workspace-surface.tsx`, `status-badge.tsx`, `pagination-bar.tsx`, `trainer-states.tsx`, `trainer-skeleton.tsx`, `confirm-sheet.tsx`.
+  - Pages: `trainer-dashboard-page.tsx`, `trainer-clients-page.tsx`, `trainer-client-workspace-layout.tsx`, `trainer-client-overview-page.tsx`, `trainer-client-training-page.tsx`, `trainer-training-plan-detail-page.tsx`, `trainer-client-progress-page.tsx`, `trainer-client-body-page.tsx`, `trainer-client-nutrition-page.tsx`, `trainer-client-check-ins-page.tsx`, `trainer-check-ins-queue-page.tsx`, `trainer-check-in-review-page.tsx`, `trainer-templates-page.tsx`, `trainer-template-detail-page.tsx`, `trainer-foods-page.tsx`, `trainer-exercises-page.tsx`, `trainer-exercise-detail-page.tsx`.
+  - Class-only tweaks if needed: `template-exercise-row.tsx`, `nutrition-meal-editor.tsx`, `exercise-picker.tsx`.
+- **Admin (~8):**
+  - `admin-primitives.tsx`, `admin-form.tsx`;
+  - `admin-dashboard-page.tsx`, `admin-trainers-page.tsx`, `admin-clients-page.tsx`, `admin-assignments-page.tsx`, `admin-exercises-page.tsx`, `admin-foods-page.tsx`;
+  - `confirm-sheet.tsx` / `assignment-sheet.tsx` only if a class is needed.
+- **Tests (0–3):** `trainer-workspace.spec.tsx`, `admin-workspace.spec.tsx` (see Risks).
+- **Docs (2):** `docs/frontend/current-task.md`, `docs/frontend/frontend-roadmap.md`.
+
+## Shared primitives (Client risk)
+
+| Primitive | Also used by Client | Rule |
+|---|---|---|
+| `styles/index.css` | yes | Edit only `.workspace-*` rules and new `.workspace-*` classes. **Do not touch** `.client-*`, `.dashboard-hero-*`, `.login-hero-*`, `.hero-enter`, `.trace-field` or the boot styles. |
+| `shared/ui/button.tsx`, `button-variants.ts` | yes (Client, Auth) | **Do not change.** Use `className` at call sites if a Trainer/Admin tweak is needed. |
+| `shared/ui/badge.tsx` | yes (client-check-ins, notifications) | Do not change. Change only the wrapper mappings. |
+| `shared/ui/sheet.tsx` | yes | Do not change. |
+| `shared/ui/page.tsx` | yes (`density='client'`) | Avoid it. If truly needed, change only the `productivity` branch and keep the `client` branch byte-identical. |
+| `shared/ui/input.tsx`, `label.tsx`, `skeleton.tsx`, `alert.tsx` | yes | Do not change. Align the Trainer/Admin selects/textareas to them instead. |
+| `shared/lib/motion.ts` | yes | Read-only. Use the existing helpers. |
+| `app/shells/user-menu.tsx` | yes (Client shell) | Do not change. |
+| `features/notifications/components/notifications-inbox.tsx` | yes (CLIENT branch) | Preferably untouched; it gets the `.workspace-surface` CSS change automatically. If edited, touch only the `density === 'productivity'` paths. |
+| `training-assistant` | yes | Do not change. |
 
 ## Out of scope
 
-backend, Trainer, Admin, API, database, migrations, business/auth/session logic, generated client, new dependencies, new features, copy changes, F14 hardening, public/login redesign, trace-field changes (unless a shared visual dependency strictly requires it), Notifications redesign (only incidental effect from shared classes).
+- Backend, API, contracts, `frontend/src/generated/**`, database/migrations.
+- Hooks, queries, mutations, `lib/**`, `schemas/**`, `copy.ts`/i18n values.
+- Routes (`routes/**`), `nav-config.ts`, `route-meta.ts`, roles/guards, `role-layouts.tsx` logic, auth/session.
+- New dependencies, `package.json`/lockfile.
+- Client UI and the public site/login.
+- Merging duplicated Trainer/Admin primitives.
+- New features or copy changes.
+- F14.
+- **Known functional bug, out of scope, report only:** `/trainer/training` lists only ACTIVE templates (`ListWorkoutTemplatesQueryDto` default), so a newly created DRAFT template seems to disappear. Do not fix it in this stage.
 
-## Functional freeze
+## Restrictions (Codex)
 
-F02–F12 are frozen. No changes to business logic, auth, refresh/session, guards, roles, requests, queries, mutations, validation, models, contracts, routes, copy or displayed data. Only presentation, motion and surface polish. If a polish idea needs a logic change, skip it and note it in the report.
+- Frontend presentation only. No business logic, permission, role, auth or session changes.
+- Keep functional copy unchanged. Keep all `aria-*`, `role`, labels and test IDs.
+- Small focused edits. No renames, reformatting or refactors of untouched code.
+- Never log tokens, signed URLs or Check-In text. Do not touch `trainer-private-photo.tsx` or `exercise-media-*` logic (classes only).
+- Do not break F13 Stage 2: the Client look and behaviour must be unchanged.
+- Do not commit, push or run the full check suite. At most one small targeted spec for a file you edited. Report with `docs/frontend/task-report-template.md`, then STOP.
+
+## Risks
+
+1. **Duplicate DOM from the mobile lists.** jsdom ignores CSS, so rendering a row in both the table and the `md:hidden` list makes `getByText`/`getByRole('link')` in `trainer-workspace.spec.tsx` / `admin-workspace.spec.tsx` match twice. Scope the existing assertions with `within(screen.getByRole('table'))` or `getAllBy…`. Never weaken what a test proves, and list every spec change in the report. Check first how the specs already handle `trainer-clients-page.tsx`.
+2. **Shell `key={pathname}` remounts the page subtree**, including `trainer-client-workspace-layout.tsx` on tab changes. Local component state such as open sheets or unsaved form input resets on navigation. That is already true when routes change, but confirm that no test or flow relies on state surviving a pathname change within the workspace.
+3. **Shared CSS spill:** `.workspace-surface` is also used by the Trainer/Admin notifications inbox. That is intended; check it visually.
+4. **Selected versus hover specificity** in `.workspace-interactive` (the Stage 2 MINOR). Selected must win.
+5. **Hidden overlays:** Stage 2 found a closed `<dialog>` intercepting clicks because of a `display` class. Do not add display utilities to `SheetContent`. The visual pass must probe that nothing invisible covers the nav or content.
+6. **Focus loss:** removing `outline-none` or changing link classes must not remove the visible focus ring.
+7. **Badge mapping change** is visual only. Some specs may assert a badge variant or class; update them only if they asserted the old presentational class, and say so.
 
 ## Acceptance criteria
 
-1. All in-scope Client screens keep their existing behavior and data.
-2. One coherent page-entrance pattern: the shell entrance only, using `motion.ts` helpers / `--motion-*` tokens.
-3. No remaining per-section/per-card reveals or `SectionReveal` use inside Client pages; no double entrance on the same route.
-4. `prefers-reduced-motion`: no translate/delay/entrance transform; navigation and states still work.
-5. No animated looping background or `infinite`/repeat animation in Client.
-6. `package.json` and lockfile unchanged.
-7. No new raw hex colors in Client code/CSS where a token exists.
-8. Focus Mode behavior identical (exercise navigation, set logging, rest timer, finish/cancel, recovery), visually calm, no decorative motion.
-9. Auth/session files untouched. 10. `backend/**` untouched. 11. Routes, API, generated, hooks, lib, schemas untouched.
-12. Usable at 375 / 768 / 1280 without horizontal overflow; bottom nav does not cover content.
-13. hover / focus-visible / active / selected / disabled are consistent across Client cards, rows, nav and controls; keyboard navigation intact.
-14. Only the existing design system (tokens, `client-surface-card`, `motion.ts`) is used; no second one.
-15. Trainer/Admin look unchanged (any shared-file change is neutral for them).
-16. Notifications page still renders correctly with the shared surface changes.
-17. Existing specs still pass without being weakened (`shells.spec.tsx`, `sheet.spec.tsx`, `button.spec.tsx`, `rest-timer.spec.tsx`); update a spec only if it asserted removed presentational markup, and say so in the report.
+1. Every Trainer and Admin route listed above renders the same data and has the same behaviour as before.
+2. There is exactly one page entrance per route, from `productivity-shell.tsx`, using the `motion.ts` helpers and tokens. No nested reveals, no stagger, no `infinite`.
+3. `prefers-reduced-motion`: no translate, delay or entrance transform. Navigation and sheets still work.
+4. Trainer and Admin surfaces share `.workspace-surface` (`--flush`). `AdminSurface` / `AdminTableSurface` no longer use inline `shadow-sm`.
+5. Hover and pressed states appear only on interactive elements. Admin `<tr>` rows have no hover. Selected (`aria-current`/`aria-pressed`/`aria-selected`) beats hover.
+6. Sidebar and client-workspace tabs have a clear token-based selected state, a hover state on `(hover: hover)` only, and visible focus.
+7. `StatusBadge` and `AdminStatusBadge` use the same visual mapping. Labels are unchanged.
+8. At 390×844 every dense table listed above has a stacked list alternative. There is no horizontal page overflow and data never needs horizontal scrolling to be reached.
+9. At 1440×900 the tables, headers and actions align. Nothing is clipped or overlaps.
+10. No raw hex. No hardcoded durations where a `--motion-*` token exists.
+11. Keyboard navigation works everywhere: sidebar, tabs, table links, sheets (Escape and focus return) and pagination. Focus is always visible.
+12. Contrast: text on surfaces, badges and selected states stays readable in dark and light themes.
+13. No invisible element intercepts pointer events (sheets closed, mobile nav closed).
+14. Client (`/client/**`) is visually and functionally unchanged. The `.client-*` CSS and the Client shell/nav files are untouched.
+15. `backend/**`, `generated/**`, hooks/lib/schemas/routes/nav-config, `package.json` and the lockfile are unchanged.
+16. Existing specs pass without being weakened.
 
-## Documentation (minimal)
+## Test plan (orchestrator, after implementation)
 
-- `docs/frontend/current-task.md`: set Status to **F13 Stage 2 IN PROGRESS** (stage 1 done and shown: public site + login); adjust the Stages list marker only. Keep the rest.
-- `docs/frontend/frontend-roadmap.md` F13 block: replace `CURRENT / NOT STARTED` with `CURRENT / IN PROGRESS — stage 1 done, stage 2 in progress`. No other edits.
+- `npm run ai:check:fast`, then `ai:check:full` (CSS, shell and shared UI changed) → `.ai/CHECKS.md`.
+- Targeted specs:
+  - `features/navigation/shells.spec.tsx`;
+  - `features/trainer-workspace/tests/trainer-workspace.spec.tsx`;
+  - `features/trainer-workspace/tests/nutrition-editor.spec.tsx`;
+  - `features/admin-workspace/tests/admin-workspace.spec.tsx`;
+  - `features/notifications/tests/notifications-page.spec.tsx`;
+  - `shared/ui/sheet.spec.tsx`;
+  - Client regression: `client-body-page.spec.tsx`, `rest-timer.spec.tsx`.
+- Review greps:
+  - `git diff --stat` shows no backend, generated, package, route or hook changes;
+  - no `.client-` diff in `index.css`;
+  - no `hover:` on `<tr`;
+  - no `infinite`;
+  - no display class on `SheetContent`.
 
-## Validation plan (orchestrator, AFTER implementation; Codex does not run these)
+## Visual validation plan (Playwright, after checks)
 
-- `npm run ai:check:fast` (lint/typecheck/relevant tests) -> `.ai/CHECKS.md`; frontend build (`ai:check:full` or frontend build only) since CSS/shell/shared UI changed.
-- Targeted tests: `shells.spec.tsx`, `rest-timer.spec.tsx`, `sheet.spec.tsx`, `button.spec.tsx`, client-feature specs.
-- Manual browser at desktop + mobile: Client Dashboard, Training hub, Workout / Focus Mode (set log -> rest -> next, finish/cancel), Progress (+ exercise detail), Nutrition, Body (measurements + photos), Check-ins (list, detail, form, trainer feedback), Client navigation (bottom nav active state, More sheet, header), Notifications sanity check, one Trainer page sanity check.
-- Reduced motion: enable OS/DevTools "prefers-reduced-motion" and confirm no entrance movement and a working Focus Mode.
-- Review greps: no `infinite`, no hardcoded `duration:` in Client, no raw hex added, `git diff --stat` shows no backend/generated/package changes.
-
-## Implementer notes
-
-Codex: do not commit or push. Do not run the full check suite; at most one small targeted check for your own change (e.g. the spec of a file you edited). Report with `docs/frontend/task-report-template.md`, then STOP. Do not start stage 3 (Trainer/Admin) or F14.
+- **Accounts:**
+  - Trainer: `qa-trainer@example.test` (local QA user from Stage 2; has 1 client, 2 ACTIVE templates and 1 plan).
+  - Admin: the user must supply admin credentials, or approve creating a local QA admin.
+- **Desktop 1440×900 and mobile 390×844**, for each Trainer and Admin route above:
+  - hierarchy, alignment and surface consistency;
+  - table vs. mobile list;
+  - no horizontal overflow (`scrollWidth - clientWidth === 0`).
+- Motion:
+  - one entrance per navigation;
+  - none on filter/pagination changes;
+  - no running animation after 2s (`document.getAnimations()`).
+- Navigation:
+  - sidebar selected/hover/focus;
+  - mobile hamburger sheet opens and closes (Escape, backdrop, link);
+  - client-workspace tabs.
+- Interactions:
+  - open and close every sheet (create template, prescription, exercise, admin form, assignment, confirm);
+  - after closing, hit-test the nav and main content so no hidden layer blocks clicks;
+  - pagination;
+  - search/filter inputs;
+  - status badges.
+- Keyboard: Tab through the sidebar, a table with links, and a sheet (Escape and focus return).
+- Reduced motion: emulate `prefers-reduced-motion: reduce` and confirm there is no entrance transform.
+- Client sanity: `/client/dashboard` and `/client/body` look unchanged at 390×844.
