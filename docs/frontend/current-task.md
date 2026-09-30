@@ -12,7 +12,7 @@ Premium visual refinement of the public website, login, and the Client, Trainer,
 
 ## Status
 
-**F13 stages 1–3 DONE** — awaiting external acceptance of F13
+**F13 DONE** (stages 1–3). Work now runs on two parallel lines — see [TEAM-PLAN.md](../TEAM-PLAN.md): Line A (Eli) = F14 hardening + known gaps; Line B (Ronny) = landing + nutrition.
 
 ## Stages (user-agreed, 2026-09-25)
 

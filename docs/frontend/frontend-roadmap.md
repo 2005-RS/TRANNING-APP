@@ -310,7 +310,7 @@ Trainer **complements** Client. Do not duplicate Client gym UX inside Trainer. T
 
 ## F13 — Motion / 3D / Premium Polish
 
-**Status:** CURRENT — stages 1–3 done, awaiting external acceptance
+**Status:** DONE — stages 1–3 complete (2026-09-29)
 
 **Objective:** Performance-conscious visual refinement. Functional 3D only where useful. Rive only for special celebratory moments if justified.
 
@@ -328,7 +328,7 @@ Trainer **complements** Client. Do not duplicate Client gym UX inside Trainer. T
 
 ## F14 — Frontend Hardening / Production
 
-**Status:** PLANNED
+**Status:** IN PROGRESS — Line A (Eli), see [TEAM-PLAN.md](../TEAM-PLAN.md)
 
 **Objective:** Accessibility, performance, bundle review, error handling, security review, production config, E2E, release readiness.
 
