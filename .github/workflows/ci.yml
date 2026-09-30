@@ -43,7 +43,7 @@ jobs:
           --health-retries 10
     steps:
       - uses: actions/checkout@v5
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v5
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: npm
@@ -87,7 +87,7 @@ jobs:
       - name: Start MinIO
         working-directory: .
         run: bash .github/scripts/start-minio.sh
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v5
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: npm
@@ -106,7 +106,7 @@ jobs:
       VITE_API_URL: http://localhost:3000
     steps:
       - uses: actions/checkout@v5
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v5
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: npm
@@ -174,7 +174,7 @@ jobs:
       - uses: actions/checkout@v5
       - name: Start MinIO
         run: bash .github/scripts/start-minio.sh
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v5
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: npm
