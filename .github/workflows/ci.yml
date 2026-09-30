@@ -15,9 +15,11 @@ permissions:
 
 env:
   NODE_VERSION: '22'
-  # minio/minio and minio/mc were removed from Docker Hub; this is the
-  # maintained Chainguard build of the same server, pinned by digest.
-  MINIO_IMAGE: chainguard/minio@sha256:71674988a1c7ddd5724928633199152b11e4ddefd6c6ce2d60772ff4a8f22ca9
+  # minio/minio and minio/mc were removed from Docker Hub, and quay.io requires
+  # credentials. Chainguard publishes the same server, matching
+  # backend/docker-compose.yml. It only offers :latest, and its older digests are
+  # garbage collected, so a pinned digest would break this workflow later.
+  MINIO_IMAGE: chainguard/minio:latest
 
 jobs:
   backend:

@@ -149,9 +149,11 @@ Live Postgres used by this machine:
 
 Compose file project name is `backend` so `docker compose up -d` from `backend/` attaches to that live stack.
 
-There is also a leftover unused container `training-app-postgres-1` (Created, not running) from when the Compose project was named `training-app`. Its volume is `training-app_training_postgres_data`, which is **not** the live data volume. It could not be proven empty without starting Postgres on port 5432. Keep it until an operator inspects that volume.
+MinIO: `backend-minio-1` on 9100/9101, volume `backend_training_minio_data`. `backend-minio-init-1` creates the bucket once and exits 0; that is its normal end state.
 
-MinIO: `training-app-minio-1` on 9100/9101. Do not `docker compose down -v`.
+Do not `docker compose down -v`. It deletes both volumes. After that the schema comes back with `npm run migration:run`, but local users and any imported exercise library have to be recreated (`npm run seed:admin` with `INITIAL_ADMIN_*`, then `npm run import:exercise-library`).
+
+The leftover `training-app-*` container and volume from the old Compose project name no longer exist.
 
 ## Troubleshooting
 
