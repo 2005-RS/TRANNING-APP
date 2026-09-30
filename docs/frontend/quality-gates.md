@@ -86,7 +86,9 @@ Critical paths that must keep coverage as features land:
 | Backend (lint, build, unit, e2e) | `npm run lint`, `npm run build`, `npm test`, `npm run test:e2e` against a PostgreSQL 16 service (`training_test`, in-memory object storage) |
 | Backend (MinIO storage e2e) | `npm run test:e2e:minio` against PostgreSQL and a real MinIO container |
 | Frontend (lint, test, build) | `npm run lint`, `npm test`, `npm run build` |
-| E2E (Playwright + real API) | Starts the API with PostgreSQL and MinIO, seeds an ADMIN, creates one CLIENT and one TRAINER through the API, checks that `npm run api:generate` leaves `src/generated/` unchanged, builds, then runs `npx playwright test` |
+| E2E (Playwright + real API) | Builds, runs `npx playwright test` with no API running, then starts the API with PostgreSQL and MinIO, checks that `npm run api:generate` leaves `src/generated/` unchanged, seeds an ADMIN, creates one CLIENT and one TRAINER through the API, and runs the real-API smoke tests |
+
+The mocked specs run before the API starts because they only route the endpoints they assert on: against a live API, an unrouted call gets a real 401 and ends the mocked session. Making every spec route all of `/api/v1/**` would remove that ordering constraint.
 
 In the E2E job the credential-dependent smoke tests run instead of skipping: `E2E_EMAIL` / `E2E_PASSWORD` and `E2E_TRAINER_EMAIL` / `E2E_TRAINER_PASSWORD` are random per run and never stored. Every secret in the workflow belongs to a throwaway API that only exists inside that job.
 

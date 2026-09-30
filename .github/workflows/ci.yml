@@ -190,11 +190,33 @@ jobs:
         run: |
           npm run build
           npm run migration:run
+
+      - name: Install frontend
+        working-directory: frontend
+        run: npm ci
+      - name: Build frontend
+        working-directory: frontend
+        run: npm run build
+      # The mocked specs only route the endpoints they assert on. With a live API,
+      # unrouted calls get a real 401 and end the mocked session, so this run
+      # happens before the API starts, as it does on a developer machine.
+      - name: Playwright (mocked API)
+        working-directory: frontend
+        run: npx playwright test
+
       - name: Start API
         working-directory: backend
         run: |
           nohup node dist/main.js > "$RUNNER_TEMP/api.log" 2>&1 &
           timeout 90 bash -c 'until curl -sf "$API/health" > /dev/null; do sleep 2; done'
+      - name: Generated API client matches the backend contract
+        working-directory: frontend
+        run: |
+          npm run api:generate
+          if ! git diff --exit-code --stat -- src/generated || [ -n "$(git status --porcelain -- src/generated)" ]; then
+            echo "::error::frontend/src/generated is out of date. Run npm run api:generate against the current backend and commit the result."
+            exit 1
+          fi
 
       - name: Create E2E users
         working-directory: backend
@@ -228,24 +250,9 @@ jobs:
             echo "E2E_TRAINER_EMAIL=trainer.ci@example.test"
             echo "E2E_TRAINER_PASSWORD=$trainer_password"
           } >> "$GITHUB_ENV"
-
-      - name: Install frontend
+      - name: Playwright (real API smoke)
         working-directory: frontend
-        run: npm ci
-      - name: Generated API client matches the backend contract
-        working-directory: frontend
-        run: |
-          npm run api:generate
-          if ! git diff --exit-code --stat -- src/generated || [ -n "$(git status --porcelain -- src/generated)" ]; then
-            echo "::error::frontend/src/generated is out of date. Run npm run api:generate against the current backend and commit the result."
-            exit 1
-          fi
-      - name: Build frontend
-        working-directory: frontend
-        run: npm run build
-      - name: Playwright
-        working-directory: frontend
-        run: npx playwright test
+        run: npx playwright test --grep "real backend|when credentials are provided"
 
       - name: API log
         if: failure()
