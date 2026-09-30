@@ -41,7 +41,10 @@ export function TrainerPrivatePhoto({
 
   return (
     <div ref={ref}>
-      {!near || access.isPending ? (
+      {!near ? (
+        // Still, not a skeleton: nothing is loading until the frame nears the viewport.
+        <div role="img" aria-label={label} className="aspect-[3/4] w-full rounded-lg bg-muted" />
+      ) : access.isPending ? (
         <div role="status" aria-label={trainerWorkspaceCopy.body.imageLoading}>
           <Skeleton className="aspect-[3/4] w-full rounded-lg" />
         </div>
