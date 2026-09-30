@@ -79,7 +79,7 @@ Critical paths that must keep coverage as features land:
 
 ## Continuous integration
 
-`.github/workflows/ci.yml` runs on every pull request to `main` and on every push to `main`. Four jobs run in parallel:
+`.github/workflows/ci.yml` runs on every push to any branch; a pull request to `main` shows the run of its head commit. Four jobs run in parallel:
 
 | Job | What it runs |
 | --- | --- |

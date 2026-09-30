@@ -1,10 +1,9 @@
 name: CI
 
 on:
-  pull_request:
-    branches: [main]
+  # Every branch push, so the checks exist on a commit before its PR is opened;
+  # GitHub shows the same run on the PR for that head commit.
   push:
-    branches: [main]
   workflow_dispatch:
 
 concurrency:
