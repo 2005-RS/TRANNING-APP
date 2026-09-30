@@ -37,7 +37,7 @@ type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
 
 
 /**
- * @summary Application availability and PostgreSQL connectivity
+ * @summary Application availability, PostgreSQL connectivity, and object-storage bucket reachability
  */
 export const getHealthCheckUrl = () => {
 
@@ -116,7 +116,7 @@ export function useHealthCheck<TData = Awaited<ReturnType<typeof healthCheck>>, 
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 /**
- * @summary Application availability and PostgreSQL connectivity
+ * @summary Application availability, PostgreSQL connectivity, and object-storage bucket reachability
  */
 
 export function useHealthCheck<TData = Awaited<ReturnType<typeof healthCheck>>, TError = HealthCheck503>(
