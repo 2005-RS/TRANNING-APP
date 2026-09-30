@@ -6,6 +6,7 @@ import {
   validateEnv,
 } from './env.validation';
 import { AiProviderName } from '../modules/chat/ai/ai-provider-name.enum';
+import { MailTransportName } from '../mail/mail-transport-name.enum';
 import { AUTH_TEST_ENV } from '../../test/auth-test-env';
 import { STORAGE_TEST_ENV } from '../../test/storage-test-env';
 
@@ -46,6 +47,10 @@ function productionEnv(
     DEEPSEEK_API_KEY: 'unit-test-deepseek-key-not-real',
     DEEPSEEK_BASE_URL: 'https://api.deepseek.com',
     DEEPSEEK_MODEL: 'deepseek-flash',
+    APP_PUBLIC_URL: 'https://app.example.com',
+    MAIL_TRANSPORT: 'smtp',
+    MAIL_FROM: 'Training <no-reply@example.com>',
+    MAIL_SMTP_HOST: 'smtp.example.com',
     ...overrides,
   });
 }
@@ -163,6 +168,29 @@ describe('validateEnv', () => {
       }),
     ).toBe(false);
     expect(shouldSkipThrottle({ NODE_ENV: 'test' })).toBe(false);
+  });
+
+  it('defaults to the log mail transport and a local reset origin outside production', () => {
+    const env = validateEnv(validEnv());
+    expect(env.MAIL_TRANSPORT).toBe(MailTransportName.Log);
+    expect(env.APP_PUBLIC_URL).toBe('http://localhost:5173');
+    expect(env.MAIL_SMTP_PORT).toBe(587);
+    expect(env.MAIL_SMTP_SECURE).toBe(false);
+  });
+
+  it('requires SMTP and an https public URL in production', () => {
+    const missing = productionEnv();
+    delete missing.MAIL_TRANSPORT;
+    expect(() => validateEnv(missing)).toThrow(/MAIL_TRANSPORT/);
+    expect(() => validateEnv(productionEnv({ MAIL_TRANSPORT: 'log' }))).toThrow(
+      /MAIL_TRANSPORT: log is not allowed/,
+    );
+    expect(() => validateEnv(productionEnv({ MAIL_SMTP_HOST: '' }))).toThrow(
+      /MAIL_SMTP_HOST/,
+    );
+    expect(() =>
+      validateEnv(productionEnv({ APP_PUBLIC_URL: 'http://app.example.com' })),
+    ).toThrow(/APP_PUBLIC_URL: must use https/);
   });
 
   it('accepts an explicit production configuration with a strong secret', () => {

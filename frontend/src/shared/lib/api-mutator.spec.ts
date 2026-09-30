@@ -33,6 +33,12 @@ describe('apiFetch', () => {
     await expect(apiFetch('/api/v1/clients/me')).rejects.toBeInstanceOf(NetworkError);
   });
 
+  it('resolves an accepted response with no body instead of failing to parse it', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(new Response(null, { status: 202 })));
+
+    await expect(apiFetch('/api/v1/auth/forgot-password', { method: 'POST' })).resolves.toBeUndefined();
+  });
+
   it('lets a caller abort pass through untouched', async () => {
     const controller = new AbortController();
     controller.abort();

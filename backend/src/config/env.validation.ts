@@ -33,6 +33,7 @@ import {
 } from './app.constants';
 import { ObjectStorageDriver } from '../storage/object-storage-driver.enum';
 import { AiProviderName } from '../modules/chat/ai/ai-provider-name.enum';
+import { MailTransportName } from '../mail/mail-transport-name.enum';
 
 export enum NodeEnvironment {
   Development = 'development',
@@ -453,6 +454,52 @@ export class EnvironmentVariables {
   @Min(1)
   @Max(100_000)
   AI_PUBLIC_DAILY_MESSAGE_LIMIT!: number;
+
+  /** Origin of the SPA; password reset links point here. */
+  @IsUrl({
+    require_protocol: true,
+    protocols: ['https', 'http'],
+    require_tld: false,
+  })
+  APP_PUBLIC_URL!: string;
+
+  @IsEnum(MailTransportName)
+  MAIL_TRANSPORT!: MailTransportName;
+
+  @ValidateIf(
+    (env: EnvironmentVariables) =>
+      env.MAIL_TRANSPORT === MailTransportName.Smtp,
+  )
+  @IsString()
+  @IsNotEmpty()
+  @MaxLength(254)
+  MAIL_FROM?: string;
+
+  @ValidateIf(
+    (env: EnvironmentVariables) =>
+      env.MAIL_TRANSPORT === MailTransportName.Smtp,
+  )
+  @IsString()
+  @IsNotEmpty()
+  MAIL_SMTP_HOST?: string;
+
+  @Transform(toIntWithDefault(587))
+  @IsInt()
+  @Min(1)
+  @Max(65535)
+  MAIL_SMTP_PORT!: number;
+
+  @Transform(({ value }) => toBoolean(value ?? false))
+  @IsBoolean()
+  MAIL_SMTP_SECURE!: boolean;
+
+  @IsOptional()
+  @IsString()
+  MAIL_SMTP_USER?: string;
+
+  @IsOptional()
+  @IsString()
+  MAIL_SMTP_PASSWORD?: string;
 }
 
 function blankToUndefined(value: unknown): unknown {
@@ -498,6 +545,23 @@ export function validateEnv(
     AI_PUBLIC_DAILY_MESSAGE_LIMIT:
       config.AI_PUBLIC_DAILY_MESSAGE_LIMIT ??
       AI_PUBLIC_DAILY_MESSAGE_LIMIT_DEFAULT,
+    // Like AI_PROVIDER: dev and CI never send mail; production must choose SMTP.
+    APP_PUBLIC_URL:
+      blankToUndefined(config.APP_PUBLIC_URL) ??
+      (config.NODE_ENV === NodeEnvironment.Production
+        ? undefined
+        : 'http://localhost:5173'),
+    MAIL_TRANSPORT:
+      blankToUndefined(config.MAIL_TRANSPORT) ??
+      (config.NODE_ENV === NodeEnvironment.Production
+        ? undefined
+        : MailTransportName.Log),
+    MAIL_FROM: blankToUndefined(config.MAIL_FROM),
+    MAIL_SMTP_HOST: blankToUndefined(config.MAIL_SMTP_HOST),
+    MAIL_SMTP_PORT: blankToUndefined(config.MAIL_SMTP_PORT) ?? 587,
+    MAIL_SMTP_SECURE: blankToUndefined(config.MAIL_SMTP_SECURE) ?? false,
+    MAIL_SMTP_USER: blankToUndefined(config.MAIL_SMTP_USER),
+    MAIL_SMTP_PASSWORD: blankToUndefined(config.MAIL_SMTP_PASSWORD),
   };
 
   const validated = plainToInstance(EnvironmentVariables, withDefaults, {
@@ -577,6 +641,18 @@ export function validateEnv(
     ) {
       throw new Error(
         'Environment validation failed:\nDEEPSEEK_BASE_URL: must use https in production',
+      );
+    }
+
+    if (validated.MAIL_TRANSPORT === MailTransportName.Log) {
+      throw new Error(
+        'Environment validation failed:\nMAIL_TRANSPORT: log is not allowed in production',
+      );
+    }
+
+    if (!validated.APP_PUBLIC_URL.startsWith('https://')) {
+      throw new Error(
+        'Environment validation failed:\nAPP_PUBLIC_URL: must use https in production',
       );
     }
   }

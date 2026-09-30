@@ -211,5 +211,6 @@ export async function apiFetch<T>(
     return undefined as T;
   }
 
-  return (await response.json()) as T;
+  const text = await response.text();
+  return (text ? JSON.parse(text) : undefined) as T;
 }

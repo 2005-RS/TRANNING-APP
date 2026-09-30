@@ -114,5 +114,13 @@ export function readEnvironment(
       'AI_PUBLIC_DAILY_MESSAGE_LIMIT',
       { infer: true },
     ),
+    APP_PUBLIC_URL: config.getOrThrow('APP_PUBLIC_URL', { infer: true }),
+    MAIL_TRANSPORT: config.getOrThrow('MAIL_TRANSPORT', { infer: true }),
+    MAIL_FROM: config.get('MAIL_FROM', { infer: true }),
+    MAIL_SMTP_HOST: config.get('MAIL_SMTP_HOST', { infer: true }),
+    MAIL_SMTP_PORT: config.getOrThrow('MAIL_SMTP_PORT', { infer: true }),
+    MAIL_SMTP_SECURE: config.getOrThrow('MAIL_SMTP_SECURE', { infer: true }),
+    MAIL_SMTP_USER: config.get('MAIL_SMTP_USER', { infer: true }),
+    MAIL_SMTP_PASSWORD: config.get('MAIL_SMTP_PASSWORD', { infer: true }),
   };
 }
