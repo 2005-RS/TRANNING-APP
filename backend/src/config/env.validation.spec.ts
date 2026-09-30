@@ -2,6 +2,7 @@ import {
   isSwaggerEnabled,
   NodeEnvironment,
   parseCorsOriginsForRuntime,
+  shouldSkipThrottle,
   validateEnv,
 } from './env.validation';
 import { AiProviderName } from '../modules/chat/ai/ai-provider-name.enum';
@@ -143,6 +144,25 @@ describe('validateEnv', () => {
         }),
       ),
     ).toThrow(/DATABASE_PASSWORD/);
+  });
+
+  it('refuses to start production with the E2E throttle switch set', () => {
+    expect(() =>
+      validateEnv(productionEnv({ AUTH_E2E_SKIP_THROTTLE: 'true' })),
+    ).toThrow(/AUTH_E2E_SKIP_THROTTLE: test-only switch/);
+  });
+
+  it('only honors the E2E throttle switch outside production', () => {
+    expect(
+      shouldSkipThrottle({ NODE_ENV: 'test', AUTH_E2E_SKIP_THROTTLE: 'true' }),
+    ).toBe(true);
+    expect(
+      shouldSkipThrottle({
+        NODE_ENV: 'production',
+        AUTH_E2E_SKIP_THROTTLE: 'true',
+      }),
+    ).toBe(false);
+    expect(shouldSkipThrottle({ NODE_ENV: 'test' })).toBe(false);
   });
 
   it('accepts an explicit production configuration with a strong secret', () => {

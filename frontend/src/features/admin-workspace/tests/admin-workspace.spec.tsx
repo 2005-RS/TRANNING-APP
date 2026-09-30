@@ -10,6 +10,7 @@ import { adminWorkspaceCopy, adminWorkspaceCopySource } from '@/features/admin-w
 import { greetingHeadline } from '@/features/client-dashboard/lib/greeting';
 import { trainerWorkspaceCopy } from '@/features/trainer-workspace/copy';
 import { changeAppLanguage } from '@/i18n/language';
+import { commonCopy } from '@/i18n/locales/common-live';
 import { esAdminWorkspace } from '@/i18n/locales/es/admin';
 import {
   ADMIN_CLIENT_ID,
@@ -105,7 +106,7 @@ describe('Admin workspace', () => {
     it('shows network errors without logging out', async () => {
       adminMockState.failNetwork = true;
       renderAdmin();
-      expect(await screen.findByRole('heading', { name: 'Something went wrong' }, { timeout })).toBeInTheDocument();
+      expect(await screen.findByRole('heading', { name: commonCopy.errors.networkTitle }, { timeout })).toBeInTheDocument();
       expect(screen.getByRole('button', { name: copy.retry })).toBeInTheDocument();
     });
   });

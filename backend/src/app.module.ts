@@ -4,7 +4,11 @@ import { APP_GUARD } from '@nestjs/core';
 import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { THROTTLE_LIMIT, THROTTLE_TTL_MS } from './config/app.constants';
-import { EnvironmentVariables, validateEnv } from './config/env.validation';
+import {
+  EnvironmentVariables,
+  shouldSkipThrottle,
+  validateEnv,
+} from './config/env.validation';
 import { readEnvironment } from './config/read-environment';
 import { createTypeOrmNestOptions } from './database/postgres-connection.options';
 import { HealthModule } from './health/health.module';
@@ -41,7 +45,7 @@ import { ChatModule } from './modules/chat/chat.module';
         createTypeOrmNestOptions(readEnvironment(config)),
     }),
     ThrottlerModule.forRoot({
-      skipIf: () => process.env.AUTH_E2E_SKIP_THROTTLE === 'true',
+      skipIf: () => shouldSkipThrottle(),
       throttlers: [
         {
           name: 'default',

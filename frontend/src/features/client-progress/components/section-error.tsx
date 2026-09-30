@@ -15,7 +15,7 @@ export function SectionError({
 }) {
   const mapped = mapApiError(error);
   const description =
-    mapped.description === 'The request could not be completed.'
+    mapped.kind === 'network'
       ? clientProgressCopy.error.network
       : mapped.description;
 

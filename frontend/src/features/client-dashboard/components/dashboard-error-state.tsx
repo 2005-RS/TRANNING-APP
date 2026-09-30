@@ -15,7 +15,7 @@ export function DashboardErrorState({
   const clientDashboardCopy = useClientDashboardCopy();
   const mapped = mapApiError(error);
   const description =
-    mapped.description === 'The request could not be completed.'
+    mapped.kind === 'network'
       ? clientDashboardCopy.error.network
       : mapped.description;
 

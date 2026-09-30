@@ -41,6 +41,8 @@ export const esCommon: LooseCopy<typeof commonCopySource> = {
     genericBody:
       'No se pudo completar la solicitud. Si continúa, comparte el identificador de la solicitud con soporte.',
     genericShort: 'No se pudo completar la solicitud.',
+    networkTitle: 'No se puede conectar con el servidor',
+    networkBody: 'Revisa tu conexión e inténtalo de nuevo.',
     tryAgain: 'Ocurrió un error. Inténtalo de nuevo.',
   },
   enums: {

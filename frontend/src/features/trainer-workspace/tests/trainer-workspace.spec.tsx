@@ -7,6 +7,7 @@ import { authServer, resetAuthMockState } from '@/features/auth/tests/msw-server
 import { resetAuthBootstrap } from '@/features/auth/lib/session-service';
 import { clearAccessToken } from '@/shared/lib/access-token';
 import { trainerWorkspaceCopy } from '@/features/trainer-workspace/copy';
+import { commonCopy } from '@/i18n/locales/common-live';
 import {
   TRAINER_ADMIN_EXERCISE_ID,
   TRAINER_CHECK_IN_ID,
@@ -195,7 +196,7 @@ describe('Trainer workspace', () => {
   it('shows dashboard network errors without logging out', async () => {
     trainerMockState.failNetwork = true;
     renderTrainer();
-    expect(await screen.findByRole('heading', { name: 'Something went wrong' }, { timeout })).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { name: commonCopy.errors.networkTitle }, { timeout })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: trainerWorkspaceCopy.retry })).toBeInTheDocument();
   });
 

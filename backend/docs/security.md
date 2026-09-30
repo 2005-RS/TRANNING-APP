@@ -75,7 +75,7 @@ All values are per IP per 60 seconds unless skipped.
 | Exercise media and progress-photo upload-request | 20 |
 | `GET /api/v1/health` | exempt |
 
-Login and refresh limits stay enabled in every environment. Functional E2E sets `AUTH_E2E_SKIP_THROTTLE=true`; a dedicated throttle suite asserts HTTP 429.
+Login and refresh limits stay enabled in every environment. Functional E2E sets `AUTH_E2E_SKIP_THROTTLE=true`; a dedicated throttle suite asserts HTTP 429. The switch is ignored when `NODE_ENV=production`, and production refuses to boot if it is set.
 
 ## Object storage
 

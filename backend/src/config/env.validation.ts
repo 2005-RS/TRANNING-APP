@@ -533,6 +533,12 @@ export function validateEnv(
   }
 
   if (validated.NODE_ENV === NodeEnvironment.Production) {
+    if (config.AUTH_E2E_SKIP_THROTTLE === 'true') {
+      throw new Error(
+        'Environment validation failed:\nAUTH_E2E_SKIP_THROTTLE: test-only switch must not be set in production',
+      );
+    }
+
     if (!validated.AUTH_COOKIE_SECURE) {
       throw new Error(
         'Environment validation failed:\nAUTH_COOKIE_SECURE: must be true in production',
@@ -593,6 +599,19 @@ export function validateEnv(
   }
 
   return validated;
+}
+
+/**
+ * Read on every request (not at boot) because E2E suites toggle the switch
+ * around their own setup. Production ignores it even if validation was bypassed.
+ */
+export function shouldSkipThrottle(
+  env: NodeJS.ProcessEnv = process.env,
+): boolean {
+  return (
+    env.NODE_ENV !== NodeEnvironment.Production &&
+    env.AUTH_E2E_SKIP_THROTTLE === 'true'
+  );
 }
 
 export function parseCorsOriginsForRuntime(

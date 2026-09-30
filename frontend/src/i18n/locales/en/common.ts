@@ -37,6 +37,8 @@ export const commonCopySource = {
     genericTitle: 'Something went wrong',
     genericBody: 'The request could not be completed. If this continues, share the request ID with support.',
     genericShort: 'The request could not be completed.',
+    networkTitle: 'Cannot reach the server',
+    networkBody: 'Check your connection and try again.',
     tryAgain: 'Something went wrong. Try again.',
   },
   enums: {
