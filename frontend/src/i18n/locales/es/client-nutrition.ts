@@ -25,6 +25,8 @@ export const esClientNutrition: LooseCopy<typeof clientNutritionCopySource> = {
     fat: 'Grasas',
     none: 'Este plan no tiene objetivos diarios definidos.',
     macroChart: 'Proporción de los objetivos prescritos de proteína, carbohidratos y grasas',
+    plannedProgress: 'Calorías de las comidas planificadas frente al objetivo diario prescrito',
+    plannedOfTarget: '{{planned}} planificadas de {{target}} prescritas',
   },
   totals: {
     title: 'Información del plan',
@@ -42,8 +44,9 @@ export const esClientNutrition: LooseCopy<typeof clientNutritionCopySource> = {
     savedHint: 'Valores del plan de comidas guardado. Las diferencias son las cantidades planificadas menos los objetivos.',
   },
   meals: {
-    title: 'Comidas',
-    description: 'Alimentos y porciones del plan asignado.',
+    title: 'Plan del día',
+    description: 'Comidas asignadas, agrupadas del desayuno a la cena.',
+    glance: 'Resumen de comidas',
     empty: 'Este plan todavía no tiene comidas.',
     noFoods: 'No hay alimentos listados.',
     notes: 'Notas',

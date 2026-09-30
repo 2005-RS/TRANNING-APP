@@ -75,8 +75,13 @@ describe('Client nutrition', { timeout: 15_000 }, () => {
     expect(screen.getByText('150.5 g')).toBeInTheDocument();
     expect(screen.getByText('Greek yogurt')).toBeInTheDocument();
     expect(screen.getByText('Oats')).toBeInTheDocument();
-    expect(screen.getByText('Morning plate')).toBeInTheDocument();
+    // The day board lists each meal in the summary and again as a card.
+    expect(screen.getAllByText('Morning plate')).toHaveLength(2);
     expect(screen.getByText(clientNutritionCopy.meals.noFoods)).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: clientNutritionCopy.mealType.BREAKFAST })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: clientNutritionCopy.mealType.LUNCH })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: clientNutritionCopy.meals.glance })).toBeInTheDocument();
+    expect(screen.getByRole('meter', { name: clientNutritionCopy.targets.plannedProgress })).toBeInTheDocument();
     expect(screen.getByText(clientNutritionCopy.totals.dailyTarget)).toBeInTheDocument();
     expect(screen.getByText(clientNutritionCopy.totals.mealTotal)).toBeInTheDocument();
     expect(screen.queryByRole('heading', { name: /remaining calories/i })).not.toBeInTheDocument();
