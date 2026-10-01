@@ -1,211 +1,222 @@
 # Current Task
 
-STATUS: APPROVED
+STATUS: READY
 <!-- PLANNING -> (PLAN_FAILED) -> READY -> IMPLEMENTING -> REVIEW -> CHANGES_REQUESTED -> APPROVED -->
 
 ## Title
 
-Nutrition 2.0 — N1: Nutrient catalog, Food source traceability, Nutrition Engine v1
+Subscriptions P1 — Free self-signup + Pro plan paid by SINPE Móvil (backend, migration, API contract)
 
 ## Context
 
-- Design source: [`docs/nutrition/nutrition-2.0-reuse-analysis.md`](../docs/nutrition/nutrition-2.0-reuse-analysis.md). Read sections 11, 12, 13 and 25. This task is phase **N1** of section 30. Do not implement later phases (N2+).
-- **Closed product decisions D1–D5** are at the top of the design doc. N1 implements the data foundations for:
-  - **D1:** no external code is copied;
-  - **D3:** the USDA original name is kept immutable next to a verifiable displayName, AI never writes nutrients, and every nutrient value is traceable to its source;
-  - **D4:** foods are traceable and deduplicated by `source + externalId`.
-
-  D2 (relative-day templates) and D5 (capabilities) come in later phases.
-- Owner: team line B (see [`docs/TEAM-PLAN.md`](../docs/TEAM-PLAN.md)). The nutrition modules are line B files. `frontend/src/generated/**` and the migrations are shared, so keep them in this PR only as needed.
-- **License rule:** do not copy code from OpenNutriTracker, Tandoor, kcal, Diet App or llmn. Write everything in our own code. The FDC nutrient IDs are public USDA data and may be used as seed values.
-
-## Goal
-
-Introduce one canonical nutrient catalog and per-food nutrient values, and record where each food comes from. Replace the ad-hoc calc helpers with a pure Nutrition Engine. **Existing API behaviour and existing numbers stay the same.**
+- **Product decision (owner: Ronny, 2026-10-01):**
+  - Anyone can create a **FREE** client account from the public site. A FREE account has no trainer.
+  - The **PRO** plan includes a trainer. It is paid **manually by SINPE Móvil**: the client pays, then reports the payment in the app. An Admin checks it against the bank and approves it, which extends PRO by one period.
+  - No card gateway yet. Design the data so a gateway (ONVO or Tilopay) can be added later as another `provider`.
+- This is a **new product feature outside the F-roadmap**.
+  - It touches files owned by line A (`clients`, `trainer-client-assignments`, auth/session) and shared migrations. Coordinate with Eli and ship it as its own PR (see `docs/TEAM-PLAN.md`).
+- **P2 (next task, NOT this one):** the frontend.
+  - `/register` page, the client "Mi plan" page with the SINPE instructions and the payment report form, the Admin "Pagos" review page, and the landing and login CTAs.
+  - Updated public copy and chatbot knowledge, which today say "no sign-up / no payments".
+  - P1 only regenerates the API client so the frontend compiles.
 
 ## Existing state (verified; do not re-audit)
 
-- **Foods:** `backend/src/modules/nutrition-foods/`. The entity is `nutrition_foods`, with macros per 100 g as fixed decimal columns:
-  - `calories_per_100g` (7,2);
-  - `protein_g_per_100g`, `carbohydrates_g_per_100g` and `fat_g_per_100g` (6,2);
-  - `fiber_g_per_100g` (6,2), which is nullable.
+- **Roles:** `ADMIN | TRAINER | CLIENT` (`users/enums`). Users and profiles are created only by Admin through `POST /clients`, using `ClientsService.create`. That method validates the password policy, hashes the password and inserts the user and the `client_profiles` row in one transaction, and returns 409 on a duplicate email.
+- **Required profile fields:** `client_profiles` requires `primary_goal` and `experience_level`.
+- **Login:** `AuthService.login(email, password)` returns an `AuthResult`. `AuthController` sets the refresh cookie and returns the access token. Throttling uses `@nestjs/throttler`, with per-route `@Throttle` constants in `auth.constants.ts`.
+- **Module dependency:** `ClientsModule` already imports `AuthModule`. Do not make `AuthModule` import `ClientsModule`, because that would create a circular dependency.
+- **Trainer assignments:**
+  - The table is `trainer_client_assignments`, with at most one row where `ended_at IS NULL` per client.
+  - Admin assigns with `PUT /clients/:clientId/trainer` and ends an assignment with `DELETE /clients/:clientId/trainer`.
+  - All trainer access goes through `TrainerClientAccessService`.
+- **No scheduler** (`@nestjs/schedule` is not installed), and none may be added.
+- **Migrations:** the latest timestamp is `1758067200000`.
 
-  The response exposes `nutritionPer100g`.
-- **Food visibility today:** every ACTIVE food is visible to ADMIN and to all TRAINERs. ARCHIVED foods are visible only to their creator and to ADMIN. Only ADMIN or the creator can write (`nutrition-foods.service.ts`, `requireWritable`). **Keep this exactly.** Visibility and private catalogs are NOT in N1.
-- **Plans:** `backend/src/modules/nutrition-plans/`. Items snapshot the food nutrients. The calc helpers are in `nutrition-calc.util.ts` (`roundNutrition`, `scalePer100`, `sumNutrition`, `scaleNullablePer100`) and are used by `nutrition-plans.mapper.ts`.
-- **Migrations:** `backend/src/database/migrations/`, timestamp-prefixed. The latest is `1757894400000-…`.
+## Goal
+
+A visitor can create a FREE client account and is logged in immediately. A client can see their plan and the SINPE instructions, and can report a SINPE payment. An Admin can approve or reject reported payments, which extends PRO. An Admin can also grant or revoke a complimentary PRO. A trainer can only be assigned to a client whose effective plan is PRO.
 
 ## Scope
 
-### 1. Nutrient catalog (DB + entity + seed)
+### 1. DB (one new migration, reversible `down`, timestamp > `1758067200000`)
 
-- **New table `nutrients`:**
-  - `id` (uuid);
-  - `code` (unique, snake_case, e.g. `energy_kcal`, `protein_g`);
-  - `name_en`, `name_es`;
-  - `unit` (enum: `kcal`, `g`, `mg`, `ug`);
-  - `category` (enum: `ENERGY`, `MACRO`, `FIBER_SUGAR`, `FAT_DETAIL`, `MINERAL`, `VITAMIN`, `OTHER`);
-  - `fdc_nutrient_id` (int, nullable, unique when not null);
-  - `display_order` (int);
-  - `is_core` (bool);
-  - timestamps.
-- **The migration seeds these rows.** Codes, units and FDC ids:
-  - **Core** (`is_core = true`, these map to the existing columns):
-    - `energy_kcal` (kcal, 1008);
-    - `protein_g` (g, 1003);
-    - `carbohydrates_g` (g, 1005);
-    - `fat_g` (g, 1004);
-    - `fiber_g` (g, 1079).
-  - **Non-core:**
-    - `sugars_g` (g, 2000);
-    - `saturated_fat_g` (g, 1258);
-    - `monounsaturated_fat_g` (g, 1292);
-    - `polyunsaturated_fat_g` (g, 1293);
-    - `cholesterol_mg` (mg, 1253);
-    - `sodium_mg` (mg, 1093);
-    - `potassium_mg` (mg, 1092);
-    - `calcium_mg` (mg, 1087);
-    - `iron_mg` (mg, 1089);
-    - `magnesium_mg` (mg, 1090);
-    - `zinc_mg` (mg, 1095);
-    - `vitamin_a_ug` (ug, 1106);
-    - `vitamin_c_mg` (mg, 1162);
-    - `vitamin_d_ug` (ug, 1114);
-    - `vitamin_b12_ug` (ug, 1178);
-    - `folate_ug` (ug, 1177).
-  - Spanish and English names use normal nutrition terminology.
-- The catalog is **read-only** in N1: no create/update endpoints.
+**Table `client_subscriptions`** (one row per client):
+- `client_profile_id` (uuid): PK, FK → `client_profiles`, on delete cascade.
+- `pro_until` (timestamptz, nullable): the end of the paid PRO time.
+- `complimentary` (boolean, not null, default false): PRO granted by an Admin, with no expiry.
+- `updated_by_user_id` (uuid, nullable): FK → `users`.
+- `created_at`, `updated_at`.
 
-### 2. Per-food nutrient values
+**Table `subscription_payments`:**
+- `id` (uuid).
+- `client_profile_id`: FK, on delete cascade, indexed.
+- `provider`: enum `subscription_payment_provider`, value `SINPE_MOVIL` only for now; not null.
+- `status`: enum `PENDING | APPROVED | REJECTED`; not null, default `PENDING`.
+- `amount_crc` (int, not null): a snapshot of the configured price at the moment the payment is reported.
+- `reference` (varchar(40), not null): the SINPE receipt or reference number, trimmed.
+- `payer_phone` (varchar(16), nullable).
+- `paid_on` (date, not null).
+- `period_start`, `period_end` (timestamptz, nullable): set on approval.
+- `reviewed_by_user_id` (nullable FK → `users`), `reviewed_at` (nullable), `rejection_reason` (varchar(300), nullable).
+- `created_at`, `updated_at`.
 
-- **New table `food_nutrients`:**
-  - `food_id` (FK → `nutrition_foods`, cascade delete);
-  - `nutrient_id` (FK → `nutrients`, restrict);
-  - `amount_per_100g` (decimal, **nullable**: `null` means unknown and is not the same as 0);
-  - `derivation` (enum `MEASURED` | `CALCULATED` | `ESTIMATED`, default `MEASURED`);
-  - `source` (the same enum as the food source: `MANUAL` | `USDA_FDC` | `OPEN_FOOD_FACTS`, not null, default `MANUAL`). **There is deliberately no `AI` value (D3).**
-  - `source_nutrient_ref` (varchar, nullable: the external nutrient id, e.g. the FDC nutrient id; null for MANUAL);
-  - `updated_by_user_id` (uuid, nullable, FK users);
-  - timestamps;
-  - PK `(food_id, nutrient_id)`.
-- **Backfill** in the same migration: one row per existing food for each core nutrient, taken from the existing columns, with `source = MANUAL`. A NULL fiber value becomes a NULL amount.
-- **Keep the existing 5 macro columns** as the fast-path cache. The service must write the core values to **both** places in one transaction on create and update, so they can never diverge.
+**Constraints:**
+- partial unique index on `(provider, reference)` WHERE `status <> 'REJECTED'`, so the same receipt cannot be used twice;
+- partial unique index on `(client_profile_id)` WHERE `status = 'PENDING'`, so a client has at most one pending payment;
+- CHECK `amount_crc > 0`.
 
-### 3. Food source traceability and name model (columns on `nutrition_foods`)
+**Backfill:** insert one `client_subscriptions` row for every existing client. Set `complimentary = true` for clients that have an active trainer assignment (`ended_at IS NULL`), so current real clients do not lose their trainer. Everyone else is FREE.
 
-- **Source columns (D4):**
-  - `source` (enum `MANUAL` | `USDA_FDC` | `OPEN_FOOD_FACTS`, not null, default `MANUAL`);
-  - `external_id` (varchar(64), nullable: the FDC id or a barcode);
-  - `source_data_type` (varchar, nullable);
-  - `source_version` (varchar, nullable);
-  - `imported_at` (timestamptz, nullable);
-  - `imported_by_user_id` (uuid, nullable, FK users);
-  - `density_g_per_ml` (decimal, nullable, > 0 when set).
-- **Name columns (D3):**
-  - the existing `name` **stays the display name**, with no rename and no behaviour change;
-  - `name_original` (varchar(300), nullable): the source's original name, which the API can never change once set;
-  - `name_origin` (enum `MANUAL` | `SOURCE` | `AI_GENERATED` | `HUMAN_TRANSLATED`, not null, default `MANUAL`);
-  - `name_verified_at` (timestamptz, nullable);
-  - `name_verified_by_user_id` (uuid, nullable, FK users).
-- **Constraints:**
-  - partial unique index on `(source, external_id)` WHERE `external_id IS NOT NULL`;
-  - CHECK that `source = 'MANUAL'` OR `external_id IS NOT NULL`;
-  - CHECK that `density_g_per_ml IS NULL OR density_g_per_ml > 0`.
-- **Backfill:** existing rows get `source = MANUAL`, `name_origin = MANUAL` and `name_original = NULL`.
-- In N1 the API **only creates `MANUAL` foods** with `name_origin = MANUAL`. All the source, name-origin and verification fields are **server-controlled** and are not accepted in the create/update DTOs. Importers, AI naming and verification endpoints come in N2 and N9.
+### 2. Config (`config/env.validation.ts` + `backend/.env.example`)
 
-### 4. API contract changes (additive only)
+| Variable | Type | Notes |
+| --- | --- | --- |
+| `SUBSCRIPTION_SINPE_PHONE` | optional string, 8 digits | |
+| `SUBSCRIPTION_SINPE_HOLDER_NAME` | optional string | |
+| `SUBSCRIPTION_PRO_PRICE_CRC` | optional int > 0 | |
+| `SUBSCRIPTION_PRO_PERIOD_DAYS` | int | Default 30 |
 
-- **Food response:** add these fields:
-  - `source`, `externalId`, `sourceDataType` and `importedAt`;
-  - `nameOriginal`, `nameOrigin`, `nameVerifiedAt` (the existing `name` is the display name);
-  - `nutrients: Array<{ code, nameEn, nameEs, unit, category, amountPer100g: number | null, derivation, source }>`, ordered by `display_order` and including only the rows that exist for the food.
+- **Payments are "configured"** only when the phone, holder name and price are all set.
+- **When they are not configured:**
+  - the report endpoint returns 503 with a stable message;
+  - the subscription response sets `sinpe: null`;
+  - signup still works.
+- **Defaults:** none for the phone and the price. No real numbers in the repo.
 
-  `nutritionPer100g` stays unchanged.
-- **Create and update food DTOs:** add an optional `nutrients?: Array<{ code: string; amountPer100g: number | null }>` for **non-core** codes only.
-  - Reject unknown codes and core codes (core values keep coming from the existing fields) with 400.
-  - Reject duplicate codes with 400.
-  - Validate `0 ≤ amount ≤` a sane max per unit, defined as constants next to the existing ones.
-  - On update, a provided array **replaces** the non-core set; omitting it leaves the set untouched.
-- **New endpoint:** `GET /nutrition/nutrients` (roles ADMIN, TRAINER). Returns the catalog ordered by `display_order`.
-- Swagger/OpenAPI decorators follow the existing DTO style. Then run `npm run api:generate` in `frontend/` so the generated client compiles. **Never hand-edit `frontend/src/generated/**`.**
-- **Plans API:** no change in N1.
+### 3. New module `backend/src/modules/subscriptions/`
 
-### 5. Nutrition Engine v1 (pure module)
+Follow the existing module patterns: entities, DTOs with Swagger decorators, a mapper and constants.
 
-- **New folder `backend/src/modules/nutrition-engine/`** with pure TypeScript only (no Nest or TypeORM imports) and an `index.ts`.
-- **Types:**
-  - `NutrientCode` (string);
-  - `NutrientVector = Record<NutrientCode, number | null>`;
-  - `Completeness = { complete: boolean; missing: NutrientCode[] }`.
-- **Functions:**
-  - `scalePer100(per100: NutrientVector, grams: number): NutrientVector`: per100 × grams / 100, and `null` stays `null`.
-  - `sumVectors(vectors: NutrientVector[]): { totals: NutrientVector; completeness: Completeness }`. A code is `null`-contaminated if any input has it `null` while another input has a number. The total sums the known numbers and lists the code in `missing`. If all inputs are `null`, the total is `null`.
-  - `roundNutrient(value: number): number`: 2 decimals, same as the current `roundNutrition`.
-- **`nutrition-calc.util.ts`:** its functions must delegate to the engine or be replaced by it. `nutrition-plans.mapper.ts` output must be **byte-for-byte identical** for existing data. The existing `nutrition-calc.util.spec.ts` and `nutrition-plans.mapper.spec.ts` must pass unchanged, or be moved without weakening assertions.
-- **No rounding inside the engine math.** Round only where the current code already rounds (at the snapshot or response boundary).
+**`SubscriptionsService` rules:**
+- **Effective plan:** `PRO` if `complimentary` is true, or if `pro_until > now`. Otherwise `FREE`. Evaluate it at read time (no cron).
+- **Approve:**
+  - Run it in one transaction, with a row lock on the payment and on the subscription row.
+  - The payment must still be `PENDING`, otherwise 409.
+  - Compute `start = max(now, pro_until ?? now)` and `end = start + PERIOD_DAYS`.
+  - Set `pro_until = end`. On the payment, set `period_start`/`period_end`, `status = APPROVED`, the reviewer and `reviewed_at`.
+- **Reject:** the payment must be `PENDING`. Store the reason (required, 3–300 chars), the reviewer and `reviewed_at`.
+- **Create a subscription row** (FREE) whenever a client profile is created, both by Admin and by self-signup, in the same transaction as the profile. Expose a helper that `ClientsService` can call with the transaction manager.
 
-### 6. Frontend
+**Endpoints:**
 
-- Only what is needed to compile after `api:generate`. No UI changes in N1.
+| Method + path | Roles | Behaviour |
+| --- | --- | --- |
+| `GET /clients/me/subscription` | CLIENT | `{ plan: 'FREE'\|'PRO', source: 'PAID'\|'COMPLIMENTARY'\|null, proUntil, periodDays, sinpe: { phone, holderName, priceCrc } \| null, pendingPayment, lastRejectedPayment }` |
+| `POST /clients/me/subscription/payments` | CLIENT | Body `{ reference, paidOn, payerPhone? }`. `amount_crc` comes from config and is never taken from the body. Returns 201 with the payment. 409 if a pending payment exists or the reference was already used. 503 if payments are not configured. Throttled. `paidOn` cannot be in the future or more than 30 days ago (400). |
+| `GET /admin/subscription-payments?status=&page=&pageSize=` | ADMIN | Paginated, newest first. Each row includes the client's id, name and email, the amount, the reference, the phone, `paidOn`, the status and the review fields. Uses the same pagination shape as the clients list. |
+| `POST /admin/subscription-payments/:id/approve` | ADMIN | Returns the updated payment and the client's new `proUntil`. |
+| `POST /admin/subscription-payments/:id/reject` | ADMIN | Body `{ reason }`. |
+| `GET /clients/:clientId/subscription` | ADMIN | The same shape as the client view, without `sinpe`. |
+| `PATCH /clients/:clientId/subscription` | ADMIN | Body `{ complimentary: boolean }`. |
+| `GET /admin/subscriptions/expired-with-trainer` | ADMIN | Clients whose effective plan is FREE but who still have an active assignment, so the Admin can end it manually. Paginated. |
+
+**Payment responses** to non-Admins never include another client's data. A client only ever sees their own payments.
+
+### 4. Public self-signup
+
+- **`POST /auth/register`**: `@Public`, with its own `@Throttle` constants (a strict limit per IP).
+  - Body: `email`, `password`, `firstName`, `lastName`, `primaryGoal`, `experienceLevel`, optional `goalNotes`, and `acceptTerms: true` (required literal true).
+  - It always creates role `CLIENT` and status `ACTIVE`, plus the FREE subscription row. The role is never read from the body, and `forbidNonWhitelisted` rejects extra fields.
+  - It reuses the `ClientsService.create` logic: extract a shared internal method instead of duplicating it. Then it logs in through `AuthService.login`, sets the refresh cookie the same way as `/auth/login`, and returns the same `AuthTokenResponseDto`.
+  - Duplicate email gives 409, with the same message the Admin create uses.
+- **Where it lives:** place the controller in a module that imports both `AuthModule` and `ClientsModule` (e.g. a small `registration` module, or inside `subscriptions`). Do not introduce a circular dependency. Reuse `AuthCookieService` for the cookie; do not copy the private controller helpers.
+
+### 5. Trainer assignment gate (line A file — keep the change minimal)
+
+- **Assignment gate:** `PUT /clients/:clientId/trainer` returns **409** with a stable message (e.g. `Client has no active Pro plan`) when the client's effective plan is FREE.
+  - Reassigning an existing PRO client keeps working.
+  - Ending (`DELETE`) is never blocked.
+- **Trainer access when PRO expires:** there is no automatic unassignment. An expired PRO keeps the trainer's access until an Admin ends the assignment. The Admin finds these clients through the expired list above.
+
+### 6. API client
+
+- Run `npm run api:generate` in `frontend/`, with the backend running. Fix only what is needed for the frontend to compile. No UI work.
 
 ## Out of scope
 
-- Food visibility (GLOBAL/PRIVATE), private catalogs or any change to who sees which food.
-- `food_portions`, units other than grams, and density-based conversion logic (the column exists; no logic yet).
-- USDA/Open Food Facts integration, caches and API keys (N2, N8).
-- Recipes, meal library, plan days, templates, diary, adherence, analytics and substitutions (N3–N7).
-- UI to edit micronutrients (a later phase; the API accepts them now).
-- Removing or renaming existing columns, endpoints or DTO fields.
-- Consolidating the duplicated `numeric.transformer.ts` / `transform.util.ts`. Leave them as they are unless the engine needs one of them.
+- All UI (that is P2): register page, "Mi plan", Admin "Pagos", landing/login CTAs, public copy, and the chatbot knowledge in `chat-system-prompt.ts` / `public-assistant-knowledge.ts`.
+- Card payments, gateways, webhooks, refunds and electronic invoices (factura electrónica).
+- Email verification, welcome or payment emails, and in-app notifications for payments.
+- A scheduler or cron, and automatic unassignment on expiry.
+- Automatic trainer assignment, and letting the client pick a trainer.
+- The nutritionist role.
+- Self-made training plans for FREE clients (built from templates). That is a later task.
+- Feature-gating any other existing client endpoint by plan.
 
 ## Security / authorization
 
-- The roles on the new endpoint and on the food endpoints are unchanged (ADMIN and TRAINER; CLIENT gets 403).
-- Server-controlled fields: the DTOs must not accept `source`, `externalId`, `sourceDataType`, `sourceVersion`, `importedAt`, `nameOriginal`, `nameOrigin`, `nameVerifiedAt` or `nameVerifiedByUserId`, nor a per-nutrient `source`, `derivation` or `sourceNutrientRef`. The global `whitelist` / `forbidNonWhitelisted` validation behaviour must reject them. Nutrients written through the API are always `source = MANUAL` and `derivation = MEASURED`.
-- **D3 guard:** no code path lets anything other than a user request (or, in later phases, an importer) write `food_nutrients`. Add a unit test that asserts the nutrient source enum has no AI-like value.
-- No change to the Client endpoints or to the plan snapshots.
+- **Roles:** follow the endpoint table. A CLIENT can never approve, reject, grant complimentary PRO or read another client's subscription or payments (403 or 404, following the existing `me` patterns). A TRAINER gets 403 on every subscription endpoint.
+- **Signup:**
+  - throttled;
+  - the role is server-forced;
+  - the password policy is enforced;
+  - no account enumeration beyond the existing 409 on duplicate email;
+  - the access token stays in memory and the refresh token in the HttpOnly cookie, exactly like login.
+- **Payments:**
+  - the amount is server-side only;
+  - approval is transactional and idempotent (approving twice gives 409, and `pro_until` is never extended twice);
+  - the reference is unique among non-rejected payments.
+- **Logs:** never log the password, tokens, cookies, `reference` or `payer_phone`.
+- **Bank checks:** the app never checks the bank automatically. The Admin is the trust boundary. Note this in the Swagger description of the approve endpoint.
 
 ## Restrictions (Codex)
 
 - Follow `AGENTS.md` and `.cursor/rules/backend-standards.mdc`.
-- **DB changes only through a new TypeORM migration** (`synchronize: false`). Use one migration with a reversible `down`. Timestamp it after `1757894400000`.
-- Keep the existing public behaviour and numbers. Additive changes only.
-- No new dependencies.
-- Do not run the full test/lint/build suites. You may run the backend nutrition unit specs you touch. General checks belong to `npm run ai:check:*`.
+- **DB changes only through one new TypeORM migration** (`synchronize: false`).
+- **No new dependencies.**
+- **Changes to existing endpoints are additive only.** The one exception is the new 409 on `PUT /clients/:clientId/trainer`.
+- Never hand-edit `frontend/src/generated/**`.
+- Do not run the full test/lint/build suites. You may run the unit specs you touch. General checks belong to `npm run ai:check:*`.
 - No commits or pushes.
 
 ## Acceptance criteria
 
-1. The migration runs up and down cleanly on a DB that already has foods and plans. After `up`:
-   - every existing food has exactly the 5 core `food_nutrients` rows matching its columns, all with `source = MANUAL`;
-   - every food has `source = MANUAL` and `name_origin = MANUAL`;
-   - inserting two foods with the same `(source, external_id)` fails.
-2. `GET /nutrition/nutrients` returns the 21 seeded nutrients in display order. CLIENT gets 403.
-3. `GET /nutrition/foods` and `GET /nutrition/foods/:id` include the source fields, the name fields (`nameOriginal`, `nameOrigin`, `nameVerifiedAt`) and `nutrients[]` with a per-value `source`. `name` and `nutritionPer100g` are identical to before.
-4. Creating or updating a food with valid non-core `nutrients` persists them. Unknown, core or duplicate codes give 400. Sending `source` or any other server-controlled field is rejected.
-5. Core values in the columns and in `food_nutrients` stay equal after create and update. This needs a unit test.
-6. The engine has unit tests for `scalePer100` (including `null`), for `sumVectors` (all known, mixed `null`, all `null`) and for `roundNutrient`.
-7. The existing nutrition specs and E2E pass without weakened assertions. Plan responses are unchanged.
-8. `frontend` compiles against the regenerated client. There are no UI changes.
+1. **Migration:** `up` → `down` → `up` runs cleanly on the local DB with seeded QA data.
+   - After `up`, every client has exactly one `client_subscriptions` row.
+   - Clients with an active assignment have `complimentary = true`. All other clients are FREE.
+2. **Signup:** `POST /auth/register` creates a CLIENT, its profile and a FREE subscription, and returns an access token plus the refresh cookie. `GET /auth/me` then works.
+   - Duplicate email gives 409.
+   - Extra fields such as `role` give 400.
+   - A weak password gives 400.
+   - The throttle limit gives 429.
+3. **Admin-created clients** (`POST /clients`) also get a FREE subscription row.
+4. **Report payment:** reporting creates a PENDING payment with `amount_crc` taken from config.
+   - A second report while one is pending gives 409.
+   - A reused reference gives 409, unless the earlier payment was rejected.
+   - A future or too-old `paidOn` gives 400.
+   - Unconfigured payments give 503.
+5. **Approve:**
+   - FREE → PRO with `proUntil = now + periodDays`;
+   - an active PRO is extended from the current `proUntil`, not from now;
+   - approving twice gives 409.
+6. **Reject:** stores the reason and does not change the plan. The client can then report again, even with the same reference.
+7. **Complimentary** makes the plan PRO with `source: 'COMPLIMENTARY'` and no expiry. Revoking it falls back to the paid `pro_until`, or to FREE.
+8. **Assignment gate:** assigning a trainer to a FREE client gives 409, and to a PRO client works. Ending an assignment always works.
+9. **Expired list:** `expired-with-trainer` lists exactly the FREE clients that still have an active assignment.
+10. **Authorization:** CLIENT and TRAINER get 403 on the Admin endpoints. A TRAINER gets 403 on the `me/subscription` endpoints.
+11. **Frontend:** compiles against the regenerated client.
 
 ## Test plan (orchestrator, after implementation)
 
-- `npm run ai:check:fast`, then `ai:review`, then `npm run ai:check:full`.
-- Backend: the nutrition unit specs plus `backend/test/nutrition-foods.e2e-spec.ts` and `nutrition-plans.e2e-spec.ts`, extended for the new fields, the 400/403 cases and the `GET /nutrition/nutrients` endpoint.
-- Migration: `migration:run` then `migration:revert` then `migration:run` on the local Docker DB with seeded QA data (9 "QA local" foods and the "Plan de volumen QA" plan). Check the backfill counts with SQL.
-- Manual: the Client `/client/nutrition` and the Trainer plan editor still show the same numbers as before.
+- **Loop:** `npm run ai:check:fast`, then `ai:review`, then `npm run ai:check:full`.
+- **Unit tests:**
+  - effective-plan calculation: complimentary, future/past/null `pro_until`;
+  - the period extension maths;
+  - the approve/reject state machine;
+  - register DTO whitelisting.
+- **E2E** (`backend/test/`): a new `subscriptions.e2e-spec.ts` and `registration.e2e-spec.ts` covering criteria 2–10. Extend the existing assignments E2E for the 409 gate. The seed or fixture clients that get assigned in existing E2E tests must be made PRO (complimentary) in their setup.
+- **Migration:** `migration:run` → `migration:revert` → `migration:run` on Docker, then check the backfill counts with SQL.
 
 ## Implementation notes
 
-- **All product decisions are closed (D1–D5).** For N1 this means:
-  - no `visibility`, capabilities, plan days or templates yet;
-  - no USDA calls; the FDC API key is only needed in N2.
 - Suggested order:
   1. migration and entities;
-  2. engine and its tests;
-  3. wire the engine into the calc util and mapper, and confirm the existing specs are green;
-  4. food service and DTOs;
-  5. nutrients endpoint;
-  6. E2E updates;
-  7. `api:generate`.
+  2. `SubscriptionsService` and its unit tests;
+  3. hook the FREE row into `ClientsService.create`;
+  4. client and Admin endpoints;
+  5. register endpoint;
+  6. assignment gate;
+  7. E2E;
+  8. `api:generate`.
+- Name the 409 and 503 messages as constants in `subscriptions.constants.ts` so P2 can map them to Spanish copy.

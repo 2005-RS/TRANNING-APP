@@ -128,6 +128,12 @@ Están listados en `frontend-roadmap.md` → "Known gaps". Cada uno es una tarea
 3. **Duplicar plantilla de entrenamiento**: endpoint nuevo y botón.
 4. **Contador de no leídas en el dashboard de Admin** (`notifications.unreadCount`).
 
+### A9. Módulo de suscripciones: plan gratis + Pro por SINPE Móvil (asignado 2026-10-01)
+Plan completo en [`docs/subscriptions/suscripciones-sinpe.md`](subscriptions/suscripciones-sinpe.md).
+- **P1 (backend):** ya está planificada en `.ai/CURRENT_TASK.md` (`STATUS: READY`). Empieza con `npm run ai:implement`.
+- **P2 (pantallas):** toca `public-site` y el login, que son de la línea B. Ronny autoriza tocarlos para esta tarea. Antes de empezar P2, trae el último merge de `ronny`.
+- Un PR por fase.
+
 ---
 
 ## Línea B — Tareas de Ronny (landing y nutrición)
@@ -169,6 +175,11 @@ Anota aquí lo que encuentres en el área del otro: fecha, archivo y problema.
   - Para verificarlo tú: `expectNoSeriousA11yViolations(page, ruta)` desde `frontend/e2e/axe.ts` en tus specs.
 - **2026-09-30 — `frontend/src/features/client-nutrition/components/nutrition-error.tsx` (Eli → Ronny). SOLO REPORTE, SIN CAMBIOS.** A5 centralizó los errores: `mapApiError` ahora devuelve `kind` (`network`, `forbidden`, `not-found`, `server`, …) y una petición que no llega al servidor lanza `NetworkError`. Este componente todavía detecta el fallo de red comparando `mapped.description` con la frase en inglés `'The request could not be completed.'`, que ya no coincide (y nunca coincidía en español). No se rompe: muestra el texto común "No se puede conectar con el servidor / Revisa tu conexión…". Si quieres tu texto propio de nutrición sin conexión, cambia la comparación por `mapped.kind === 'network'`, como ya hacen `client-progress/components/section-error.tsx` y `client-body/components/body-progress-error.tsx`.
 - **2026-09-30 — `frontend/src/features/auth/components/login-page.tsx` (Eli → Ronny). CAMBIO MÍNIMO HECHO POR ELI (A8.1).** Para recuperar la contraseña hacía falta el enlace "¿Olvidaste tu contraseña?" en el login. Se añadieron solo un import y la línea `<ForgotPasswordLink />` debajo de `<LoginForm />`; el componente, las páginas y las rutas nuevas (`/forgot-password`, `/reset-password`) viven en `features/password-reset/` y `routes/`, que son de la línea A. Va en `login-page.tsx` y no en `login-form.tsx` porque las pruebas de `LoginForm` lo renderizan sin router. Si reorganizas el login, conserva el enlace.
+- **2026-10-01 · Ronny → Eli: CORREGIDOS los reportes A3 y A5 de nutrición.**
+  - `trainer-client-nutrition-page.tsx`: `htmlFor`/`id` en la descripción del plan (`nutrition-plan-description`).
+  - `trainer-foods-page.tsx`: los cinco campos de crear alimento asociados a su `Label` (`trainer-food-*`).
+  - `nutrition-error.tsx`: detecta la falta de conexión con `mapped.kind === 'network'`.
+  - Tests: `trainer-workspace.spec.tsx` (etiquetas) y `client-nutrition/tests/nutrition-error.spec.tsx`.
 - **2026-09-30 · Ronny → Eli (diario):**
   - Migración `1758067200000-CreateNutritionJournal` y cliente regenerado.
   - `NutritionFoodResponseDto` ahora exige `portions` y `visibility`; ya están agregados a los fixtures de `admin-workspace/tests/msw-admin.ts`.
