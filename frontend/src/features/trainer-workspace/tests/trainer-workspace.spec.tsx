@@ -141,6 +141,8 @@ describe('Trainer workspace', () => {
     renderTrainer(`/trainer/clients/${TRAINER_CLIENT_A_ID}/nutrition`);
     expect(await screen.findByLabelText(trainerWorkspaceCopy.nutrition.name, undefined, { timeout })).toBeInTheDocument();
     await user.type(screen.getByLabelText(trainerWorkspaceCopy.nutrition.name), 'Cut block');
+    // The description field is reachable by its label (axe: "label").
+    expect(screen.getByLabelText(trainerWorkspaceCopy.nutrition.descriptionLabel)).toBeInTheDocument();
     await user.type(screen.getByLabelText(trainerWorkspaceCopy.nutrition.calories), '2125.5');
     await user.type(screen.getByLabelText(trainerWorkspaceCopy.nutrition.protein), '170.25');
     await user.click(screen.getByRole('button', { name: trainerWorkspaceCopy.nutrition.create }));
@@ -151,6 +153,22 @@ describe('Trainer workspace', () => {
         targetProteinG: 170.25,
       });
     });
+  });
+
+  it('names every field of the create-food form by its label', async () => {
+    usePopulatedTrainerWorkspace();
+    renderTrainer('/trainer/nutrition');
+    const heading = await screen.findByRole('heading', { name: trainerWorkspaceCopy.foods.create }, { timeout });
+    const form = within(requireElement(heading.parentElement?.querySelector('form') ?? undefined));
+    for (const label of [
+      trainerWorkspaceCopy.foods.name,
+      trainerWorkspaceCopy.nutrition.calories,
+      trainerWorkspaceCopy.nutrition.protein,
+      trainerWorkspaceCopy.nutrition.carbs,
+      trainerWorkspaceCopy.nutrition.fat,
+    ]) {
+      expect(form.getByLabelText(label)).toBeInTheDocument();
+    }
   });
 
   it('saves meal portions from the catalog search and blocks activation while dirty', async () => {

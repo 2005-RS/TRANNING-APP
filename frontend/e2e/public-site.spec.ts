@@ -17,7 +17,7 @@ function traceField(page: Page) {
 async function openHome(page: Page) {
   await mockAnonymousSession(page);
   await page.goto('/', { waitUntil: 'domcontentloaded' });
-  await expect(page.getByRole('heading', { level: 1, name: 'Train with precision.' })).toBeVisible({
+  await expect(page.getByRole('heading', { level: 1, name: 'Train. Fuel. Evolve.' })).toBeVisible({
     timeout: 20_000,
   });
 }

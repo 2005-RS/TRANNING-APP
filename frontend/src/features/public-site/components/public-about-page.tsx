@@ -12,7 +12,7 @@ export function PublicAboutPage() {
 
   return (
     <>
-      <PublicPageHero heading={about.heading} body={about.body} />
+      <PublicPageHero eyebrow={about.title} heading={about.heading} body={about.body} />
       <PublicFeatureGrid
         columns={2}
         items={[

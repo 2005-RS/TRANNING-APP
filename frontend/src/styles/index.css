@@ -433,3 +433,132 @@ html:has(.client-workout-focus) {
   line-height: 1;
   letter-spacing: -0.04em;
 }
+
+/* ------------------------------------------------------------------
+ * Public website (landing): black + orange identity.
+ * Scoped token overrides so shared/ui components adapt without forks.
+ * The app workspaces keep their own theme; only `.landing` changes.
+ * ------------------------------------------------------------------ */
+.landing {
+  color-scheme: dark;
+  --background: #060607;
+  --foreground: #f5f5f4;
+  --card: #0e0e10;
+  --card-foreground: #f5f5f4;
+  --muted: #18181b;
+  --muted-foreground: #a3a3a8;
+  --border: rgb(255 255 255 / 0.09);
+  --ring: #ff7a3d;
+  --primary: #ff6a2b;
+  /* Near-black on orange keeps button text at AA contrast. */
+  --primary-foreground: #0a0a0a;
+  --secondary: #1c1c1f;
+  --secondary-foreground: #f5f5f4;
+  --accent: #1c1c1f;
+  --accent-foreground: #f5f5f4;
+  --chart-1: #ff6a2b;
+  --chart-2: #f5f5f4;
+  --chart-3: #a3a3a8;
+  --landing-glow: 255 106 43;
+  background: var(--background);
+  color: var(--foreground);
+}
+
+@utility landing-display {
+  font-weight: 800;
+  text-transform: uppercase;
+  line-height: 0.92;
+  letter-spacing: -0.035em;
+}
+
+@utility landing-eyebrow {
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+  color: var(--primary);
+}
+
+/* Soft orange light used across sections (never animated continuously). */
+.landing-glow {
+  pointer-events: none;
+  position: absolute;
+  border-radius: 9999px;
+  background: radial-gradient(
+    closest-side,
+    rgb(var(--landing-glow) / 0.32),
+    rgb(var(--landing-glow) / 0.08) 55%,
+    transparent 100%
+  );
+  filter: blur(8px);
+}
+
+/* Perspective floor grid for the hero depth layer. */
+.landing-grid {
+  pointer-events: none;
+  position: absolute;
+  inset: auto -20% -10% -20%;
+  height: 60%;
+  background-image:
+    linear-gradient(to right, rgb(255 255 255 / 0.07) 1px, transparent 1px),
+    linear-gradient(to bottom, rgb(255 255 255 / 0.07) 1px, transparent 1px);
+  background-size: 64px 64px;
+  transform: perspective(700px) rotateX(62deg);
+  transform-origin: 50% 0%;
+  mask-image: linear-gradient(to bottom, transparent, black 30%, black 55%, transparent);
+}
+
+/* Photos are graded to one cinematic look: dark, warm, contrasty. */
+.landing-photo {
+  filter: grayscale(0.35) contrast(1.08) brightness(0.72) sepia(0.12);
+}
+
+/* App mock surfaces reuse real UI proportions; the frame is the only chrome. */
+.landing-device {
+  border-radius: 2.4rem;
+  background: #0b0b0d;
+  box-shadow:
+    0 0 0 1px rgb(255 255 255 / 0.1),
+    0 0 0 9px #141416,
+    0 0 0 10px rgb(255 255 255 / 0.08),
+    0 40px 80px -30px rgb(0 0 0 / 0.9),
+    0 0 120px -30px rgb(var(--landing-glow) / 0.35);
+}
+
+.landing-float {
+  border: 1px solid rgb(255 255 255 / 0.1);
+  background: rgb(14 14 16 / 0.82);
+  backdrop-filter: blur(14px);
+  box-shadow: 0 24px 48px -24px rgb(0 0 0 / 0.85);
+}
+
+/* Primary CTA: small lift + arrow nudge on hover (transform only). */
+.landing-cta {
+  transition:
+    transform var(--motion-fast) cubic-bezier(0.16, 1, 0.3, 1),
+    box-shadow var(--motion-panel) ease;
+}
+.landing-cta:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 10px 30px -10px rgb(var(--landing-glow) / 0.6);
+}
+.landing-cta:active {
+  transform: translateY(0);
+}
+.landing-cta svg {
+  transition: transform var(--motion-fast) cubic-bezier(0.16, 1, 0.3, 1);
+}
+.landing-cta:hover svg {
+  transform: translateX(3px);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .landing-cta,
+  .landing-cta svg {
+    transition: none;
+  }
+  .landing-cta:hover,
+  .landing-cta:hover svg {
+    transform: none;
+  }
+}

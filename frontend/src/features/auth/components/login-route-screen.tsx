@@ -13,10 +13,13 @@ export function LoginRouteScreen() {
   const { redirect } = useSearch({ from: '/login' });
   return (
     <RedirectIfAuthenticated redirect={redirect}>
-      <Suspense fallback={<div className="min-h-svh bg-background" />}>
-        <LoginPage />
-      </Suspense>
-      <TrainingAssistant placement="public" />
+      {/* Same black + orange scope as the public site, assistant included. */}
+      <div className="landing contents">
+        <Suspense fallback={<div className="min-h-svh bg-background" />}>
+          <LoginPage />
+        </Suspense>
+        <TrainingAssistant placement="public" />
+      </div>
     </RedirectIfAuthenticated>
   );
 }

@@ -194,40 +194,40 @@ function CreateFoodForm() {
         <form.Field name="name">
           {(field) => (
             <div className="space-y-1 sm:col-span-2">
-              <Label>{copy.name}</Label>
-              <Input value={field.state.value} onChange={(event) => field.handleChange(event.target.value)} required />
+              <Label htmlFor="trainer-food-name">{copy.name}</Label>
+              <Input id="trainer-food-name" value={field.state.value} onChange={(event) => field.handleChange(event.target.value)} required />
             </div>
           )}
         </form.Field>
         <form.Field name="caloriesPer100g">
           {(field) => (
             <div className="space-y-1">
-              <Label>{trainerWorkspaceCopy.nutrition.calories}</Label>
-              <Input inputMode="decimal" value={field.state.value} onChange={(event) => field.handleChange(event.target.value)} />
+              <Label htmlFor="trainer-food-calories">{trainerWorkspaceCopy.nutrition.calories}</Label>
+              <Input id="trainer-food-calories" inputMode="decimal" value={field.state.value} onChange={(event) => field.handleChange(event.target.value)} />
             </div>
           )}
         </form.Field>
         <form.Field name="proteinGPer100g">
           {(field) => (
             <div className="space-y-1">
-              <Label>{trainerWorkspaceCopy.nutrition.protein}</Label>
-              <Input inputMode="decimal" value={field.state.value} onChange={(event) => field.handleChange(event.target.value)} />
+              <Label htmlFor="trainer-food-protein">{trainerWorkspaceCopy.nutrition.protein}</Label>
+              <Input id="trainer-food-protein" inputMode="decimal" value={field.state.value} onChange={(event) => field.handleChange(event.target.value)} />
             </div>
           )}
         </form.Field>
         <form.Field name="carbohydratesGPer100g">
           {(field) => (
             <div className="space-y-1">
-              <Label>{trainerWorkspaceCopy.nutrition.carbs}</Label>
-              <Input inputMode="decimal" value={field.state.value} onChange={(event) => field.handleChange(event.target.value)} />
+              <Label htmlFor="trainer-food-carbs">{trainerWorkspaceCopy.nutrition.carbs}</Label>
+              <Input id="trainer-food-carbs" inputMode="decimal" value={field.state.value} onChange={(event) => field.handleChange(event.target.value)} />
             </div>
           )}
         </form.Field>
         <form.Field name="fatGPer100g">
           {(field) => (
             <div className="space-y-1">
-              <Label>{trainerWorkspaceCopy.nutrition.fat}</Label>
-              <Input inputMode="decimal" value={field.state.value} onChange={(event) => field.handleChange(event.target.value)} />
+              <Label htmlFor="trainer-food-fat">{trainerWorkspaceCopy.nutrition.fat}</Label>
+              <Input id="trainer-food-fat" inputMode="decimal" value={field.state.value} onChange={(event) => field.handleChange(event.target.value)} />
             </div>
           )}
         </form.Field>

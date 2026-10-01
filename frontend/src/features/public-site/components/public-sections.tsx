@@ -1,68 +1,57 @@
 import type { ReactNode } from 'react';
-import { Link } from '@tanstack/react-router';
 import { MessageCircle, type LucideIcon } from 'lucide-react';
 import { usePublicSiteCopy } from '@/features/public-site/copy';
 import { useAccountDestination } from '@/features/public-site/hooks/use-account-destination';
-import { AmbientField } from '@/shared/ui/ambient-field';
-import { buttonVariants } from '@/shared/ui/button-variants';
+import { CtaLink, LandingContainer, Reveal } from '@/features/public-site/components/landing/landing-primitives';
 import { cn } from '@/shared/lib/utils';
 
 export function PublicContainer({ className, children }: { className?: string; children: ReactNode }) {
-  return <div className={cn('mx-auto w-full max-w-6xl px-4 sm:px-6', className)}>{children}</div>;
+  return <LandingContainer className={className}>{children}</LandingContainer>;
 }
 
 /**
- * Page hero. `ambient` is the home page only: taller, display type, and the
- * animated trace field. Every hero enters once on load, as one CSS sequence
- * (`.hero-enter`), so the public pages load no animation library.
+ * Hero of the detailed public pages (the home page has its own LandingHero).
+ * Same identity as the landing: eyebrow, uppercase display heading, orange
+ * light and floor grid, and an optional visual on the right. Enters once on
+ * load as one CSS sequence (`.hero-enter`); the grid never animates.
  */
 export function PublicPageHero({
+  eyebrow,
   heading,
   body,
+  visual,
   children,
-  ambient = false,
 }: {
+  eyebrow: string;
   heading: string;
   body: string;
+  visual?: ReactNode;
   children?: ReactNode;
-  ambient?: boolean;
 }) {
   return (
-    <section
-      className={cn(
-        'relative isolate overflow-hidden border-b border-border',
-        // On phones the copy sits high and the field rises below it.
-        ambient && 'flex min-h-[min(44rem,88svh)] items-start sm:items-center',
-      )}
-    >
-      {ambient ? (
-        <AmbientField preset="home" />
-      ) : (
-        <div aria-hidden className="login-hero-atmosphere pointer-events-none absolute inset-0" />
-      )}
-      <PublicContainer className={cn('relative', ambient ? 'pb-40 pt-16 sm:py-28' : 'py-16 sm:py-24')}>
-        {/* data-field-clear: the ambient field keeps its traces away from this box. */}
-        <div data-field-clear className="w-fit max-w-full">
-          <h1
-            className={cn(
-              'hero-enter text-balance text-foreground',
-              ambient
-                ? 'text-hero max-w-4xl'
-                : 'max-w-3xl text-4xl font-semibold tracking-tight sm:text-5xl',
-            )}
-          >
+    <section className="relative isolate -mt-16 overflow-hidden border-b border-border pt-16">
+      <div aria-hidden className="pointer-events-none absolute inset-0 -z-10">
+        <div className="landing-glow -top-48 -left-40 size-[40rem] opacity-60" />
+        <div className="landing-glow -right-40 -bottom-64 size-[36rem] opacity-50" />
+        <div className="landing-grid opacity-40" />
+      </div>
+      <PublicContainer
+        className={cn(
+          'relative grid items-center gap-12 py-16 sm:py-24',
+          visual && 'lg:grid-cols-[1.3fr_0.7fr] lg:gap-16',
+        )}
+      >
+        <div>
+          <p className="hero-enter landing-eyebrow">{eyebrow}</p>
+          <h1 className="hero-enter landing-display mt-5 max-w-4xl text-[clamp(2rem,3.6vw,3.5rem)] text-balance text-foreground">
             {heading}
           </h1>
-          <p
-            className={cn(
-              'hero-enter max-w-xl text-pretty text-base leading-relaxed text-muted-foreground sm:text-lg',
-              ambient ? 'mt-7' : 'mt-5',
-            )}
-          >
+          <p className="hero-enter mt-6 max-w-xl text-base leading-relaxed text-pretty text-muted-foreground sm:text-lg">
             {body}
           </p>
           {children ? <div className="hero-enter">{children}</div> : null}
         </div>
+        {visual ? <div className="hero-enter relative">{visual}</div> : null}
       </PublicContainer>
     </section>
   );
@@ -76,8 +65,8 @@ export type PublicFeature = {
 };
 
 /**
- * Parallel items as one panel split by hairlines, not a pile of cards. An odd
- * last item spans the row so the panel never shows an empty cell.
+ * Parallel items as numbered panels that enter in sequence. An odd last item
+ * spans the row so the grid never shows an empty cell.
  */
 export function PublicFeatureGrid({
   heading,
@@ -92,30 +81,42 @@ export function PublicFeatureGrid({
     <section className="py-16 sm:py-24">
       <PublicContainer>
         {heading ? (
-          <h2 className="mb-10 max-w-2xl text-balance text-2xl font-semibold tracking-tight text-foreground sm:text-3xl">
-            {heading}
-          </h2>
+          <h2 className="landing-display mb-10 max-w-2xl text-3xl text-balance text-foreground sm:text-4xl">{heading}</h2>
         ) : null}
         <ul
           className={cn(
-            'grid gap-px overflow-hidden rounded-xl border border-border bg-border sm:grid-cols-2',
+            'grid gap-4 sm:grid-cols-2',
             columns === 3 && 'lg:grid-cols-3',
             columns === 4 && 'lg:grid-cols-4',
           )}
         >
-          {items.map(({ key, icon: Icon, title, body }) => (
-            <li
+          {items.map(({ key, icon: Icon, title, body }, index) => (
+            <Reveal
+              as="li"
               key={key}
+              delay={(index % columns) * 0.06}
+              y={16}
               className={cn(
-                'bg-card p-6 text-card-foreground sm:p-8',
+                'group relative overflow-hidden rounded-3xl border border-border bg-card p-6 text-card-foreground transition-colors duration-300 hover:border-primary/40 sm:p-8 motion-reduce:transition-none',
                 'sm:[&:last-child:nth-child(odd)]:col-span-2',
                 columns !== 2 && 'lg:[&:last-child:nth-child(odd)]:col-span-1',
               )}
             >
-              <Icon className="size-5 text-primary" aria-hidden />
-              <h3 className="mt-5 text-base font-semibold tracking-tight">{title}</h3>
+              <div
+                aria-hidden
+                className="absolute -top-24 -right-24 size-48 rounded-full bg-primary/10 opacity-0 blur-2xl transition-opacity duration-500 group-hover:opacity-100 motion-reduce:transition-none"
+              />
+              <div className="flex items-center justify-between">
+                <span className="flex size-11 items-center justify-center rounded-xl border border-primary/30 bg-primary/10 text-primary">
+                  <Icon className="size-5" aria-hidden />
+                </span>
+                <span aria-hidden className="font-mono text-xs text-muted-foreground/70">
+                  {String(index + 1).padStart(2, '0')}
+                </span>
+              </div>
+              <h3 className="mt-6 text-base font-semibold tracking-wide uppercase">{title}</h3>
               <p className="mt-2 max-w-prose text-sm leading-relaxed text-muted-foreground">{body}</p>
-            </li>
+            </Reveal>
           ))}
         </ul>
       </PublicContainer>
@@ -124,8 +125,8 @@ export function PublicFeatureGrid({
 }
 
 /**
- * Last section of every public page: sign in for visitors, then where to ask
- * questions. Signed-in visitors already have their workspace link in the header.
+ * Last section of every detailed public page: sign in for visitors, then where
+ * to ask questions. Signed-in visitors already have their workspace link.
  */
 export function PublicClosing({ assistant = true }: { assistant?: boolean }) {
   const copy = usePublicSiteCopy();
@@ -135,21 +136,20 @@ export function PublicClosing({ assistant = true }: { assistant?: boolean }) {
   }
 
   return (
-    <section className="border-t border-border py-16 sm:py-24">
+    <section className="relative isolate overflow-hidden border-t border-border py-16 sm:py-24">
+      <div aria-hidden className="landing-glow bottom-[-18rem] left-1/2 -z-10 size-[40rem] -translate-x-1/2 opacity-60" />
       <PublicContainer>
         {signedIn ? null : (
-          <div className="flex flex-col gap-6 sm:flex-row sm:items-end sm:justify-between">
+          <Reveal className="flex flex-col gap-8 sm:flex-row sm:items-end sm:justify-between">
             <div className="max-w-xl">
-              <h2 className="text-balance text-2xl font-semibold tracking-tight text-foreground sm:text-3xl">
-                {copy.cta.title}
-              </h2>
-              <p className="mt-3 text-sm leading-relaxed text-muted-foreground sm:text-base">{copy.cta.body}</p>
+              <h2 className="landing-display text-3xl text-balance text-foreground sm:text-5xl">{copy.cta.title}</h2>
+              <p className="mt-4 text-sm leading-relaxed text-muted-foreground sm:text-base">{copy.cta.body}</p>
               <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{copy.accessNote}</p>
             </div>
-            <Link to="/login" className={cn(buttonVariants({ size: 'lg' }), 'self-start sm:self-auto')}>
+            <CtaLink to="/login" className="self-start sm:self-auto">
               {copy.cta.signIn}
-            </Link>
-          </div>
+            </CtaLink>
+          </Reveal>
         )}
         {assistant ? (
           <div className={cn('flex gap-4', !signedIn && 'mt-12 border-t border-border pt-10')}>
@@ -164,5 +164,23 @@ export function PublicClosing({ assistant = true }: { assistant?: boolean }) {
         ) : null}
       </PublicContainer>
     </section>
+  );
+}
+
+/** A graded photo panel for page heroes (decorative). */
+export function PublicHeroPhoto({ src, width, height, className }: { src: string; width: number; height: number; className?: string }) {
+  return (
+    <div aria-hidden className="relative aspect-[4/5] overflow-hidden rounded-[2rem] border border-border sm:aspect-[16/10] lg:aspect-[4/5]">
+      <img
+        src={src}
+        alt=""
+        width={width}
+        height={height}
+        fetchPriority="high"
+        decoding="async"
+        className={cn('landing-photo absolute inset-0 size-full object-cover', className)}
+      />
+      <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent" />
+    </div>
   );
 }

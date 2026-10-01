@@ -146,7 +146,7 @@ export default function TraceField({
         return false;
       }
       renderer = createTraceFieldRenderer(canvas);
-      palette = readTraceFieldPalette();
+      palette = readTraceFieldPalette(canvas.parentElement);
       if (!renderer || !palette) {
         fail();
         return false;
@@ -229,7 +229,7 @@ export default function TraceField({
       if (!renderer) {
         return;
       }
-      palette = readTraceFieldPalette() ?? palette;
+      palette = readTraceFieldPalette(canvas.parentElement) ?? palette;
       paint();
     });
     themeObserver.observe(document.documentElement, {

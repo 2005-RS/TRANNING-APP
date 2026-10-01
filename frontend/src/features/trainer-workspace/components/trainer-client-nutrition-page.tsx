@@ -178,8 +178,8 @@ function CreateNutritionForm({ clientId }: { clientId: string }) {
         <form.Field name="description">
           {(field) => (
             <div className="space-y-1 sm:col-span-2">
-              <Label>{copy.descriptionLabel}</Label>
-              <TextArea value={field.state.value} onChange={(event) => field.handleChange(event.target.value)} />
+              <Label htmlFor="nutrition-plan-description">{copy.descriptionLabel}</Label>
+              <TextArea id="nutrition-plan-description" value={field.state.value} onChange={(event) => field.handleChange(event.target.value)} />
             </div>
           )}
         </form.Field>

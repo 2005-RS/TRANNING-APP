@@ -12,10 +12,9 @@ export function NutritionError({
   retrying: boolean;
 }) {
   const mapped = mapApiError(error);
+  // A request that never reached the server gets the nutrition-specific copy.
   const description =
-    mapped.description === 'The request could not be completed.'
-      ? clientNutritionCopy.error.network
-      : mapped.description;
+    mapped.kind === 'network' ? clientNutritionCopy.error.network : mapped.description;
 
   return (
     <section className="client-surface-card space-y-3" aria-labelledby="nutrition-error-title">

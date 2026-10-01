@@ -1,7 +1,7 @@
 import { createRoute, lazyRouteComponent } from '@tanstack/react-router';
 import { PublicSiteLayout } from '@/features/public-site/components/public-site-layout';
 import { publicSiteCopy } from '@/features/public-site/copy';
-import { documentTitleFor } from '@/features/navigation/copy';
+import { publicPageHead } from '@/features/public-site/lib/public-head';
 import { rootRoute } from '@/routes/__root';
 
 export const publicSiteRoute = createRoute({
@@ -13,7 +13,7 @@ export const publicSiteRoute = createRoute({
 const publicHomeRoute = createRoute({
   getParentRoute: () => publicSiteRoute,
   path: '/',
-  head: () => ({ meta: [{ title: documentTitleFor(publicSiteCopy.home.title) }] }),
+  head: () => publicPageHead(publicSiteCopy.home.title, publicSiteCopy.landing.body),
   component: lazyRouteComponent(
     () => import('@/features/public-site/components/public-home-page'),
     'PublicHomePage',
@@ -23,7 +23,7 @@ const publicHomeRoute = createRoute({
 const publicPlatformRoute = createRoute({
   getParentRoute: () => publicSiteRoute,
   path: '/platform',
-  head: () => ({ meta: [{ title: documentTitleFor(publicSiteCopy.platform.title) }] }),
+  head: () => publicPageHead(publicSiteCopy.platform.title, publicSiteCopy.platform.body),
   component: lazyRouteComponent(
     () => import('@/features/public-site/components/public-platform-page'),
     'PublicPlatformPage',
@@ -33,7 +33,7 @@ const publicPlatformRoute = createRoute({
 const publicTrainingRoute = createRoute({
   getParentRoute: () => publicSiteRoute,
   path: '/training',
-  head: () => ({ meta: [{ title: documentTitleFor(publicSiteCopy.training.title) }] }),
+  head: () => publicPageHead(publicSiteCopy.training.title, publicSiteCopy.training.body),
   component: lazyRouteComponent(
     () => import('@/features/public-site/components/public-training-page'),
     'PublicTrainingPage',
@@ -43,7 +43,7 @@ const publicTrainingRoute = createRoute({
 const publicProgressRoute = createRoute({
   getParentRoute: () => publicSiteRoute,
   path: '/progress',
-  head: () => ({ meta: [{ title: documentTitleFor(publicSiteCopy.progress.title) }] }),
+  head: () => publicPageHead(publicSiteCopy.progress.title, publicSiteCopy.progress.body),
   component: lazyRouteComponent(
     () => import('@/features/public-site/components/public-progress-page'),
     'PublicProgressPage',
@@ -53,7 +53,7 @@ const publicProgressRoute = createRoute({
 const publicAboutRoute = createRoute({
   getParentRoute: () => publicSiteRoute,
   path: '/about',
-  head: () => ({ meta: [{ title: documentTitleFor(publicSiteCopy.about.title) }] }),
+  head: () => publicPageHead(publicSiteCopy.about.title, publicSiteCopy.about.body),
   component: lazyRouteComponent(
     () => import('@/features/public-site/components/public-about-page'),
     'PublicAboutPage',

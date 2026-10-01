@@ -2,6 +2,7 @@ import { Dumbbell, LibraryBig, ListChecks, Play, Timer, Layers } from 'lucide-re
 import {
   PublicClosing,
   PublicFeatureGrid,
+  PublicHeroPhoto,
   PublicPageHero,
 } from '@/features/public-site/components/public-sections';
 import { usePublicSiteCopy } from '@/features/public-site/copy';
@@ -12,7 +13,12 @@ export function PublicTrainingPage() {
 
   return (
     <>
-      <PublicPageHero heading={training.heading} body={training.body} />
+      <PublicPageHero
+        eyebrow={training.title}
+        heading={training.heading}
+        body={training.body}
+        visual={<PublicHeroPhoto src="/landing/training-cable.webp" width={960} height={640} className="object-[40%_center]" />}
+      />
       <PublicFeatureGrid
         items={[
           { key: 'templates', icon: Layers, ...features.templates },

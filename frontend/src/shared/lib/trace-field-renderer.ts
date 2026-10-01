@@ -119,20 +119,22 @@ function rasterizeColor(value: string): Rgb | null {
   return [(pixel[0] ?? 0) / 255, (pixel[1] ?? 0) / 255, (pixel[2] ?? 0) / 255];
 }
 
-function readTokenRgb(token: string): Rgb | null {
+function readTokenRgb(token: string, scope: Element = document.body): Rgb | null {
   const probe = document.createElement('span');
   probe.style.display = 'none';
   probe.style.color = `var(${token})`;
-  document.body.appendChild(probe);
+  // Probe inside the field's own container so scoped token overrides apply.
+  scope.appendChild(probe);
   const computed = getComputedStyle(probe).color;
   probe.remove();
   return parseCssRgb(computed) ?? rasterizeColor(computed);
 }
 
-export function readTraceFieldPalette(): TraceFieldPalette | null {
-  const background = readTokenRgb('--background');
-  const line = readTokenRgb('--muted-foreground');
-  const accent = readTokenRgb('--primary');
+export function readTraceFieldPalette(scope?: Element | null): TraceFieldPalette | null {
+  const root = scope ?? document.body;
+  const background = readTokenRgb('--background', root);
+  const line = readTokenRgb('--muted-foreground', root);
+  const accent = readTokenRgb('--primary', root);
   if (!background || !line || !accent) {
     return null;
   }
