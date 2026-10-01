@@ -7,6 +7,7 @@ import { authServer, resetAuthMockState } from '@/features/auth/tests/msw-server
 import { resetAuthBootstrap } from '@/features/auth/lib/session-service';
 import { clearAccessToken } from '@/shared/lib/access-token';
 import { trainerWorkspaceCopy } from '@/features/trainer-workspace/copy';
+import { commonCopy } from '@/i18n/locales/common-live';
 import {
   TRAINER_ADMIN_EXERCISE_ID,
   TRAINER_CHECK_IN_ID,
@@ -195,7 +196,7 @@ describe('Trainer workspace', () => {
   it('shows dashboard network errors without logging out', async () => {
     trainerMockState.failNetwork = true;
     renderTrainer();
-    expect(await screen.findByRole('heading', { name: 'Something went wrong' }, { timeout })).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { name: commonCopy.errors.networkTitle }, { timeout })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: trainerWorkspaceCopy.retry })).toBeInTheDocument();
   });
 
@@ -290,6 +291,9 @@ describe('Trainer workspace', () => {
     await waitFor(() => {
       expect(trainerMockState.lastTemplateCreate).toEqual({ name: 'Pull Hypertrophy' });
     });
+    // The new draft is not in the default Active list, so creating opens its builder.
+    expect(await screen.findByRole('heading', { name: 'Pull Hypertrophy' }, { timeout })).toBeInTheDocument();
+    expect(screen.getByText(trainerWorkspaceCopy.templates.builderEmptyTitle)).toBeInTheDocument();
   }, 12_000);
 
   it('filters templates through the API search and status contract', async () => {
@@ -323,6 +327,19 @@ describe('Trainer workspace', () => {
     expect(screen.queryByRole('heading', { name: trainerWorkspaceCopy.templates.noMatches })).not.toBeInTheDocument();
     await userEvent.setup().click(screen.getByRole('button', { name: trainerWorkspaceCopy.templates.emptyCreate }));
     expect(await screen.findByRole('dialog')).toBeInTheDocument();
+  });
+
+  it('reaches drafts from the empty Active library', async () => {
+    trainerMockState.templates = [{ ...structuredClone(trainerMockState.template), name: 'Only draft', status: 'DRAFT' }];
+    const user = userEvent.setup();
+    renderTrainer('/trainer/training');
+    await user.click(
+      await screen.findByRole('button', { name: trainerWorkspaceCopy.templates.showDrafts }, { timeout }),
+    );
+    expect(
+      await screen.findByRole('link', { name: `${trainerWorkspaceCopy.templates.openTemplate} Only draft` }, { timeout }),
+    ).toBeInTheDocument();
+    expect(screen.getByLabelText(trainerWorkspaceCopy.templates.statusFilter)).toHaveValue('DRAFT');
   });
 
   it('shows a builder empty state and keeps Activate disabled without exercises', async () => {
@@ -411,6 +428,22 @@ describe('Trainer workspace', () => {
         TRAINER_EXERCISE_ID,
       ]);
     });
+  });
+
+  it('duplicates a template into a new draft and opens the copy', async () => {
+    useWorkoutTemplateBuilder('populated-draft');
+    const user = userEvent.setup();
+    renderTrainer(`/trainer/training/${TRAINER_TEMPLATE_B_ID}`);
+    expect(await screen.findByRole('heading', { name: 'Push Strength' }, { timeout })).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: trainerWorkspaceCopy.templates.duplicate }));
+    expect(
+      await screen.findByRole('heading', { name: 'Push Strength (copy)' }, { timeout }),
+    ).toBeInTheDocument();
+    expect(trainerMockState.lastTemplateDuplicate).toEqual({
+      id: TRAINER_TEMPLATE_B_ID,
+      body: { name: 'Push Strength (copy)' },
+    });
+    expect(trainerMockState.lastTemplateReplace).toBeNull();
   });
 
   it('does not persist signed exercise media URLs in web storage', async () => {

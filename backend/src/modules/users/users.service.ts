@@ -61,6 +61,20 @@ export class UsersService {
     return manager.getRepository(User).findOne({ where: { id } });
   }
 
+  async findActiveByEmail(email: string): Promise<User | null> {
+    return this.users.findOne({
+      where: { email: normalizeEmail(email), status: UserStatus.ACTIVE },
+    });
+  }
+
+  async updatePasswordHash(
+    manager: EntityManager,
+    userId: string,
+    passwordHash: string,
+  ): Promise<void> {
+    await manager.getRepository(User).update({ id: userId }, { passwordHash });
+  }
+
   async findActiveById(id: string): Promise<User | null> {
     return this.users.findOne({
       where: { id, status: UserStatus.ACTIVE },

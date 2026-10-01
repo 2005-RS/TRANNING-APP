@@ -97,6 +97,9 @@ export const adminWorkspaceCopySource = {
     programsTitle: 'Programs and activity',
     sessionsInWindow: 'Completed sessions, last {{days}} days',
     pendingCheckInsHint: 'Submitted check-ins waiting for trainer review.',
+    unreadNotifications: 'Unread notifications',
+    unreadNotificationsHint: 'Your unread items only. Not a count of every admin.',
+    openInbox: 'Open inbox',
   },
   trainers: {
     title: 'Trainers',

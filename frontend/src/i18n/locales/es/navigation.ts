@@ -112,6 +112,11 @@ export const esTrainerNav: LooseCopy<typeof trainerCopySource> = {
     title: 'Notificaciones',
     description: 'Novedades sobre tus clientes asignados.',
   },
+  profile: {
+    label: 'Perfil',
+    title: 'Perfil',
+    description: 'Título, biografía y teléfono que ven tus clientes.',
+  },
 };
 
 export const esAdminNav: LooseCopy<typeof adminCopySource> = {

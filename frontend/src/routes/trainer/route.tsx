@@ -266,6 +266,18 @@ const trainerNotificationsRoute = createRoute({
   ),
 });
 
+const profileMeta = getRouteMeta('/trainer/profile');
+const trainerProfileRoute = createRoute({
+  getParentRoute: () => trainerRoute,
+  path: 'profile',
+  staticData: profileMeta,
+  head: () => ({ meta: [{ title: profileMeta.documentTitle }] }),
+  component: lazyRouteComponent(
+    () => import('@/features/trainer-workspace/components/trainer-profile-page'),
+    'TrainerProfilePage',
+  ),
+});
+
 export const trainerRouteTree = trainerRoute.addChildren([
   trainerIndexRoute,
   trainerDashboardRoute,
@@ -289,4 +301,5 @@ export const trainerRouteTree = trainerRoute.addChildren([
   trainerExercisesRoute,
   trainerExerciseDetailRoute,
   trainerNotificationsRoute,
+  trainerProfileRoute,
 ]);

@@ -1,5 +1,6 @@
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
+import { AppErrorBoundary } from '@/app/app-error-boundary';
 import { AppRouterProvider } from '@/app/app-router';
 import { Providers } from '@/app/providers';
 import { getPublicEnv } from '@/shared/config/env';
@@ -16,8 +17,10 @@ if (!rootElement) {
 
 createRoot(rootElement).render(
   <StrictMode>
-    <Providers>
-      <AppRouterProvider />
-    </Providers>
+    <AppErrorBoundary>
+      <Providers>
+        <AppRouterProvider />
+      </Providers>
+    </AppErrorBoundary>
   </StrictMode>,
 );

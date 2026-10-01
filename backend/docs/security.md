@@ -27,6 +27,14 @@ Local development may use HTTP with `AUTH_COOKIE_SECURE=false` and `SameSite=lax
 - Logout revokes the current session. Logout-all revokes every session for the user.
 - Disabling a user revokes refresh sessions in the same transaction. Re-enable does not restore old sessions.
 
+### Password reset
+
+- `POST /api/v1/auth/forgot-password` always answers 202, whether the email is unknown, disabled, or active, so it cannot be used to enumerate accounts. Mail is sent in the background so response time does not reveal the answer either.
+- The emailed link is `${APP_PUBLIC_URL}/reset-password#token=<id>.<secret>`. The secret is 32 random bytes; only its SHA-256 digest is stored. The token sits in the URL fragment, which browsers never send to a server or in a `Referer`, and the SPA removes it from the address bar on load.
+- Links expire after 30 minutes and are single-use. `POST /api/v1/auth/reset-password` locks the token row, compares digests in constant time, sets the new Argon2id hash, marks every outstanding link for that user used, and revokes every refresh session, all in one transaction. Any failure returns the same 400 message.
+- Neither the token nor the link is ever logged. The log transport used outside production logs only the subject line; production refuses to boot with it and requires `MAIL_TRANSPORT=smtp` and an `https` `APP_PUBLIC_URL`.
+- SMTP uses `nodemailer` (v10; earlier majors carry published advisories). It is the de facto Node SMTP client, has no transitive runtime dependencies, and works with any provider's SMTP relay, so no vendor SDK is needed. It sits behind the `MAIL_TRANSPORT` provider in `src/mail/`, so swapping the transport touches one file.
+
 Frontend contract:
 
 1. Login returns `accessToken` in JSON. Store it in memory only. Never use `localStorage`.
@@ -72,10 +80,12 @@ All values are per IP per 60 seconds unless skipped.
 | Global authenticated/public API | 120 |
 | `POST /api/v1/auth/login` | 8 |
 | `POST /api/v1/auth/refresh` | 12 |
+| `POST /api/v1/auth/forgot-password` | 5 |
+| `POST /api/v1/auth/reset-password` | 8 |
 | Exercise media and progress-photo upload-request | 20 |
 | `GET /api/v1/health` | exempt |
 
-Login and refresh limits stay enabled in every environment. Functional E2E sets `AUTH_E2E_SKIP_THROTTLE=true`; a dedicated throttle suite asserts HTTP 429.
+Login, refresh, and password-reset limits stay enabled in every environment. Functional E2E sets `AUTH_E2E_SKIP_THROTTLE=true`; a dedicated throttle suite asserts HTTP 429. The switch is ignored when `NODE_ENV=production`, and production refuses to boot if it is set.
 
 ## Object storage
 

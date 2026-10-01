@@ -147,7 +147,7 @@ Frontend Zod is UX. PostgreSQL uniqueness and assignment checks win. 409 after a
 11. **Trainer mutations must not invalidate Client `/clients/me` query keys.** Cross-session Client devices see plan/review changes on the next fetch (`staleTime` 60s).
 12. **Trainer dashboard `notifications.unreadCount` is not an inbox.** F12 owns the inbox. Do not badge it in F10.
 13. **Exercise media upload is ADMIN or owning TRAINER.** Flow is upload-request → private-bucket signed POST → finalize. TRAINER UI must hide upload/delete when `createdByUserId` is not the session user. ADMIN may attach media to any ACTIVE catalog exercise. Do not persist or log signed URLs. CLIENT still has no `/exercises` media API.
-14. **Admin dashboard `notifications.unreadCount` is not an inbox.** F12 owns the inbox. Do not badge or render that count in F11. Admin dashboard remains operational counts only.
+14. **Admin dashboard `notifications.unreadCount` is the signed-in ADMIN's unread total**, not a system-wide aggregate. F12 still owns the inbox at `/admin/notifications`; the dashboard surfaces the count and links there.
 
 #### F11 documented gaps (non-blocking; do not work around in the frontend)
 
@@ -163,7 +163,7 @@ Frontend Zod is UX. PostgreSQL uniqueness and assignment checks win. 409 after a
 21. **Recipients in v1** (backend publisher, not guaranteed by OpenAPI): `CHECK_IN_SUBMITTED` → current Trainer; `CHECK_IN_REVIEWED`, `TRAINING_PLAN_ACTIVATED`, `NUTRITION_PLAN_ACTIVATED` → Client. ADMIN normally receives none; its inbox still works.
 22. **No mark-unread, no delete, no push/realtime.** Mark-read is idempotent; foreign IDs return 404. Writes are not optimistic. The unread badge polls `unread-count` every 60s while visible (`refetchIntervalInBackground: false`).
 23. **Client has no per-plan route**, so plan notifications link to the current-plan pages. Trainer links require `clientProfileId`; when absent there is no link.
-24. **Dashboard `notifications.unreadCount` stays unrendered.** Navigation uses `/notifications/unread-count`; read-state writes invalidate the list, the count, and only the signed-in role's dashboard key.
+24. **Client and Trainer dashboards leave `notifications.unreadCount` unrendered.** Navigation uses `/notifications/unread-count`. The Admin dashboard renders the signed-in admin's dashboard DTO count and links to `/admin/notifications`. Read-state writes invalidate the list, the count, and only the signed-in role's dashboard key.
 
 ## Query key examples (Orval-first)
 

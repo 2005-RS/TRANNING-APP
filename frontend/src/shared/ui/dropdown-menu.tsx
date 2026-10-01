@@ -7,6 +7,7 @@ import {
   useState,
   type ButtonHTMLAttributes,
   type HTMLAttributes,
+  type KeyboardEvent as ReactKeyboardEvent,
   type ReactNode,
 } from 'react';
 import { cn } from '@/shared/lib/utils';
@@ -19,6 +20,13 @@ type MenuContextValue = {
 };
 
 const MenuContext = createContext<MenuContextValue | null>(null);
+
+/** Matches menuitem, menuitemradio, and menuitemcheckbox in document order. */
+const MENU_ITEM_SELECTOR = '[role^="menuitem"]:not(:disabled)';
+
+function menuItems(menu: HTMLElement | null): HTMLElement[] {
+  return menu ? Array.from(menu.querySelectorAll<HTMLElement>(MENU_ITEM_SELECTOR)) : [];
+}
 
 function useMenu(): MenuContextValue {
   const value = useContext(MenuContext);
@@ -54,6 +62,12 @@ export function DropdownMenuTrigger({
       aria-controls={menuId}
       className={className}
       onClick={() => setOpen(!open)}
+      onKeyDown={(event) => {
+        if (event.key === 'ArrowDown' && !open) {
+          event.preventDefault();
+          setOpen(true);
+        }
+      }}
       {...props}
     >
       {children}
@@ -99,6 +113,7 @@ export function DropdownMenuContent({
 
     document.addEventListener('mousedown', onPointerDown);
     document.addEventListener('keydown', onKeyDown);
+    menuItems(ref.current)[0]?.focus();
     return () => {
       document.removeEventListener('mousedown', onPointerDown);
       document.removeEventListener('keydown', onKeyDown);
@@ -109,12 +124,40 @@ export function DropdownMenuContent({
     return null;
   }
 
+  function onMenuKeyDown(event: ReactKeyboardEvent<HTMLDivElement>) {
+    if (event.key === 'Tab') {
+      setOpen(false);
+      return;
+    }
+    const items = menuItems(ref.current);
+    if (items.length === 0) {
+      return;
+    }
+    const current = items.indexOf(document.activeElement as HTMLElement);
+    const next =
+      event.key === 'ArrowDown'
+        ? (current + 1) % items.length
+        : event.key === 'ArrowUp'
+          ? (current - 1 + items.length) % items.length
+          : event.key === 'Home'
+            ? 0
+            : event.key === 'End'
+              ? items.length - 1
+              : null;
+    if (next === null) {
+      return;
+    }
+    event.preventDefault();
+    items[next]?.focus();
+  }
+
   return (
     <div
       ref={ref}
       id={menuId}
       role="menu"
       aria-labelledby={triggerId}
+      onKeyDown={onMenuKeyDown}
       className={cn(
         'absolute z-[var(--z-dropdown)] mt-2 min-w-56 rounded-lg border border-border bg-card p-1 shadow-md',
         align === 'end' ? 'right-0' : 'left-0',
@@ -162,6 +205,7 @@ export function DropdownMenuItem({
     <button
       type="button"
       role="menuitem"
+      tabIndex={-1}
       disabled={disabled}
       className={cn(
         'flex w-full items-center gap-2 rounded-md px-2 py-2 text-left text-sm text-foreground',
@@ -201,6 +245,7 @@ export function DropdownMenuRadioItem({
     <button
       type="button"
       role="menuitemradio"
+      tabIndex={-1}
       aria-checked={checked}
       className={cn(
         'flex w-full items-center gap-2 rounded-md px-2 py-2 text-left text-sm',

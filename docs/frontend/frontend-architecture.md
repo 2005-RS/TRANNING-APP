@@ -291,16 +291,14 @@ Implemented Trainer routes (lazy per page):
 
 Query policy: `staleTime` 60s, `refetchOnWindowFocus: false`. `clientId` is always in generated keys. Signed photo access: `staleTime` 15s, `gcTime` 30s, memory/query cache only. Mutations invalidate Trainer prefixes (`/api/v1/trainers/me/...`, `/api/v1/clients/:clientId/...`) and **must not** invalidate Client `/api/v1/clients/me`.
 
-Do not surface dashboard `notifications.unreadCount` (F12). TRAINER cannot create Clients.
+Do not surface Trainer dashboard `notifications.unreadCount` as an inbox (F12). TRAINER cannot create Clients.
 
 Backend/OpenAPI gaps (no frontend invention):
 
 - TRAINER cannot create or assign Clients
-- No template clone/duplicate operation
 - TRAINER may upload/delete exercise media only on exercises they created (`createdByUserId`). ADMIN-owned catalog (e.g. Vital) stays read-only in Trainer UI. Backend already 404s non-owners; UI must not show the uploader.
 - No Trainer write for body measurements or progress photos
 - No nutrition intake / food logging
-- No Trainer profile editor (`GET/PATCH /trainers/me` unused in F10 shell)
 - Dashboard has no revenue, engagement score, or AI insights fields
 - `CreateNutritionPlanDto` targets and several notes/reps fields are generated as object maps; runtime still sends numbers/strings
 

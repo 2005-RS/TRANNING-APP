@@ -22,6 +22,7 @@ import {
   populatedClientDashboard,
 } from '@/features/client-dashboard/tests/fixtures';
 import { clientCopy, navigationCopy } from '@/features/navigation/copy';
+import { commonCopy } from '@/i18n/locales/common-live';
 
 const timeout = 4000;
 
@@ -236,7 +237,7 @@ describe('Client dashboard', () => {
     renderDashboard();
 
     expect(
-      await screen.findByRole('heading', { name: 'Something went wrong' }, { timeout }),
+      await screen.findByRole('heading', { name: commonCopy.errors.networkTitle }, { timeout }),
     ).toBeInTheDocument();
     expect(screen.getByText(clientDashboardCopy.error.network)).toBeInTheDocument();
     expect(screen.getByRole('navigation', { name: clientCopy.mainNav })).toBeInTheDocument();

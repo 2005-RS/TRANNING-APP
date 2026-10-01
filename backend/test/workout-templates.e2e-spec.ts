@@ -410,6 +410,143 @@ describe('Workout templates (e2e)', () => {
     });
   });
 
+  describe('duplicate', () => {
+    it('copies a shared ACTIVE template into a DRAFT owned by the caller, independent of the source', async () => {
+      const { authorization } = await createAdmin();
+      const trainerA = await provisionTrainer(authorization);
+      const trainerB = await provisionTrainer(authorization, {
+        email: 'trainer-b@example.com',
+        firstName: 'Bea',
+      });
+      const trainerAAuth = await authHeader(trainerA.user.email);
+      const trainerBAuth = await authHeader(trainerB.user.email);
+      const exerciseA = await createExercise(trainerAAuth, { name: 'Squat' });
+      const exerciseB = await createExercise(trainerAAuth, { name: 'Plank' });
+      const sourceId = await createTemplate(trainerAAuth, {
+        name: 'Legs',
+        description: 'Lower body.',
+      });
+      await request(http)
+        .put(`/api/v1/workout-templates/${sourceId}/exercises`)
+        .set('Authorization', trainerAAuth)
+        .send({
+          items: [
+            repsItem(exerciseA, { tempo: '3-1-1', notes: 'Brace.' }),
+            durationItem(exerciseB),
+          ],
+        })
+        .expect(200);
+      await request(http)
+        .patch(`/api/v1/workout-templates/${sourceId}/status`)
+        .set('Authorization', trainerAAuth)
+        .send({ status: 'ACTIVE' })
+        .expect(200);
+
+      const copy = await request(http)
+        .post(`/api/v1/workout-templates/${sourceId}/duplicate`)
+        .set('Authorization', trainerBAuth)
+        .expect(201);
+      expect(copy.body.id).not.toBe(sourceId);
+      expect(copy.body.name).toBe('Legs (copy)');
+      expect(copy.body.description).toBe('Lower body.');
+      expect(copy.body.status).toBe(WorkoutTemplateStatus.DRAFT);
+      expect(copy.body.createdByUserId).toBe(trainerB.user.id);
+      expect(
+        (
+          copy.body.items as Array<
+            Record<string, unknown> & { exercise: { id: string } }
+          >
+        ).map((item) => ({
+          exerciseId: item.exercise.id,
+          position: item.position,
+          prescriptionType: item.prescriptionType,
+          tempo: item.tempo,
+          notes: item.notes,
+        })),
+      ).toEqual([
+        {
+          exerciseId: exerciseA,
+          position: 1,
+          prescriptionType: WorkoutPrescriptionType.REPS,
+          tempo: '3-1-1',
+          notes: 'Brace.',
+        },
+        {
+          exerciseId: exerciseB,
+          position: 2,
+          prescriptionType: WorkoutPrescriptionType.DURATION,
+          tempo: null,
+          notes: null,
+        },
+      ]);
+      assertNoSecrets(copy.body);
+
+      await request(http)
+        .put(`/api/v1/workout-templates/${copy.body.id as string}/exercises`)
+        .set('Authorization', trainerBAuth)
+        .send({ items: [durationItem(exerciseB)] })
+        .expect(200);
+      const source = await request(http)
+        .get(`/api/v1/workout-templates/${sourceId}`)
+        .set('Authorization', trainerAAuth)
+        .expect(200);
+      expect(source.body.items).toHaveLength(2);
+      expect(source.body.status).toBe(WorkoutTemplateStatus.ACTIVE);
+
+      const named = await request(http)
+        .post(`/api/v1/workout-templates/${sourceId}/duplicate`)
+        .set('Authorization', trainerAAuth)
+        .send({ name: '  Legs   v2 ' })
+        .expect(201);
+      expect(named.body.name).toBe('Legs v2');
+    });
+
+    it("hides another trainer's DRAFT and rejects CLIENT, anonymous, and extra fields", async () => {
+      const { authorization } = await createAdmin();
+      const trainerA = await provisionTrainer(authorization);
+      const trainerB = await provisionTrainer(authorization, {
+        email: 'trainer-b@example.com',
+        firstName: 'Bea',
+      });
+      const client = await createUser({
+        email: 'client@example.com',
+        role: UserRole.CLIENT,
+        firstName: 'Cara',
+        lastName: 'Client',
+      });
+      const trainerAAuth = await authHeader(trainerA.user.email);
+      const draftId = await createTemplate(trainerAAuth, { name: 'Private' });
+
+      await request(http)
+        .post(`/api/v1/workout-templates/${draftId}/duplicate`)
+        .set('Authorization', await authHeader(trainerB.user.email))
+        .expect(404);
+      await request(http)
+        .post(`/api/v1/workout-templates/${draftId}/duplicate`)
+        .set('Authorization', await authHeader(client.email))
+        .expect(403);
+      await request(http)
+        .post(`/api/v1/workout-templates/${draftId}/duplicate`)
+        .expect(401);
+      await request(http)
+        .post(`/api/v1/workout-templates/${draftId}/duplicate`)
+        .set('Authorization', trainerAAuth)
+        .send({ createdByUserId: randomUUID() })
+        .expect(400);
+      await request(http)
+        .post(`/api/v1/workout-templates/${randomUUID()}/duplicate`)
+        .set('Authorization', trainerAAuth)
+        .expect(404);
+
+      const ownCopy = await request(http)
+        .post(`/api/v1/workout-templates/${draftId}/duplicate`)
+        .set('Authorization', trainerAAuth)
+        .expect(201);
+      expect(ownCopy.body.items).toEqual([]);
+      expect(ownCopy.body.name).toBe('Private (copy)');
+    });
+  });
+
   describe('prescriptions and ordering', () => {
     it('assigns positions from array order and allows the same exercise twice', async () => {
       const { authorization } = await createAdmin();

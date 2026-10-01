@@ -18,6 +18,8 @@ import {
   ApiUnauthorizedResponse,
   ApiTooManyRequestsResponse,
   ApiNoContentResponse,
+  ApiAcceptedResponse,
+  ApiBadRequestResponse,
 } from '@nestjs/swagger';
 import { Throttle } from '@nestjs/throttler';
 import { Request, Response } from 'express';
@@ -27,6 +29,9 @@ import {
   AUTH_LOGIN_THROTTLE_TTL_MS,
   AUTH_REFRESH_THROTTLE_LIMIT,
   AUTH_REFRESH_THROTTLE_TTL_MS,
+  AUTH_FORGOT_PASSWORD_THROTTLE_LIMIT,
+  AUTH_PASSWORD_RESET_THROTTLE_TTL_MS,
+  AUTH_RESET_PASSWORD_THROTTLE_LIMIT,
 } from './auth.constants';
 import { AuthService, AuthResult } from './auth.service';
 import { CurrentUser } from './decorators/current-user.decorator';
@@ -35,7 +40,9 @@ import {
   AuthUserResponseDto,
 } from './dto/auth-token-response.dto';
 import { LoginDto } from './dto/login.dto';
+import { ForgotPasswordDto, ResetPasswordDto } from './dto/password-reset.dto';
 import { AuthCookieService } from './services/auth-cookie.service';
+import { PasswordResetService } from './services/password-reset.service';
 import { AuthenticatedUser } from './types/authenticated-user';
 
 @ApiTags('auth')
@@ -44,6 +51,7 @@ export class AuthController {
   constructor(
     private readonly auth: AuthService,
     private readonly cookies: AuthCookieService,
+    private readonly passwordReset: PasswordResetService,
   ) {}
 
   @Public()
@@ -105,6 +113,53 @@ export class AuthController {
     @Res({ passthrough: true }) response: Response,
   ): Promise<void> {
     await this.auth.logout(this.cookies.read(request));
+    this.clearRefreshCookie(response);
+  }
+
+  @Public()
+  @Post('forgot-password')
+  @HttpCode(HttpStatus.ACCEPTED)
+  @Throttle({
+    default: {
+      limit: AUTH_FORGOT_PASSWORD_THROTTLE_LIMIT,
+      ttl: AUTH_PASSWORD_RESET_THROTTLE_TTL_MS,
+    },
+  })
+  @ApiOperation({
+    summary:
+      'Email a single-use password reset link. Always 202, whether or not the account exists',
+  })
+  @ApiBody({ type: ForgotPasswordDto })
+  @ApiAcceptedResponse()
+  @ApiTooManyRequestsResponse()
+  async forgotPassword(@Body() dto: ForgotPasswordDto): Promise<void> {
+    await this.passwordReset.requestReset(dto.email);
+  }
+
+  @Public()
+  @Post('reset-password')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @Throttle({
+    default: {
+      limit: AUTH_RESET_PASSWORD_THROTTLE_LIMIT,
+      ttl: AUTH_PASSWORD_RESET_THROTTLE_TTL_MS,
+    },
+  })
+  @ApiOperation({
+    summary:
+      'Set a new password with a reset token and revoke every session of the account',
+  })
+  @ApiBody({ type: ResetPasswordDto })
+  @ApiNoContentResponse()
+  @ApiBadRequestResponse({
+    description: 'Invalid, used, or expired token, or password policy failure',
+  })
+  @ApiTooManyRequestsResponse()
+  async resetPassword(
+    @Body() dto: ResetPasswordDto,
+    @Res({ passthrough: true }) response: Response,
+  ): Promise<void> {
+    await this.passwordReset.resetPassword(dto.token, dto.password);
     this.clearRefreshCookie(response);
   }
 

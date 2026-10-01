@@ -59,6 +59,10 @@ export class MemoryObjectStorageAdapter implements ObjectStorageService {
     };
   }
 
+  async ping(): Promise<void> {
+    return;
+  }
+
   async putObject(input: PutTestObjectInput): Promise<void> {
     this.objects.set(input.key, {
       contentType: input.contentType,

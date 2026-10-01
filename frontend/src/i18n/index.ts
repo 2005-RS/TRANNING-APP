@@ -17,6 +17,7 @@ import { adminWorkspaceCopySource } from '@/features/admin-workspace/copy';
 import { trainingAssistantCopySource } from '@/features/training-assistant/copy';
 import { publicSiteCopySource } from '@/features/public-site/copy';
 import { notificationsCopySource } from '@/features/notifications/copy';
+import { passwordResetCopySource } from '@/features/password-reset/copy';
 import { commonCopySource } from '@/i18n/locales/en/common';
 import { esCommon } from '@/i18n/locales/es/common';
 import { esAuth } from '@/i18n/locales/es/auth';
@@ -32,6 +33,7 @@ import { esAdminWorkspace } from '@/i18n/locales/es/admin';
 import { esTrainingAssistant } from '@/i18n/locales/es/training-assistant';
 import { esPublicSite } from '@/i18n/locales/es/public-site';
 import { esNotifications } from '@/i18n/locales/es/notifications';
+import { esPasswordReset } from '@/i18n/locales/es/password-reset';
 import {
   DEFAULT_LANGUAGE,
   isAppLanguage,
@@ -66,6 +68,7 @@ void i18nInstance.use(initReactI18next).init({
       trainingAssistant: trainingAssistantCopySource,
       publicSite: publicSiteCopySource,
       notifications: notificationsCopySource,
+      passwordReset: passwordResetCopySource,
     },
     es: {
       common: esCommon,
@@ -85,6 +88,7 @@ void i18nInstance.use(initReactI18next).init({
       trainingAssistant: esTrainingAssistant,
       publicSite: esPublicSite,
       notifications: esNotifications,
+      passwordReset: esPasswordReset,
     },
   },
 });

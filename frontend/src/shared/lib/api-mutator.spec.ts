@@ -1,4 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
+import { NetworkError } from '@/shared/errors/api-error';
 import { setAccessToken, clearAccessToken, getAccessToken } from '@/shared/lib/access-token';
 import {
   apiFetch,
@@ -24,6 +25,31 @@ describe('apiFetch', () => {
     vi.unstubAllGlobals();
     clearAccessToken();
     setOnAuthFailure(null);
+  });
+
+  it('reports a request that never got a response as a NetworkError', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new TypeError('Failed to fetch')));
+
+    await expect(apiFetch('/api/v1/clients/me')).rejects.toBeInstanceOf(NetworkError);
+  });
+
+  it('resolves an accepted response with no body instead of failing to parse it', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(new Response(null, { status: 202 })));
+
+    await expect(apiFetch('/api/v1/auth/forgot-password', { method: 'POST' })).resolves.toBeUndefined();
+  });
+
+  it('lets a caller abort pass through untouched', async () => {
+    const controller = new AbortController();
+    controller.abort();
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockRejectedValue(Object.assign(new Error('Aborted'), { name: 'AbortError' })),
+    );
+
+    const failure = apiFetch('/api/v1/clients/me', { signal: controller.signal });
+    await expect(failure).rejects.toMatchObject({ name: 'AbortError' });
+    await expect(failure).rejects.not.toBeInstanceOf(NetworkError);
   });
 
   it('sends a bearer token from memory and retries once after a single refresh', async () => {

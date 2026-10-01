@@ -2,6 +2,7 @@ import { DataSource } from 'typeorm';
 import { BodyMeasurement } from '../../src/modules/body-measurements/entities/body-measurement.entity';
 import { ProgressPhoto } from '../../src/modules/progress-photos/entities/progress-photo.entity';
 import { AuthSession } from '../../src/modules/auth/entities/auth-session.entity';
+import { PasswordResetToken } from '../../src/modules/auth/entities/password-reset-token.entity';
 import { Exercise } from '../../src/modules/exercises/entities/exercise.entity';
 import { ExerciseMedia } from '../../src/modules/exercises/media/entities/exercise-media.entity';
 import { TrainerClientAssignment } from '../../src/modules/trainer-client-assignments/entities/trainer-client-assignment.entity';
@@ -140,6 +141,11 @@ export async function clearIdentityGraph(
     .execute();
   await dataSource
     .getRepository(AuthSession)
+    .createQueryBuilder()
+    .delete()
+    .execute();
+  await dataSource
+    .getRepository(PasswordResetToken)
     .createQueryBuilder()
     .delete()
     .execute();

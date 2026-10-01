@@ -16,6 +16,7 @@ import { Exercise } from '../exercises/entities/exercise.entity';
 import { ExercisesService } from '../exercises/exercises.service';
 import { UserRole } from '../users/enums/user-role.enum';
 import { CreateWorkoutTemplateDto } from './dto/create-workout-template.dto';
+import { DuplicateWorkoutTemplateDto } from './dto/duplicate-workout-template.dto';
 import { ListWorkoutTemplatesQueryDto } from './dto/list-workout-templates-query.dto';
 import { WorkoutTemplateExerciseInputDto } from './dto/replace-workout-template-exercises.dto';
 import { UpdateWorkoutTemplateDto } from './dto/update-workout-template.dto';
@@ -37,6 +38,7 @@ import {
   normalizeTemplateName,
   optionalPlainText,
 } from './workout-template-text.util';
+import { WORKOUT_TEMPLATE_NAME_MAX_LENGTH } from './workout-templates.constants';
 import {
   toWorkoutTemplateResponse,
   toWorkoutTemplateSummary,
@@ -45,6 +47,13 @@ import {
 export interface UsableWorkoutTemplate {
   template: WorkoutTemplate;
   items: WorkoutTemplateExercise[];
+}
+
+const COPY_SUFFIX = ' (copy)';
+
+function defaultCopyName(sourceName: string): string {
+  const room = WORKOUT_TEMPLATE_NAME_MAX_LENGTH - COPY_SUFFIX.length;
+  return `${sourceName.slice(0, room).trimEnd()}${COPY_SUFFIX}`;
 }
 
 const SORT_COLUMNS: Record<WorkoutTemplateSortField, string> = {
@@ -86,6 +95,67 @@ export class WorkoutTemplatesService {
     );
 
     return toWorkoutTemplateResponse(saved, []);
+  }
+
+  /**
+   * Copies any template the actor can read into a new DRAFT they own, with the
+   * same ordered prescriptions. The copy is independent: later edits to either
+   * template never touch the other, and assigned Training Plans are unaffected.
+   */
+  async duplicate(
+    sourceId: string,
+    dto: DuplicateWorkoutTemplateDto,
+    actor: AuthenticatedUser,
+  ): Promise<WorkoutTemplateResponseDto> {
+    const saved = await this.dataSource.transaction(async (manager) => {
+      const source = await this.loadDetail(sourceId, manager);
+      this.assertReadAccess(source, actor);
+
+      const copy = await manager.getRepository(WorkoutTemplate).save(
+        manager.getRepository(WorkoutTemplate).create({
+          name: dto.name ?? defaultCopyName(source.name),
+          description: source.description,
+          status: WorkoutTemplateStatus.DRAFT,
+          createdByUserId: actor.id,
+        }),
+      );
+
+      if (source.items.length > 0) {
+        const items = manager.getRepository(WorkoutTemplateExercise);
+        await items.save(
+          source.items.map((item) =>
+            items.create({
+              workoutTemplateId: copy.id,
+              exerciseId: item.exerciseId,
+              position: item.position,
+              sets: item.sets,
+              prescriptionType: item.prescriptionType,
+              repsMin: item.repsMin,
+              repsMax: item.repsMax,
+              durationSeconds: item.durationSeconds,
+              restSeconds: item.restSeconds,
+              targetRpe: item.targetRpe,
+              targetRir: item.targetRir,
+              tempo: item.tempo,
+              notes: item.notes,
+            }),
+          ),
+        );
+      }
+
+      return copy;
+    });
+
+    this.logger.log(
+      JSON.stringify({
+        event: 'workout_template_duplicated',
+        workoutTemplateId: saved.id,
+        sourceWorkoutTemplateId: sourceId,
+        createdByUserId: actor.id,
+      }),
+    );
+
+    return this.loadDetailResponse(saved.id);
   }
 
   async list(

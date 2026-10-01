@@ -1,4 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
+import { expectNoSeriousA11yViolations } from './axe';
 
 const clientUser = {
   id: '11111111-1111-4111-8111-111111111111',
@@ -215,6 +216,19 @@ test.describe('client progress', () => {
       'aria-current',
       'page',
     );
+  });
+
+  test('progress and exercise detail have no serious accessibility violations', async ({ page }) => {
+    test.setTimeout(60_000);
+    await page.setViewportSize({ width: 390, height: 844 });
+    await mockAuthenticatedProgress(page);
+    await page.goto('/client/progress?period=30', { waitUntil: 'domcontentloaded', timeout: 30_000 });
+    await expect(page.getByText('18450 kg')).toBeVisible({ timeout: 20_000 });
+    await expectNoSeriousA11yViolations(page, '/client/progress');
+
+    await page.getByRole('link', { name: /Back squat/ }).click();
+    await expect(page.getByRole('heading', { name: 'Back squat' })).toBeVisible();
+    await expectNoSeriousA11yViolations(page, '/client/progress/exercises/$exerciseId');
   });
 
   test('real backend progress smoke', async ({ page }) => {

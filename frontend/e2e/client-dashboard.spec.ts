@@ -1,4 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
+import { expectNoSeriousA11yViolations } from './axe';
 
 const clientUser = {
   id: '11111111-1111-4111-8111-111111111111',
@@ -149,6 +150,19 @@ test.describe('client dashboard', () => {
     await expect(page).toHaveURL(/\/client\/workout\/cccccccc-cccc-4ccc-8ccc-cccccccccccc$/);
     await expect(page.getByRole('heading', { name: 'Lower A' })).toBeVisible();
     await expect(page.getByRole('navigation', { name: 'Main' })).toHaveCount(0);
+  });
+
+  test('home and training have no serious accessibility violations', async ({ page }) => {
+    test.setTimeout(60_000);
+    await page.setViewportSize({ width: 390, height: 844 });
+    await mockAuthenticatedClient(page);
+    await page.goto('/client/dashboard', { waitUntil: 'domcontentloaded', timeout: 30_000 });
+    await expect(page.getByRole('heading', { name: 'Lower A' })).toBeVisible({ timeout: 20_000 });
+    await expectNoSeriousA11yViolations(page, '/client/dashboard');
+
+    await page.getByRole('link', { name: 'Training' }).first().click();
+    await expect(page.getByRole('heading', { level: 1 })).toBeVisible({ timeout: 20_000 });
+    await expectNoSeriousA11yViolations(page, '/client/training');
   });
 
   test('real backend dashboard smoke', async ({ page }) => {

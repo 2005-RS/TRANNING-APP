@@ -7,18 +7,22 @@ import { EnvironmentVariables } from '../../config/env.validation';
 import { UsersModule } from '../users/users.module';
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
+import { MailModule } from '../../mail/mail.module';
 import { AuthSession } from './entities/auth-session.entity';
+import { PasswordResetToken } from './entities/password-reset-token.entity';
 import { AccessAuthGuard } from './guards/access-auth.guard';
 import { RolesGuard } from './guards/roles.guard';
 import { AccessTokenService } from './services/access-token.service';
 import { AuthCookieService } from './services/auth-cookie.service';
 import { PasswordHasherService } from './services/password-hasher.service';
+import { PasswordResetService } from './services/password-reset.service';
 import { RefreshSessionService } from './services/refresh-session.service';
 
 @Module({
   imports: [
     UsersModule,
-    TypeOrmModule.forFeature([AuthSession]),
+    MailModule,
+    TypeOrmModule.forFeature([AuthSession, PasswordResetToken]),
     JwtModule.registerAsync({
       inject: [ConfigService],
       useFactory: (config: ConfigService<EnvironmentVariables, true>) => ({
@@ -45,6 +49,7 @@ import { RefreshSessionService } from './services/refresh-session.service';
     AccessTokenService,
     RefreshSessionService,
     PasswordHasherService,
+    PasswordResetService,
     AuthCookieService,
     AccessAuthGuard,
     RolesGuard,

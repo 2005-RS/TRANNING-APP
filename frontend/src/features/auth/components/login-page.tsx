@@ -5,6 +5,7 @@ import { LoginForm } from '@/features/auth/components/login-form';
 import { LoginHero } from '@/features/auth/components/login-hero';
 import { ThemeCycleButton } from '@/features/auth/components/theme-cycle-button';
 import { LanguageSwitcher } from '@/i18n/language-switcher';
+import { ForgotPasswordLink } from '@/features/password-reset/components/forgot-password-link';
 import { useAuthSession } from '@/features/auth/hooks/use-auth-session';
 import type { LoginFormValues } from '@/features/auth/schemas/login-schema';
 
@@ -43,6 +44,7 @@ export function LoginPage() {
               </p>
             </header>
             <LoginForm onLogin={handleLogin} />
+            <ForgotPasswordLink />
           </div>
         </div>
       </main>

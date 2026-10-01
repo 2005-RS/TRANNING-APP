@@ -50,8 +50,9 @@ describe('Health (e2e)', () => {
 
       expect(response.body.status).toBe('ok');
       expect(response.body.info.postgres.status).toBe('up');
+      expect(response.body.info.storage.status).toBe('up');
       expect(JSON.stringify(response.body)).not.toMatch(
-        /DATABASE_PASSWORD|JWT_ACCESS_SECRET|passwordHash/i,
+        /DATABASE_PASSWORD|JWT_ACCESS_SECRET|passwordHash|OBJECT_STORAGE_SECRET/i,
       );
     } finally {
       await app.close();

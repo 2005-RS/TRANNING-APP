@@ -6,6 +6,8 @@ import {
 import { idleAuthContext } from '@/app/router-context';
 import { rootRoute } from '@/routes/__root';
 import { loginRoute } from '@/routes/login';
+import { forgotPasswordRoute } from '@/routes/forgot-password';
+import { resetPasswordRoute } from '@/routes/reset-password';
 import { publicSiteRouteTree } from '@/routes/public-site';
 import { clientRouteTree } from '@/routes/client/route';
 import { trainerRouteTree } from '@/routes/trainer/route';
@@ -16,6 +18,8 @@ import { ContentSkeleton } from '@/shared/ui/page';
 const routeTree = rootRoute.addChildren([
   publicSiteRouteTree,
   loginRoute,
+  forgotPasswordRoute,
+  resetPasswordRoute,
   clientRouteTree,
   trainerRouteTree,
   adminRouteTree,

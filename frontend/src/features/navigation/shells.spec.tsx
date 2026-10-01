@@ -266,7 +266,9 @@ describe('role shells', () => {
     expect(
       await screen.findByRole('heading', { name: 'Exercises' }, { timeout }),
     ).toBeInTheDocument();
-    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    await waitFor(() => {
+      expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    });
   });
 });
 

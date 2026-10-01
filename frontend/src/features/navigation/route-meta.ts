@@ -20,6 +20,7 @@ export type AppPath =
   | '/trainer/nutrition'
   | '/trainer/exercises'
   | '/trainer/notifications'
+  | '/trainer/profile'
   | '/admin/dashboard'
   | '/admin/trainers'
   | '/admin/clients'
@@ -49,6 +50,7 @@ const APP_PATHS = new Set<string>([
   '/trainer/nutrition',
   '/trainer/exercises',
   '/trainer/notifications',
+  '/trainer/profile',
   '/admin/dashboard',
   '/admin/trainers',
   '/admin/clients',
@@ -88,6 +90,7 @@ export function getAllRouteMeta(): Record<AppPath, RouteMeta> {
       trainerCopy.notifications.title,
       trainerCopy.notifications.description,
     ),
+    '/trainer/profile': meta(trainerCopy.profile.title, trainerCopy.profile.description),
     '/admin/dashboard': meta(adminCopy.dashboard.title, adminCopy.dashboard.description),
     '/admin/trainers': meta(adminCopy.trainers.title, adminCopy.trainers.description),
     '/admin/clients': meta(adminCopy.clients.title, adminCopy.clients.description),

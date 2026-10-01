@@ -74,7 +74,15 @@ export function ExerciseDemoPlayer({
   const shouldLoadUrl = Boolean(ready && (isImage || shouldLoadVideo));
   const access = useExerciseMediaAccess(exerciseId, ready?.id ?? '', shouldLoadUrl);
   const url = access.data?.url;
-  const loading = (loadCatalogMedia && catalog.isPending) || (shouldLoadUrl && access.isPending && !url);
+  // A query that is still disabled also reports isPending, so isLoading is what
+  // separates media being fetched from media whose request has not started. The
+  // catalog stays disabled until the frame scrolls near the viewport, and every
+  // thumbnail below the fold would otherwise animate a skeleton indefinitely.
+  const catalogLoading = loadCatalogMedia && catalog.isLoading;
+  const urlLoading = shouldLoadUrl && access.isLoading && !url;
+  // Without the catalog there is no way to tell an exercise with no media from
+  // one whose media could not be listed, so that failure is not shown as empty.
+  const unavailable = failed || access.isError || (loadCatalogMedia && catalog.isError);
   const isPlaying = playing || wantsAutoplay;
 
   useEffect(() => {
@@ -149,11 +157,11 @@ export function ExerciseDemoPlayer({
         }
       }}
     >
-      {!ready && loadCatalogMedia && catalog.isPending ? (
-        <Skeleton className="size-full" aria-hidden />
-      ) : !ready ? (
-        <Placeholder label={labels.empty} />
-      ) : failed || access.isError ? (
+      {!ready && catalogLoading ? (
+        <div role="status" aria-label={labels.loading} className="size-full">
+          <Skeleton className="size-full" />
+        </div>
+      ) : unavailable ? (
         <div className="flex size-full flex-col items-center justify-center gap-2 p-3 text-center">
           <p className="text-xs text-muted-foreground">{labels.failed}</p>
           <Button
@@ -162,12 +170,18 @@ export function ExerciseDemoPlayer({
             size="sm"
             onClick={() => {
               setFailed(false);
+              if (loadCatalogMedia && catalog.isError) {
+                void catalog.refetch();
+                return;
+              }
               void access.refetch();
             }}
           >
             {labels.retry}
           </Button>
         </div>
+      ) : !ready ? (
+        <Placeholder label={labels.empty} />
       ) : isImage && url ? (
         <img src={url} alt="" loading="lazy" decoding="async" className="size-full object-cover" />
       ) : isVideo && url && shouldLoadVideo ? (
@@ -193,7 +207,7 @@ export function ExerciseDemoPlayer({
         <Placeholder label={ready ? `${exerciseName} demonstration` : labels.empty} />
       )}
 
-      {interactive && ready && isVideo && !failed ? (
+      {interactive && ready && isVideo && !unavailable ? (
         <Button
           type="button"
           variant="secondary"
@@ -228,7 +242,7 @@ export function ExerciseDemoPlayer({
         </Button>
       ) : null}
 
-      {loading ? (
+      {urlLoading ? (
         <div role="status" aria-label={labels.loading} className="absolute inset-0">
           <Skeleton className="size-full" />
         </div>

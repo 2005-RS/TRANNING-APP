@@ -46,7 +46,12 @@ export function adminMutationError(error: unknown, context: AdminMutationContext
 export function adminQueryError(error: unknown, copy: AdminWorkspaceCopy): UserFacingError {
   const mapped = mapApiError(error);
   if (error instanceof ApiError && error.statusCode === 400) {
-    return { title: commonCopy.errors.notFound, description: commonCopy.errors.notFoundBody, requestId: error.requestId };
+    return {
+      kind: 'not-found',
+      title: commonCopy.errors.notFound,
+      description: commonCopy.errors.notFoundBody,
+      requestId: error.requestId,
+    };
   }
   if (error instanceof ApiError && error.statusCode === 409) {
     return { ...mapped, description: copy.common.conflictBody };
