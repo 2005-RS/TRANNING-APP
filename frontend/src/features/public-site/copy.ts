@@ -3,7 +3,7 @@ import { useLiveCopy } from '@/i18n/use-live-copy';
 
 /**
  * Public website copy. Describe only capabilities the app ships
- * (docs/frontend/route-map.md). No prices, sign-up, testimonials or statistics.
+ * (docs/frontend/route-map.md). No prices, statistics, or testimonials.
  */
 export const publicSiteCopySource = {
   nav: {
@@ -14,20 +14,21 @@ export const publicSiteCopySource = {
     progress: 'Progress',
     about: 'About',
     signIn: 'Sign in',
+    createAccount: 'Create account',
     goToApp: 'Go to my workspace',
     openMenu: 'Open site menu',
     closeMenu: 'Close site menu',
     nutrition: 'Nutrition',
     how: 'How it works',
-    start: 'Get started',
+    start: 'Create free account',
     pages: 'Pages',
   },
   landing: {
     eyebrow: 'Coaching, training and nutrition in one app',
     headline: ['Train.', 'Fuel.', 'Evolve.'],
     body: 'Personal training plans, nutrition plans, progress tracking and a coach who follows every step — in one experience.',
-    primary: 'Get started',
-    secondary: 'See how it works',
+    primary: 'Create free account',
+    secondary: 'Sign in',
     demoLabel: 'App preview · sample data',
     scrollHint: 'Scroll',
     screens: {
@@ -147,8 +148,23 @@ export const publicSiteCopySource = {
     },
     final: {
       title: ['Your change', 'starts today.'],
-      body: 'Ask your coach or organisation for access, then sign in and start.',
-      primary: 'Get started',
+      body: 'Create your free account and use the app on your own. Upgrade to Pro when you want a trainer by your side.',
+      primary: 'Create free account',
+      secondary: 'Sign in',
+    },
+    plans: {
+      eyebrow: 'Plans',
+      title: ['Choose how you', 'want to train'],
+      body: 'Create your free account and use the app on your own. Pro includes a trainer, is paid by SINPE Móvil, and activates when the team verifies the payment.',
+      free: {
+        title: 'Free',
+        features: ['Record workouts and progress', 'Food journal', 'Body measurements', 'Training Assistant'],
+      },
+      pro: {
+        title: 'Pro',
+        features: ['Everything in Free', 'An assigned trainer', 'Training and nutrition plans made for you', 'Check-in reviews'],
+      },
+      cta: 'Create free account',
     },
     footer: {
       explore: 'Explore',
@@ -157,13 +173,13 @@ export const publicSiteCopySource = {
   },
   footer: {
     note: 'Private coaching platform for trainers and their clients.',
-    access: 'There is no public sign-up. Accounts are created by an administrator.',
+    access: 'Create your free account and use the app on your own. Pro includes a trainer and is paid by SINPE Móvil after the team verifies the payment.',
   },
   accessNote:
-    'There is no public sign-up. The administrator of the organisation that uses the platform creates your account.',
+    'Create your free account and use the app on your own. Pro includes a trainer, is paid by SINPE Móvil, and activates when the team verifies the payment.',
   cta: {
-    title: 'Already have an account?',
-    body: 'Sign in with the email and password your trainer or administrator gave you.',
+    title: 'Create your free account',
+    body: 'Use the app on your own, or choose Pro for a trainer who assigns plans and reviews your progress.',
     signIn: 'Sign in',
   },
   assistant: {
@@ -194,8 +210,8 @@ export const publicSiteCopySource = {
     stepsTitle: 'How it works',
     steps: {
       one: {
-        title: 'Accounts are created',
-        body: 'An administrator creates trainer and client accounts and assigns each client to a trainer.',
+        title: 'Create your account',
+        body: 'Create a free account and start using the app on your own.',
       },
       two: {
         title: 'The trainer plans',
@@ -234,7 +250,7 @@ export const publicSiteCopySource = {
       },
       nutrition: {
         title: 'Nutrition plans',
-        body: 'Trainers prescribe daily targets, meals, and foods; clients see their plan in a read-only view.',
+        body: 'Trainers prescribe daily targets, meals, and foods; clients can also use the food journal to record what they eat.',
       },
       checkIns: {
         title: 'Check-ins',
@@ -315,7 +331,7 @@ export const publicSiteCopySource = {
       },
       access: {
         title: 'Access',
-        body: 'There is no public sign-up and no payments in the app. Accounts are created by an administrator of the organisation.',
+        body: 'Create a free account and use the app on your own. Pro includes a trainer, is paid by SINPE Móvil, and activates when the team verifies the payment.',
       },
       assistant: {
         title: 'Training Assistant',

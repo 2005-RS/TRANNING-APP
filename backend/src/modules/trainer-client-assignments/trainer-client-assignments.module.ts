@@ -7,12 +7,14 @@ import { TrainerClientAssignment } from './entities/trainer-client-assignment.en
 import { TrainerAssignedClientsController } from './trainer-assigned-clients.controller';
 import { TrainerClientAccessService } from './trainer-client-access.service';
 import { TrainerClientAssignmentsService } from './trainer-client-assignments.service';
+import { SubscriptionsModule } from '../subscriptions/subscriptions.module';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([TrainerClientAssignment]),
     TrainersModule,
     ClientsModule,
+    SubscriptionsModule,
   ],
   controllers: [
     ClientTrainerAssignmentsController,

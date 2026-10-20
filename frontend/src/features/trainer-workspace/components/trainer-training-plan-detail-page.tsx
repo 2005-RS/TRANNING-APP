@@ -6,6 +6,8 @@ import {
   TrainingPlanResponseDtoStatus,
   TrainingPlanWorkoutInputDtoScheduledDay,
   UpdateTrainingPlanStatusDtoStatus,
+  type UpdateTrainingPlanDto,
+  type UpdateTrainingPlanWorkoutDto,
   WorkoutTemplatesListStatus,
   type TrainingPlanExerciseResponseDto,
   type TrainingPlanWorkoutInputDto,
@@ -20,11 +22,14 @@ import {
 import {
   useTrainingPlansGetById,
   useTrainingPlansReplaceWorkouts,
+  useTrainingPlansUpdate,
   useTrainingPlansUpdateExercise,
+  useTrainingPlansUpdateWorkout,
   useTrainingPlansUpdateStatus,
 } from '@/generated/training-plans/training-plans';
 import { useWorkoutTemplatesList } from '@/generated/workout-templates/workout-templates';
 import { NativeSelect, TextArea, WorkspaceSurface } from '@/features/trainer-workspace/components/workspace-surface';
+import { TrainingPlanEditSheet, WorkoutEditSheet } from '@/features/trainer-workspace/components/plan-edit-sheets';
 import { StatusBadge } from '@/features/trainer-workspace/components/status-badge';
 import { TrainerErrorState } from '@/features/trainer-workspace/components/trainer-states';
 import { TrainerSectionSkeleton } from '@/features/trainer-workspace/components/trainer-skeleton';
@@ -53,6 +58,8 @@ export function TrainerTrainingPlanDetailPage() {
   const [error, setError] = useState<string | null>(null);
   const [templateId, setTemplateId] = useState('');
   const [scheduledDay, setScheduledDay] = useState('');
+  const [editPlanOpen, setEditPlanOpen] = useState(false);
+  const [editingWorkoutId, setEditingWorkoutId] = useState<string | null>(null);
   const planQuery = useTrainingPlansGetById(clientId, planId, {
     query: { enabled: Boolean(clientId && planId), staleTime: TRAINER_STALE_TIME_MS, refetchOnWindowFocus: false },
   });
@@ -62,6 +69,8 @@ export function TrainerTrainingPlanDetailPage() {
   );
   const replaceWorkouts = useTrainingPlansReplaceWorkouts();
   const updateStatus = useTrainingPlansUpdateStatus();
+  const updatePlan = useTrainingPlansUpdate();
+  const updateWorkout = useTrainingPlansUpdateWorkout();
 
   async function persistWorkouts(workouts: TrainingPlanWorkoutInputDto[]) {
     setError(null);
@@ -117,7 +126,10 @@ export function TrainerTrainingPlanDetailPage() {
           <h2 className="text-lg font-semibold tracking-tight">{plan.name}</h2>
           {plan.description ? <p className="text-sm text-muted-foreground">{plan.description}</p> : null}
         </div>
-        <StatusBadge status={plan.status} />
+        <div className="flex items-center gap-2">
+          {plan.status !== TrainingPlanResponseDtoStatus.ARCHIVED ? <Button variant="outline" size="sm" onClick={() => setEditPlanOpen(true)}>{copy.editPlan}</Button> : null}
+          <StatusBadge status={plan.status} />
+        </div>
       </div>
       {error ? <Alert variant="danger">{error}</Alert> : null}
       {plan.status === TrainingPlanResponseDtoStatus.DRAFT ? (
@@ -241,6 +253,9 @@ export function TrainerTrainingPlanDetailPage() {
                       Remove
                     </Button>
                   ) : null}
+                  {plan.status !== TrainingPlanResponseDtoStatus.ARCHIVED ? (
+                    <Button variant="outline" size="sm" onClick={() => setEditingWorkoutId(workout.id)}>{copy.editWorkout}</Button>
+                  ) : null}
                 </div>
                 <ul className="mt-3 space-y-3">
                   {workout.exercises.map((exercise) => (
@@ -259,6 +274,46 @@ export function TrainerTrainingPlanDetailPage() {
           </ul>
         )}
       </WorkspaceSurface>
+      <TrainingPlanEditSheet
+        key={`${plan.id}-${plan.updatedAt}`}
+        open={editPlanOpen}
+        onOpenChange={setEditPlanOpen}
+        pending={updatePlan.isPending}
+        values={{ name: plan.name, description: plan.description ?? '', startDate: plan.startDate ?? '', endDate: plan.endDate ?? '' }}
+        onSave={async (data, fail) => {
+          try {
+            await updatePlan.mutateAsync({ clientId, planId, data: { ...data, description: data.description || null, startDate: data.startDate || null, endDate: data.endDate || null } as UpdateTrainingPlanDto });
+            await invalidateTrainerTraining(queryClient, clientId);
+            toast.success(trainerWorkspaceCopy.changesSaved);
+            setEditPlanOpen(false);
+          } catch (err) {
+            const mapped = mapApiError(err);
+            fail(mapped.kind === 'invalid' ? trainerWorkspaceCopy.checkFields : mapped.kind === 'conflict' ? trainerWorkspaceCopy.notEditable : mapped.description);
+          }
+        }}
+      />
+      {editingWorkoutId ? (() => {
+        const workout = plan.workouts.find((item) => item.id === editingWorkoutId);
+        return workout ? <WorkoutEditSheet
+          key={`${workout.id}-${plan.updatedAt}`}
+          open
+          onOpenChange={(open) => { if (!open) setEditingWorkoutId(null); }}
+          scheduledDay={workout.scheduledDay}
+          notes={workout.notes}
+          pending={updateWorkout.isPending}
+          onSave={async (data, fail) => {
+            try {
+              await updateWorkout.mutateAsync({ clientId, planId, planWorkoutId: workout.id, data: data as UpdateTrainingPlanWorkoutDto });
+              await invalidateTrainerTraining(queryClient, clientId);
+              toast.success(trainerWorkspaceCopy.changesSaved);
+              setEditingWorkoutId(null);
+            } catch (err) {
+              const mapped = mapApiError(err);
+              fail(mapped.kind === 'invalid' ? trainerWorkspaceCopy.checkFields : mapped.kind === 'conflict' ? trainerWorkspaceCopy.notEditable : mapped.description);
+            }
+          }}
+        /> : null;
+      })() : null}
     </div>
   );
 }

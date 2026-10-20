@@ -16,6 +16,7 @@ export function toWorkoutTemplateSummary(
     name: template.name,
     description: template.description,
     status: template.status,
+    isLibraryPublished: template.isLibraryPublished,
     createdByUserId: template.createdByUserId,
     createdAt: template.createdAt,
     updatedAt: template.updatedAt,

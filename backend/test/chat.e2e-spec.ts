@@ -266,7 +266,7 @@ describe('Training Assistant chat gateway (e2e, AI_PROVIDER=mock)', () => {
       await expect(response).resolves.toMatchObject({
         role: 'assistant',
         clientMessageId: CLIENT_MESSAGE_ID,
-        content: expect.stringContaining('registro público') as unknown,
+        content: expect.stringContaining('/register') as unknown,
       });
     });
 

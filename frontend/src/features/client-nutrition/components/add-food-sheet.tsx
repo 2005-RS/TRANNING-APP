@@ -1,8 +1,7 @@
 import { Link } from '@tanstack/react-router';
-import { Camera, ChevronRight, Database, ScanBarcode } from 'lucide-react';
+import { ChevronRight, Database, ScanBarcode } from 'lucide-react';
 import type { JournalMealDtoMealType } from '@/generated/models';
 import { useClientNutritionCopy } from '@/features/client-nutrition/copy';
-import { Badge } from '@/shared/ui/badge';
 import {
   Sheet,
   SheetContent,
@@ -68,21 +67,6 @@ export function AddFoodSheet({
               </span>
               <ChevronRight className="size-5 text-muted-foreground" aria-hidden />
             </Link>
-          </li>
-          <li>
-            {/* U3: photo recognition only suggests catalog foods; the current AI provider has no vision yet. */}
-            <div className={`${optionClass} cursor-not-allowed opacity-60 hover:bg-card`} aria-disabled="true">
-              <Camera className="size-6 shrink-0 text-muted-foreground" aria-hidden />
-              <span className="min-w-0 flex-1">
-                <span className="flex items-center gap-2 font-medium">
-                  {copy.addSheet.photo}
-                  <Badge variant="secondary">{copy.addSheet.photoBeta}</Badge>
-                </span>
-                <span className="block text-xs text-muted-foreground">
-                  {copy.addSheet.photoHint}
-                </span>
-              </span>
-            </div>
           </li>
         </ul>
       </SheetContent>

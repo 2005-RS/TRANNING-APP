@@ -31,6 +31,14 @@ const timestamps = {
 
 export const squatExercise: WorkoutSessionExerciseResponseDto = {
   id: SQUAT_SESSION_EXERCISE_ID,
+  previousSets: [
+    {
+      setNumber: 1,
+      actualLoadKg: 75,
+      actualReps: 10,
+      actualDurationSeconds: null,
+    },
+  ],
   sourceTrainingPlanExerciseId: '33333333-aaaa-4111-8111-333333333333',
   exerciseId: SQUAT_EXERCISE_ID,
   exerciseName: 'Back squat',
@@ -54,6 +62,7 @@ export const squatExercise: WorkoutSessionExerciseResponseDto = {
 
 export const plankExercise: WorkoutSessionExerciseResponseDto = {
   id: PLANK_SESSION_EXERCISE_ID,
+  previousSets: [],
   sourceTrainingPlanExerciseId: '44444444-aaaa-4111-8111-444444444444',
   exerciseId: PLANK_EXERCISE_ID,
   exerciseName: 'Plank',
@@ -103,6 +112,7 @@ export const inProgressSession = createInProgressSession();
 
 export const currentTrainingPlan: TrainingPlanResponseDto = {
   id: PLAN_ID,
+  isSelfAuthored: false,
   name: 'Hypertrophy block 4',
   description: null,
   status: TrainingPlanResponseDtoStatus.ACTIVE,
@@ -215,6 +225,7 @@ export function sessionFromPlanWorkout(
     updatedAt: timestamps.updatedAt,
     exercises: workout.exercises.map((exercise, index) => ({
       id: index === 0 ? SQUAT_SESSION_EXERCISE_ID : PLANK_SESSION_EXERCISE_ID,
+      previousSets: [],
       sourceTrainingPlanExerciseId: exercise.id,
       exerciseId: exercise.exerciseId,
       exerciseName: exercise.exerciseName,

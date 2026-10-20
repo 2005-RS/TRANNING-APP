@@ -82,7 +82,8 @@ export function LandingFinal() {
           className="[&_h2]:text-[clamp(2.6rem,8vw,6.5rem)]"
         />
         <Reveal delay={0.15} className="mt-10 flex flex-col items-center gap-4">
-          <CtaLink to={account.to}>{account.signedIn ? account.label : final.primary}</CtaLink>
+          <CtaLink to={account.signedIn ? account.to : '/register'}>{account.signedIn ? account.label : final.primary}</CtaLink>
+          {account.signedIn ? null : <CtaLink to="/login" variant="ghost">{final.secondary}</CtaLink>}
           {account.signedIn ? null : <p className="max-w-md text-xs leading-relaxed text-muted-foreground">{copy.accessNote}</p>}
         </Reveal>
       </LandingContainer>

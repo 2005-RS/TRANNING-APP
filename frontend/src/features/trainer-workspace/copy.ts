@@ -6,6 +6,7 @@ export const trainerWorkspaceCopySource = {
   retry: 'Try again',
   retrying: 'Retrying…',
   save: 'Save',
+  changesSaved: 'Changes saved.',
   saving: 'Saving…',
   create: 'Create',
   creating: 'Creating…',
@@ -21,6 +22,10 @@ export const trainerWorkspaceCopySource = {
   notSet: 'Not set',
   yes: 'Yes',
   no: 'No',
+  editDescription: 'Update the details and save your changes.',
+  checkFields: 'Check the fields and try again.',
+  endBeforeStart: 'The end date must be on or after the start date.',
+  notEditable: 'This item can no longer be edited.',
   status: {
     ACTIVE: 'Active',
     DISABLED: 'Disabled',
@@ -203,6 +208,9 @@ export const trainerWorkspaceCopySource = {
     tempo: 'Tempo',
     saveExercise: 'Save exercise',
     openPlan: 'Open plan',
+    editPlan: 'Edit plan',
+    editWorkout: 'Edit workout',
+    nameRequired: 'Plan name is required.',
   },
   templates: {
     title: 'Training',
@@ -280,6 +288,8 @@ export const trainerWorkspaceCopySource = {
     openTemplate: 'Open template',
     close: 'Close',
     backToLibrary: 'Workout templates',
+    editTitle: 'Edit template',
+    editTemplate: 'Edit template',
   },
   nutritionJournal: {
     title: 'Food journal',
@@ -343,6 +353,7 @@ export const trainerWorkspaceCopySource = {
     savedSummary: 'Saved plan summary',
     emptyMeal: 'Add a food to complete this meal.',
     mealLimit: 'Up to 14 meals and 30 foods per meal.',
+    editPlan: 'Edit plan',
   },
   foods: {
     title: 'Nutrition',

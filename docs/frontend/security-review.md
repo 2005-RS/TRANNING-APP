@@ -23,7 +23,7 @@ topology, where the SPA and `/api` share one origin behind a reverse proxy:
 
 ```
 default-src 'self';
-script-src 'self' 'sha256-gq8zQQX10dMH/2iO9XKuI+tsm3uYzrZXWjG9bKrPmDQ=';
+script-src 'self' 'sha256-Y1XKZHK68OB6k11QDLm9hUkNg8daLrFCU/3SiNxJjOM=' 'sha256-RWrlFZkoCn3m6md6APqL6TAzBwzkjMFkcaG2OI5Cd2s=';
 style-src 'self' 'unsafe-inline';
 img-src 'self' <STORAGE_ORIGIN>;
 media-src 'self' <STORAGE_ORIGIN>;
@@ -34,6 +34,12 @@ base-uri 'self';
 form-action 'self';
 frame-ancestors 'none';
 upgrade-insecure-requests
+```
+
+Both hashes are the same inline theme script in `frontend/index.html`: one for LF checkouts (Linux CI and production builds) and one for CRLF checkouts (Windows with `core.autocrlf=true`). **Whenever that script changes, recompute both** with the script below; otherwise the browser blocks it and the theme flashes on load (this happened after the B1 landing change).
+
+```
+cd frontend && node scripts/csp-hash.mjs
 ```
 
 Why each exception exists:

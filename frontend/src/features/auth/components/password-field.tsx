@@ -12,6 +12,7 @@ type PasswordFieldProps = {
   invalid: boolean;
   describedBy?: string;
   disabled?: boolean;
+  autoComplete?: 'current-password' | 'new-password';
   onBlur: () => void;
   onChange: (value: string) => void;
   error?: ReactNode;
@@ -24,6 +25,7 @@ export function PasswordField({
   invalid,
   describedBy,
   disabled,
+  autoComplete = 'current-password',
   onBlur,
   onChange,
   error,
@@ -42,7 +44,7 @@ export function PasswordField({
           id={id}
           name={name}
           type={visible ? 'text' : 'password'}
-          autoComplete="current-password"
+          autoComplete={autoComplete}
           value={value}
           disabled={disabled}
           aria-invalid={invalid}

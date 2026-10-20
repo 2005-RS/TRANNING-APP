@@ -33,6 +33,8 @@ import {
 import { ListAssignmentHistoryQueryDto } from './dto/list-assignment-history-query.dto';
 import { TrainerClientAssignment } from './entities/trainer-client-assignment.entity';
 import { TrainerClientAccessService } from './trainer-client-access.service';
+import { SubscriptionsService } from '../subscriptions/subscriptions.service';
+import { CLIENT_NO_PRO_MESSAGE } from '../subscriptions/subscriptions.constants';
 
 const CLIENT_SORT_COLUMNS: Record<ClientSortField, string> = {
   [ClientSortField.CreatedAt]: 'profile.createdAt',
@@ -52,6 +54,7 @@ export class TrainerClientAssignmentsService {
     private readonly trainers: TrainersService,
     private readonly clients: ClientsService,
     private readonly dataSource: DataSource,
+    private readonly subscriptions: SubscriptionsService,
   ) {}
 
   async setTrainer(
@@ -70,6 +73,9 @@ export class TrainerClientAssignmentsService {
         }
         if (client.user.status !== UserStatus.ACTIVE) {
           throw new ConflictException('Client is disabled');
+        }
+        if (!(await this.subscriptions.hasEffectivePro(manager, client.id))) {
+          throw new ConflictException(CLIENT_NO_PRO_MESSAGE);
         }
 
         const trainer = await this.trainers.findByIdWithUserOn(

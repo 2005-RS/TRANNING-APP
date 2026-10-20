@@ -8,7 +8,7 @@ server {
     add_header Referrer-Policy "strict-origin-when-cross-origin" always;
     add_header X-Content-Type-Options "nosniff" always;
     add_header Permissions-Policy "camera=(), microphone=(), geolocation=()" always;
-    add_header Content-Security-Policy "default-src 'self'; script-src 'self' 'sha256-gq8zQQX10dMH/2iO9XKuI+tsm3uYzrZXWjG9bKrPmDQ='; style-src 'self' 'unsafe-inline'; img-src 'self' ${STORAGE_ORIGIN}; media-src 'self' ${STORAGE_ORIGIN}; font-src 'self'; connect-src 'self' ${STORAGE_ORIGIN}; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'; upgrade-insecure-requests" always;
+    add_header Content-Security-Policy "default-src 'self'; script-src 'self' 'sha256-Y1XKZHK68OB6k11QDLm9hUkNg8daLrFCU/3SiNxJjOM=' 'sha256-RWrlFZkoCn3m6md6APqL6TAzBwzkjMFkcaG2OI5Cd2s='; style-src 'self' 'unsafe-inline'; img-src 'self' ${STORAGE_ORIGIN}; media-src 'self' ${STORAGE_ORIGIN}; font-src 'self'; connect-src 'self' ${STORAGE_ORIGIN}; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'; upgrade-insecure-requests" always;
 
     location /assets/ {
         add_header Cache-Control "public, max-age=31536000, immutable" always;
@@ -22,7 +22,7 @@ server {
         add_header Referrer-Policy "strict-origin-when-cross-origin" always;
         add_header X-Content-Type-Options "nosniff" always;
         add_header Permissions-Policy "camera=(), microphone=(), geolocation=()" always;
-        add_header Content-Security-Policy "default-src 'self'; script-src 'self' 'sha256-gq8zQQX10dMH/2iO9XKuI+tsm3uYzrZXWjG9bKrPmDQ='; style-src 'self' 'unsafe-inline'; img-src 'self' ${STORAGE_ORIGIN}; media-src 'self' ${STORAGE_ORIGIN}; font-src 'self'; connect-src 'self' ${STORAGE_ORIGIN}; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'; upgrade-insecure-requests" always;
+        add_header Content-Security-Policy "default-src 'self'; script-src 'self' 'sha256-Y1XKZHK68OB6k11QDLm9hUkNg8daLrFCU/3SiNxJjOM=' 'sha256-RWrlFZkoCn3m6md6APqL6TAzBwzkjMFkcaG2OI5Cd2s='; style-src 'self' 'unsafe-inline'; img-src 'self' ${STORAGE_ORIGIN}; media-src 'self' ${STORAGE_ORIGIN}; font-src 'self'; connect-src 'self' ${STORAGE_ORIGIN}; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'; upgrade-insecure-requests" always;
         try_files $$uri $$uri/ /index.html;
     }
 }

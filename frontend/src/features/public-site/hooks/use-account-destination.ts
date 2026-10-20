@@ -9,5 +9,5 @@ export function useAccountDestination() {
   if (status === 'AUTHENTICATED' && user) {
     return { signedIn: true, to: homeForRole(user.role), label: copy.nav.goToApp } as const;
   }
-  return { signedIn: false, to: '/login', label: copy.nav.signIn } as const;
+  return { signedIn: false, to: '/register', label: copy.nav.createAccount } as const;
 }

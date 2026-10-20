@@ -129,6 +129,11 @@ describe('Nutrition journal (e2e)', () => {
         .expect(201)
     ).body as { id: string; user: { email: string } };
     await request(http)
+      .patch(`/api/v1/clients/${client.id}/subscription`)
+      .set('Authorization', adminAuth)
+      .send({ complimentary: true })
+      .expect(200);
+    await request(http)
       .put(`/api/v1/clients/${client.id}/trainer`)
       .set('Authorization', adminAuth)
       .send({ trainerId: trainer.id })

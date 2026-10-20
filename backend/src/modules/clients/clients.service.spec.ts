@@ -28,6 +28,7 @@ describe('ClientsService', () => {
     hash?: jest.Mock;
     createClientUser?: jest.Mock;
     profileSave?: jest.Mock;
+    createFreeForProfile?: jest.Mock;
   }) {
     const profiles = {
       createQueryBuilder: jest.fn(),
@@ -55,12 +56,15 @@ describe('ClientsService', () => {
     const sessions = {
       revokeAllForUser: jest.fn(),
     };
+    const subscriptions = {
+      createFreeForProfile: overrides?.createFreeForProfile ?? jest.fn(),
+    };
+    const manager = {
+      getRepository: () => profiles,
+    };
     const dataSource = {
       transaction: jest.fn(
-        async (work: (manager: unknown) => Promise<unknown>) =>
-          work({
-            getRepository: () => profiles,
-          }),
+        async (work: (manager: unknown) => Promise<unknown>) => work(manager),
       ),
     };
 
@@ -70,9 +74,10 @@ describe('ClientsService', () => {
       passwords as never,
       sessions as never,
       dataSource as never,
+      subscriptions as never,
     );
 
-    return { service, users, passwords, dataSource };
+    return { service, users, passwords, dataSource, subscriptions, manager };
   }
 
   it('rejects passwords that fail the shared policy before opening a transaction', async () => {
@@ -106,7 +111,11 @@ describe('ClientsService', () => {
       updatedAt: new Date('2026-01-01T00:00:00.000Z'),
     }));
 
-    const { service } = buildService({ hash, createClientUser, profileSave });
+    const { service, subscriptions, manager } = buildService({
+      hash,
+      createClientUser,
+      profileSave,
+    });
 
     await service.create(createDto);
 
@@ -117,6 +126,10 @@ describe('ClientsService', () => {
     expect(createClientUser).toHaveBeenCalledWith(
       expect.anything(),
       expect.objectContaining({ passwordHash }),
+    );
+    expect(subscriptions.createFreeForProfile).toHaveBeenCalledWith(
+      manager,
+      'profile-1',
     );
   });
 

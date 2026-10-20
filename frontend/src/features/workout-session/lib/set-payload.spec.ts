@@ -7,7 +7,7 @@ describe('set payload', () => {
     expect(createSetDraft(squatExercise)).toEqual({
       actualLoadKg: 80,
       actualReps: 8,
-      actualDurationSeconds: 0,
+      actualDurationSeconds: null,
     });
   });
 

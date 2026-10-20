@@ -1,0 +1,55 @@
+# Full local stack in Docker: API + SPA (nginx), single origin http://localhost:8080.
+# PostgreSQL and MinIO come from backend/docker-compose.yml (start that first).
+#
+#   docker compose -f backend/docker-compose.yml up -d
+#   docker compose -f docker/local/docker-compose.yml up -d --build
+#
+# Ports avoid 3000/5173, which other local projects may use.
+name: training-app
+
+services:
+  api:
+    build: ../../backend
+    env_file: ../../backend/.env
+    environment:
+      NODE_ENV: development
+      PORT: "3000"
+      DATABASE_HOST: host.docker.internal
+      # Signed media URLs must use a host the BROWSER reaches: localhost:9100 (MinIO published port).
+      # Inside this container, localhost:9100 is served by the storage-bridge sidecar below.
+      OBJECT_STORAGE_ENDPOINT: http://localhost:9100
+      CORS_ORIGIN: http://localhost:8080
+      APP_PUBLIC_URL: http://localhost:8080
+      TRUST_PROXY: "true"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    ports:
+      - "3100:3000"
+    restart: unless-stopped
+
+  # Shares the API network namespace and forwards its localhost:9100 to MinIO on the host.
+  # Uses Docker's internal DNS for host.docker.internal, which does not depend on the Wi-Fi IP
+  # (the Windows hosts-file entry goes stale when the network changes).
+  storage-bridge:
+    image: alpine/socat:1.8.0.0
+    network_mode: "service:api"
+    command: ["tcp-listen:9100,fork,reuseaddr", "tcp-connect:host.docker.internal:9100"]
+    depends_on:
+      - api
+    restart: unless-stopped
+
+  web:
+    build:
+      context: ../../frontend
+      args:
+        VITE_API_URL: http://localhost:8080
+        VITE_APP_ENV: development
+    environment:
+      STORAGE_ORIGIN: http://localhost:9100
+    volumes:
+      - ./nginx.local.conf.template:/etc/nginx/templates/default.conf.template:ro
+    depends_on:
+      - api
+    ports:
+      - "8080:80"
+    restart: unless-stopped

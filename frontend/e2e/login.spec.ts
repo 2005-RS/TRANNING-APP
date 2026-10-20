@@ -1,4 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
+import { expectNoSeriousA11yViolations } from './axe';
 
 const email = process.env.E2E_EMAIL;
 const password = process.env.E2E_PASSWORD;
@@ -25,6 +26,18 @@ test.describe('login smoke', () => {
     });
     await expect(page.getByRole('textbox', { name: 'Email' })).toBeVisible();
     await expect(page.getByLabel('Password', { exact: true })).toBeVisible();
+  });
+
+  test('opens registration from login and validates the form', async ({ page }) => {
+    await mockAnonymousSession(page);
+    await page.goto('/login', { waitUntil: 'domcontentloaded' });
+    await page.getByRole('link', { name: 'Create a free account' }).click();
+
+    await expect(page).toHaveURL(/\/register$/);
+    await expect(page.getByRole('heading', { name: 'Create your free account' })).toBeVisible();
+    await page.getByRole('button', { name: 'Create free account' }).click();
+    await expect(page.getByText('Enter your first name')).toBeVisible();
+    await expectNoSeriousA11yViolations(page, '/register');
   });
 
   test('anonymous nested protected route keeps a safe return-to', async ({ page }) => {

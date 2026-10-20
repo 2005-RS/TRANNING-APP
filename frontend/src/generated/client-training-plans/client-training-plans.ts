@@ -10,22 +10,27 @@ Refresh secrets stay in an HttpOnly cookie and are never returned in JSON.
  * OpenAPI spec version: 1.0.0
  */
 import {
+  useMutation,
   useQuery
 } from '@tanstack/react-query';
 import type {
   DataTag,
   DefinedInitialDataOptions,
   DefinedUseQueryResult,
+  MutationFunction,
   QueryClient,
   QueryFunction,
   QueryKey,
   UndefinedInitialDataOptions,
+  UseMutationOptions,
+  UseMutationResult,
   UseQueryOptions,
   UseQueryResult
 } from '@tanstack/react-query';
 
 import type {
   ClientTrainingPlansListMineParams,
+  CreateSelfTrainingPlanDto,
   CurrentTrainingPlanResponseDto,
   PaginatedTrainingPlansResponseDto,
   TrainingPlanResponseDto
@@ -39,6 +44,77 @@ type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
 
 
 /**
+ * @summary Create and activate the client own plan ("Mi rutina") from published library routines
+ */
+export const getClientTrainingPlansCreateSelfUrl = () => {
+
+
+  
+
+  return `/api/v1/clients/me/training-plans/self`
+}
+
+export const clientTrainingPlansCreateSelf = async (createSelfTrainingPlanDto: CreateSelfTrainingPlanDto, options?: RequestInit): Promise<TrainingPlanResponseDto> => {
+  
+  return apiFetch<TrainingPlanResponseDto>(getClientTrainingPlansCreateSelfUrl(),
+  {      
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      createSelfTrainingPlanDto,)
+  }
+);}
+
+
+
+
+export const getClientTrainingPlansCreateSelfMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof clientTrainingPlansCreateSelf>>, TError,{data: CreateSelfTrainingPlanDto}, TContext>, request?: SecondParameter<typeof apiFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof clientTrainingPlansCreateSelf>>, TError,{data: CreateSelfTrainingPlanDto}, TContext> => {
+
+const mutationKey = ['clientTrainingPlansCreateSelf'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof clientTrainingPlansCreateSelf>>, {data: CreateSelfTrainingPlanDto}> = (props) => {
+          const {data} = props ?? {};
+
+          return  clientTrainingPlansCreateSelf(data,requestOptions)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ClientTrainingPlansCreateSelfMutationResult = NonNullable<Awaited<ReturnType<typeof clientTrainingPlansCreateSelf>>>
+    export type ClientTrainingPlansCreateSelfMutationBody = CreateSelfTrainingPlanDto
+    export type ClientTrainingPlansCreateSelfMutationError = void
+
+    /**
+ * @summary Create and activate the client own plan ("Mi rutina") from published library routines
+ */
+export const useClientTrainingPlansCreateSelf = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof clientTrainingPlansCreateSelf>>, TError,{data: CreateSelfTrainingPlanDto}, TContext>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof clientTrainingPlansCreateSelf>>,
+        TError,
+        {data: CreateSelfTrainingPlanDto},
+        TContext
+      > => {
+
+      const mutationOptions = getClientTrainingPlansCreateSelfMutationOptions(options);
+
+      return useMutation(mutationOptions, queryClient);
+    }
+    /**
  * @summary List the authenticated Client's ACTIVE and ARCHIVED plans. DRAFT plans are hidden. Read-only.
  */
 export const getClientTrainingPlansListMineUrl = (params?: ClientTrainingPlansListMineParams,) => {

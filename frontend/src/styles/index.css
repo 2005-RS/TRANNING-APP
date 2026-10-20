@@ -134,6 +134,28 @@
   --chart-4: #c4b5fd;
 }
 
+/* ------------------------------------------------------------------
+ * Client workspace brand (R5): the public site's orange, so signing up and
+ * using the app feel like one product. Set on <html> by ClientAppShell (so
+ * portaled sheets and dialogs inherit it) and removed when it unmounts.
+ * Trainer and Admin keep the default theme.
+ * Light: a deeper orange keeps AA contrast for white button text and links.
+ * ------------------------------------------------------------------ */
+.client-brand {
+  --primary: #c2410c;
+  --primary-foreground: #ffffff;
+  --ring: #ea580c;
+  --chart-1: #ea580c;
+}
+
+.dark.client-brand {
+  --primary: #ff6a2b;
+  /* Near-black on orange keeps button text at AA contrast (same as .landing). */
+  --primary-foreground: #0a0a0a;
+  --ring: #ff7a3d;
+  --chart-1: #ff6a2b;
+}
+
 @layer base {
   * {
     @apply border-border;

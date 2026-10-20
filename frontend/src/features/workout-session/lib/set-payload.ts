@@ -10,9 +10,9 @@ import {
 } from '@/features/workout-session/lib/nullable-number';
 
 export type SetDraft = {
-  actualLoadKg: number;
-  actualReps: number;
-  actualDurationSeconds: number;
+  actualLoadKg: number | null;
+  actualReps: number | null;
+  actualDurationSeconds: number | null;
 };
 
 /**
@@ -30,11 +30,10 @@ export function createSetDraft(
   const prescription = exercise.prescription;
 
   return {
-    actualLoadKg: finiteOrZero(last?.actualLoadKg ?? prescription.targetLoadKg),
-    actualReps: finiteOrZero(last?.actualReps ?? prescription.repsMin),
-    actualDurationSeconds: finiteOrZero(
-      last?.actualDurationSeconds ?? prescription.durationSeconds,
-    ),
+    actualLoadKg: last?.actualLoadKg ?? prescription.targetLoadKg ?? null,
+    actualReps: last?.actualReps ?? prescription.repsMin ?? null,
+    actualDurationSeconds:
+      last?.actualDurationSeconds ?? prescription.durationSeconds ?? null,
   };
 }
 
@@ -42,19 +41,19 @@ export function toSetInput(
   draft: SetDraft,
   type: WorkoutSessionExerciseResponseDto['prescription']['type'],
 ): WorkoutSetInputDto {
-  const load = toSetInputNumber(Math.max(0, draft.actualLoadKg));
+  const load = toSetInputNumber(Math.max(0, draft.actualLoadKg ?? 0));
 
   if (type === WorkoutSessionPrescriptionResponseDtoType.DURATION) {
     return {
       actualDurationSeconds: toSetInputNumber(
-        Math.max(0, Math.round(draft.actualDurationSeconds)),
+        Math.max(0, Math.round(draft.actualDurationSeconds ?? 0)),
       ),
       actualLoadKg: load,
     };
   }
 
   return {
-    actualReps: toSetInputNumber(Math.max(0, Math.round(draft.actualReps))),
+    actualReps: toSetInputNumber(Math.max(0, Math.round(draft.actualReps ?? 0))),
     actualLoadKg: load,
   };
 }

@@ -1,5 +1,11 @@
 import { isValid, parseISO } from 'date-fns';
-import { formatFromDate, formatInstant, formatInstantDateTime, formatUntilDate, formatDurationParts } from '@/i18n/format';
+import {
+  formatFromDate,
+  formatInstant,
+  formatInstantDateTime,
+  formatUntilDate,
+  formatDurationParts,
+} from '@/i18n/format';
 
 function parseInstant(value: string): Date | null {
   const parsed = parseISO(value);
@@ -86,7 +92,11 @@ export function formatCountLabel(count: number, singular: string, plural: string
 }
 
 export function localDayKey(date: Date): string {
-  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+
+  return `${year}-${month}-${day}`;
 }
 
 export function lastLocalDays(count: number, now = new Date()): Date[] {

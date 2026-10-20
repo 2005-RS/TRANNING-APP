@@ -81,6 +81,10 @@ type TrainerMockState = {
   lastTemplateCreate: unknown;
   lastTemplateDuplicate: { id: string; body: { name?: string } } | null;
   lastTemplateReplace: ReplaceWorkoutTemplateExercisesDto | null;
+  lastTemplateUpdate: unknown;
+  lastTrainingUpdate: unknown;
+  lastWorkoutUpdate: unknown;
+  lastNutritionUpdate: unknown;
   lastUploadRequest: Record<string, unknown> | null;
   lastStoragePosted: boolean;
   lastDeletedMediaId: string | null;
@@ -112,6 +116,10 @@ export const trainerMockState: TrainerMockState = {
   lastTemplateCreate: null,
   lastTemplateDuplicate: null,
   lastTemplateReplace: null,
+  lastTemplateUpdate: null,
+  lastTrainingUpdate: null,
+  lastWorkoutUpdate: null,
+  lastNutritionUpdate: null,
   lastUploadRequest: null,
   lastStoragePosted: false,
   lastDeletedMediaId: null,
@@ -143,6 +151,10 @@ export function resetTrainerMockState(): void {
   trainerMockState.lastTemplateCreate = null;
   trainerMockState.lastTemplateDuplicate = null;
   trainerMockState.lastTemplateReplace = null;
+  trainerMockState.lastTemplateUpdate = null;
+  trainerMockState.lastTrainingUpdate = null;
+  trainerMockState.lastWorkoutUpdate = null;
+  trainerMockState.lastNutritionUpdate = null;
   trainerMockState.lastUploadRequest = null;
   trainerMockState.lastStoragePosted = false;
   trainerMockState.lastDeletedMediaId = null;
@@ -404,6 +416,16 @@ export const trainerHandlers = [
   http.put(`${API}/clients/:clientId/training-plans/:planId/workouts`, async () =>
     HttpResponse.json(trainerMockState.trainingPlan),
   ),
+  http.patch(`${API}/clients/:clientId/training-plans/:planId`, async ({ request }) => {
+    const body = await request.json();
+    trainerMockState.lastTrainingUpdate = body;
+    trainerMockState.trainingPlan = { ...trainerMockState.trainingPlan, ...(body as object) } as TrainingPlanResponseDto;
+    return HttpResponse.json(trainerMockState.trainingPlan);
+  }),
+  http.patch(`${API}/clients/:clientId/training-plans/:planId/workouts/:planWorkoutId`, async ({ request }) => {
+    trainerMockState.lastWorkoutUpdate = await request.json();
+    return HttpResponse.json(trainerMockState.trainingPlan);
+  }),
   http.patch(`${API}/clients/:clientId/training-plans/:planId/exercises/:planExerciseId`, async () =>
     HttpResponse.json(trainerMockState.trainingPlan),
   ),
@@ -437,6 +459,11 @@ export const trainerHandlers = [
     const body = (await request.json()) as ReplaceNutritionPlanMealsDto;
     trainerMockState.lastNutritionReplace = body;
     trainerMockState.nutritionPlan = applyMealReplacement(trainerMockState.nutritionPlan, body);
+    return HttpResponse.json(trainerMockState.nutritionPlan);
+  }),
+  http.patch(`${API}/clients/:clientId/nutrition-plans/:planId`, async ({ request }) => {
+    const body = await request.json();
+    trainerMockState.lastNutritionUpdate = body;
     return HttpResponse.json(trainerMockState.nutritionPlan);
   }),
   http.patch(`${API}/clients/:clientId/nutrition-plans/:planId/status`, async ({ request }) => {
@@ -567,6 +594,12 @@ export const trainerHandlers = [
       ...trainerMockState.template,
       items: itemsFromReplaceBody(body.items ?? []),
     };
+    return HttpResponse.json(trainerMockState.template);
+  }),
+  http.patch(`${API}/workout-templates/:id`, async ({ request }) => {
+    const body = await request.json();
+    trainerMockState.lastTemplateUpdate = body;
+    trainerMockState.template = { ...trainerMockState.template, ...(body as object) } as WorkoutTemplateResponseDto;
     return HttpResponse.json(trainerMockState.template);
   }),
   http.patch(`${API}/workout-templates/:id/status`, async ({ request }) => {

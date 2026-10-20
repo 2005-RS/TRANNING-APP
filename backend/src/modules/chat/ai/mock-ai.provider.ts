@@ -112,15 +112,15 @@ const MEMBER_RESPONSES: Record<ChatLocale, Record<MockIntent, string>> = {
       'I can’t give medical advice. If you have pain, an injury, or severe symptoms, stop exercising and talk to a health professional. You can also let your trainer know.',
     GREETING: 'Hi! I’m Training Assistant. How can I help you?',
     PRICING:
-      'Prices are not published in the platform. Confirm any commercial information with the Training team.',
+      'Create a free account at /register. The Pro price is shown inside the app on “My plan”; I will not invent a price.',
     LOGIN:
-      "If you already have an enabled account, use 'Sign in' on the home page.",
+      "If you already have an account, use 'Sign in' on the home page. Otherwise, create a free account at /register.",
     SUPPORT:
       'I can guide you through the platform. For account help, contact the organisation that enabled your access.',
     CONTRACT_SERVICE:
       'Training is a private platform where trainers and clients work together. Commercial information must be confirmed with the Training team.',
     START:
-      'To get started, the organisation must enable your account and assign a trainer. There is no public sign-up.',
+      'To get started, create a free account at /register. Pro includes a trainer and is paid through SINPE Móvil after verification.',
     PLANS:
       'Your trainer prepares the plans you see in Training. Commercial service options are not published in the platform.',
     TRAINER:

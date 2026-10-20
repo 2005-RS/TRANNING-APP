@@ -141,7 +141,7 @@ describe('MockAiProvider', () => {
     );
     await expect(
       reply('como obtengo una cuenta', 'es', true),
-    ).resolves.toContain('No hay registro público');
+    ).resolves.toContain('/register');
   });
 
   it('returns useful public product responses', async () => {
@@ -164,7 +164,7 @@ describe('MockAiProvider', () => {
       publicAssistantKnowledgeFor('en').pricingExplanation,
     );
     await expect(reply('How do I get started?', 'en', true)).resolves.toContain(
-      'There is no public sign-up',
+      '/register',
     );
   });
 

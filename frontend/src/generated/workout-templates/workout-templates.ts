@@ -34,6 +34,7 @@ import type {
   PaginatedWorkoutTemplatesResponseDto,
   ReplaceWorkoutTemplateExercisesDto,
   UpdateWorkoutTemplateDto,
+  UpdateWorkoutTemplateLibraryDto,
   UpdateWorkoutTemplateStatusDto,
   WorkoutTemplateResponseDto,
   WorkoutTemplatesListParams
@@ -609,6 +610,72 @@ export const useWorkoutTemplatesUpdateStatus = <TError = void,
       > => {
 
       const mutationOptions = getWorkoutTemplatesUpdateStatusMutationOptions(options);
+
+      return useMutation(mutationOptions, queryClient);
+    }
+    export const getWorkoutTemplatesUpdateLibraryPublicationUrl = (id: string,) => {
+
+
+  
+
+  return `/api/v1/workout-templates/${id}/library`
+}
+
+export const workoutTemplatesUpdateLibraryPublication = async (id: string,
+    updateWorkoutTemplateLibraryDto: UpdateWorkoutTemplateLibraryDto, options?: RequestInit): Promise<WorkoutTemplateResponseDto> => {
+  
+  return apiFetch<WorkoutTemplateResponseDto>(getWorkoutTemplatesUpdateLibraryPublicationUrl(id),
+  {      
+    ...options,
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      updateWorkoutTemplateLibraryDto,)
+  }
+);}
+
+
+
+
+export const getWorkoutTemplatesUpdateLibraryPublicationMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof workoutTemplatesUpdateLibraryPublication>>, TError,{id: string;data: UpdateWorkoutTemplateLibraryDto}, TContext>, request?: SecondParameter<typeof apiFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof workoutTemplatesUpdateLibraryPublication>>, TError,{id: string;data: UpdateWorkoutTemplateLibraryDto}, TContext> => {
+
+const mutationKey = ['workoutTemplatesUpdateLibraryPublication'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof workoutTemplatesUpdateLibraryPublication>>, {id: string;data: UpdateWorkoutTemplateLibraryDto}> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  workoutTemplatesUpdateLibraryPublication(id,data,requestOptions)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type WorkoutTemplatesUpdateLibraryPublicationMutationResult = NonNullable<Awaited<ReturnType<typeof workoutTemplatesUpdateLibraryPublication>>>
+    export type WorkoutTemplatesUpdateLibraryPublicationMutationBody = UpdateWorkoutTemplateLibraryDto
+    export type WorkoutTemplatesUpdateLibraryPublicationMutationError = void
+
+    export const useWorkoutTemplatesUpdateLibraryPublication = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof workoutTemplatesUpdateLibraryPublication>>, TError,{id: string;data: UpdateWorkoutTemplateLibraryDto}, TContext>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof workoutTemplatesUpdateLibraryPublication>>,
+        TError,
+        {id: string;data: UpdateWorkoutTemplateLibraryDto},
+        TContext
+      > => {
+
+      const mutationOptions = getWorkoutTemplatesUpdateLibraryPublicationMutationOptions(options);
 
       return useMutation(mutationOptions, queryClient);
     }

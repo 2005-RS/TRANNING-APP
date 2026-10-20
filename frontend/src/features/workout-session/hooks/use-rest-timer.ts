@@ -40,5 +40,11 @@ export function useRestTimer() {
     skip() {
       setSnapshot(null);
     },
+    adjust(seconds: number) {
+      setSnapshot((current) => current
+        ? { ...current, durationSeconds: Math.max(0, current.durationSeconds + seconds) }
+        : current);
+    },
+    durationSeconds: snapshot?.durationSeconds ?? 0,
   };
 }

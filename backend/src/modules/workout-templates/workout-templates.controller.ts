@@ -34,6 +34,7 @@ import { ListWorkoutTemplatesQueryDto } from './dto/list-workout-templates-query
 import { ReplaceWorkoutTemplateExercisesDto } from './dto/replace-workout-template-exercises.dto';
 import { UpdateWorkoutTemplateDto } from './dto/update-workout-template.dto';
 import { UpdateWorkoutTemplateStatusDto } from './dto/update-workout-template-status.dto';
+import { UpdateWorkoutTemplateLibraryDto } from './dto/update-workout-template-library.dto';
 import {
   PaginatedWorkoutTemplatesResponseDto,
   WorkoutTemplateResponseDto,
@@ -187,5 +188,19 @@ export class WorkoutTemplatesController {
     @CurrentUser() user: AuthenticatedUser,
   ): Promise<WorkoutTemplateResponseDto> {
     return this.templates.updateStatus(id, dto.status, user);
+  }
+
+  @Patch(':id/library')
+  @Roles(UserRole.ADMIN)
+  @ApiParam({ name: 'id', description: 'Workout template UUID' })
+  @ApiOkResponse({ type: WorkoutTemplateResponseDto })
+  @ApiConflictResponse({
+    description: 'Only ACTIVE templates can be published',
+  })
+  updateLibraryPublication(
+    @Param('id', new ParseUUIDPipe({ version: '4' })) id: string,
+    @Body() dto: UpdateWorkoutTemplateLibraryDto,
+  ): Promise<WorkoutTemplateResponseDto> {
+    return this.templates.updateLibraryPublication(id, dto.published);
   }
 }

@@ -20,6 +20,8 @@ COPY index.html vite.config.ts tsconfig.json tsconfig.app.json tsconfig.node.jso
 COPY scripts ./scripts
 COPY public ./public
 COPY src ./src
+# tsconfig.app.json includes tests/ (Vitest setup types), so tsc -b needs it.
+COPY tests ./tests
 
 RUN test -n "$VITE_API_URL" || (echo "VITE_API_URL build-arg is required" && exit 1)
 RUN npm run build

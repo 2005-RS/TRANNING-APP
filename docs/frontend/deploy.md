@@ -139,8 +139,14 @@ See `backend/.env.example` for the grouped list. Production-required:
 | `APP_PUBLIC_URL` | Public https origin of the SPA; used in password-reset emails |
 | `MAIL_TRANSPORT` | `smtp` (`log` is rejected in production) |
 | `MAIL_FROM`, `MAIL_SMTP_HOST`, `MAIL_SMTP_PORT`, `MAIL_SMTP_SECURE`, `MAIL_SMTP_USER`, `MAIL_SMTP_PASSWORD` | |
+| `SUBSCRIPTION_SINPE_PHONE` | SINPE Móvil number that receives Pro payments, 8 digits. The business supplies the real value |
+| `SUBSCRIPTION_SINPE_HOLDER_NAME` | Account holder name shown to the client next to the number |
+| `SUBSCRIPTION_PRO_PRICE_CRC` | Pro price per period, in colones (integer). The server snapshots it on every reported payment |
+| `SUBSCRIPTION_PRO_PERIOD_DAYS` | Days of Pro granted per approved payment. Default `30` |
 
 Optional: `SWAGGER_ENABLED` (default false), `HTTP_JSON_BODY_LIMIT_BYTES`, pool timeouts, `AI_*` rate/history caps, `AI_PUBLIC_CHAT_ENABLED`.
+
+If any of the first three `SUBSCRIPTION_*` values is missing, sign-up still works, "Mi plan" says payments are not enabled yet, and `POST /clients/me/subscription/payments` answers 503. Never commit the real number or price.
 
 `AUTH_E2E_SKIP_THROTTLE` must be unset. Production refuses to boot if it is set.
 
@@ -172,6 +178,7 @@ Rollback: restore PostgreSQL + object storage from the matching backup, then dep
 The production image is pruned (`npm prune --omit=dev`). Two documented scripts use `ts-node`, which is a **devDependency** and is **not** in the runtime image:
 
 - `npm run seed:admin`
+- `npm run seed:starter-routines`
 - `npm run import:exercise-library` / `npm run exercises:import`
 
 Run those from a source checkout or a CI job that executed `npm ci` (full install), pointed at the production database, never from the pruned API container. `seed:admin` also refuses `admin@example.com` and known default passwords when `NODE_ENV=production`.
@@ -202,6 +209,7 @@ See [backend/docs/production-runbook.md](../../backend/docs/production-runbook.m
 10. Confirm login sets the refresh cookie on `/api/v1/auth`, access token stays in memory, and a signed photo/media URL loads under the CSP.
 11. Confirm `POST /api/v1/auth/forgot-password` returns 202 and, in production, SMTP delivers a fragment link under `APP_PUBLIC_URL`.
 12. Smoke Client Home, a Trainer template duplicate, Admin dashboard unread count, and the notification inbox.
-13. Keep the previous image tags until the smoke window ends.
+13. Smoke the subscription flow: create an account at `/register`, open "Mi plan" and check the SINPE number and price, report a test payment, approve it as Admin in "Pagos", then assign a trainer.
+14. Keep the previous image tags until the smoke window ends.
 
 Operators deploy; this repository does not ship a cloud-vendor pipeline.

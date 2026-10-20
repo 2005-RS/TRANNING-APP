@@ -1,11 +1,18 @@
 import { delay, http, HttpResponse } from 'msw';
 import type {
+  CreateSelfTrainingPlanDto,
   ReplaceWorkoutSetsDto,
   StartWorkoutSessionDto,
   UpdateWorkoutSessionStatusDto,
+  WorkoutLibraryItemResponseDto,
   WorkoutSessionResponseDto,
+  WorkoutSessionSummaryResponseDto,
 } from '@/generated/models';
-import { WorkoutSessionResponseDtoStatus } from '@/generated/models';
+import {
+  WorkoutLibraryExerciseResponseDtoPrescriptionType,
+  WorkoutSessionResponseDtoStatus,
+  WorkoutSessionSummaryResponseDtoStatus,
+} from '@/generated/models';
 import {
   applySets,
   createInProgressSession,
@@ -17,14 +24,78 @@ import {
 
 const API = 'http://localhost:3000/api/v1/clients/me';
 
+const workoutLibrary: WorkoutLibraryItemResponseDto[] = [
+  {
+    id: '90000000-aaaa-4111-8111-900000000001',
+    name: 'Full body foundation',
+    description: 'A balanced full-body routine.',
+    exerciseCount: 2,
+    estimatedMinutes: 45,
+    exercises: [
+      {
+        exerciseId: '77777777-dddd-4ddd-8ddd-777777777777',
+        name: 'Back squat',
+        sets: 3,
+        prescriptionType: WorkoutLibraryExerciseResponseDtoPrescriptionType.REPS,
+        repsMin: 8,
+        repsMax: 10,
+        durationSeconds: null,
+        restSeconds: 90,
+      },
+    ],
+  },
+  {
+    id: '90000000-aaaa-4111-8111-900000000002',
+    name: 'Upper body foundation',
+    description: 'A balanced upper-body routine.',
+    exerciseCount: 1,
+    estimatedMinutes: 30,
+    exercises: [
+      {
+        exerciseId: '88888888-dddd-4ddd-8ddd-888888888888',
+        name: 'Bench press',
+        sets: 3,
+        prescriptionType: WorkoutLibraryExerciseResponseDtoPrescriptionType.REPS,
+        repsMin: 8,
+        repsMax: 10,
+        durationSeconds: null,
+        restSeconds: 90,
+      },
+    ],
+  },
+];
+
+const completedSessions: WorkoutSessionSummaryResponseDto[] = [
+  {
+    id: 'dddddddd-dddd-4ddd-8ddd-dddddddddddd',
+    trainingPlanId: currentTrainingPlan.id,
+    sourceTrainingPlanWorkoutId: currentTrainingPlan.workouts[0]?.id ?? '',
+    workoutName: 'Lower A',
+    workoutDescription: null,
+    scheduledDay: null,
+    status: WorkoutSessionSummaryResponseDtoStatus.COMPLETED,
+    startedAt: '2026-09-03T10:00:00.000Z',
+    completedAt: '2026-09-03T10:45:00.000Z',
+    cancelledAt: null,
+    createdAt: '2026-09-03T10:00:00.000Z',
+    updatedAt: '2026-09-03T10:45:00.000Z',
+  },
+];
+
 type WorkoutMockState = {
   currentSession: WorkoutSessionResponseDto | null;
   sessions: Record<string, WorkoutSessionResponseDto>;
   plan: typeof currentTrainingPlan | null;
   delayMs: number;
   startStatus: number;
+  createSelfPlanStatus: number;
   sessionStatus: number;
   failNetwork: boolean;
+  library: WorkoutLibraryItemResponseDto[];
+  completedSessions: WorkoutSessionSummaryResponseDto[];
+  /** Archived plans for the Historial tab (empty by default). */
+  archivedPlans: Array<typeof currentTrainingPlan>;
+  lastCreateSelfPlan: CreateSelfTrainingPlanDto | null;
   lastReplaceSets: {
     sessionId: string;
     sessionExerciseId: string;
@@ -40,8 +111,13 @@ export const workoutMockState: WorkoutMockState = {
   plan: currentTrainingPlan,
   delayMs: 0,
   startStatus: 201,
+  createSelfPlanStatus: 201,
   sessionStatus: 200,
   failNetwork: false,
+  library: structuredClone(workoutLibrary),
+  completedSessions: structuredClone(completedSessions),
+  archivedPlans: [],
+  lastCreateSelfPlan: null,
   lastReplaceSets: null,
 };
 
@@ -53,8 +129,13 @@ export function resetWorkoutMockState(): void {
   workoutMockState.plan = currentTrainingPlan;
   workoutMockState.delayMs = 0;
   workoutMockState.startStatus = 201;
+  workoutMockState.createSelfPlanStatus = 201;
   workoutMockState.sessionStatus = 200;
   workoutMockState.failNetwork = false;
+  workoutMockState.library = structuredClone(workoutLibrary);
+  workoutMockState.completedSessions = structuredClone(completedSessions);
+  workoutMockState.archivedPlans = [];
+  workoutMockState.lastCreateSelfPlan = null;
   workoutMockState.lastReplaceSets = null;
 }
 
@@ -76,6 +157,33 @@ async function maybeDelay() {
 }
 
 export const workoutHandlers = [
+  http.get(`${API}/workout-library`, () => HttpResponse.json(workoutMockState.library)),
+  http.post(`${API}/training-plans/self`, async ({ request }) => {
+    if (workoutMockState.createSelfPlanStatus === 409) {
+      return HttpResponse.json(
+        errorBody(
+          409,
+          '/api/v1/clients/me/training-plans/self',
+          'Your trainer manages your active plan.',
+          'CONFLICT',
+        ),
+        { status: 409 },
+      );
+    }
+    workoutMockState.lastCreateSelfPlan = await request.json() as CreateSelfTrainingPlanDto;
+    return HttpResponse.json({ ...currentTrainingPlan, isSelfAuthored: true }, { status: 201 });
+  }),
+  http.get(`${API}/training-plans`, () =>
+    HttpResponse.json({
+      data: workoutMockState.archivedPlans,
+      meta: {
+        page: 1,
+        limit: 20,
+        totalItems: workoutMockState.archivedPlans.length,
+        totalPages: workoutMockState.archivedPlans.length ? 1 : 0,
+      },
+    }),
+  ),
   http.get(`${API}/training-plans/current`, async () => {
     await maybeDelay();
     if (workoutMockState.failNetwork) {
@@ -92,6 +200,21 @@ export const workoutHandlers = [
       workoutSession: workoutMockState.currentSession,
     });
   }),
+  http.get(`${API}/training-plans/:planId`, ({ params }) => {
+    const plan = workoutMockState.archivedPlans.find((item) => item.id === params.planId);
+    return plan
+      ? HttpResponse.json(plan)
+      : HttpResponse.json(
+          errorBody(404, `/training-plans/${String(params.planId)}`, 'Not found', 'NOT_FOUND'),
+          { status: 404 },
+        );
+  }),
+  http.get(`${API}/workout-sessions`, () =>
+    HttpResponse.json({
+      data: workoutMockState.completedSessions,
+      meta: { page: 1, limit: 10, totalItems: workoutMockState.completedSessions.length, totalPages: 1 },
+    }),
+  ),
   http.post(`${API}/workout-sessions`, async ({ request }) => {
     await maybeDelay();
     if (workoutMockState.startStatus === 409) {

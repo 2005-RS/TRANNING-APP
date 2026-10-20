@@ -12,6 +12,12 @@ export const esClientDashboard: LooseCopy<typeof clientDashboardCopySource> = {
     afternoonLine: 'Así van las cosas.',
     eveningLine: 'Así van las cosas.',
   },
+  today: {
+    upNext: 'Te toca',
+    exerciseCount: (count) => (count === 1 ? '1 ejercicio' : `${count} ejercicios`),
+    emptyTitle: 'Empieza a entrenar hoy',
+    emptyBody: 'Elige una rutina de la biblioteca y registra tu primer entrenamiento en minutos.',
+  },
   primary: {
     inProgressEyebrow: 'En curso',
     planEyebrow: 'Plan actual',
@@ -78,6 +84,14 @@ export const esClientDashboard: LooseCopy<typeof clientDashboardCopySource> = {
     waitingReview: 'En espera de revisión',
     submittedAt: 'Enviado',
     reviewedAt: 'Revisado',
+  },
+  subscription: {
+    upgradeTitle: 'Pásate a Pro: un entrenador te arma tu plan',
+    viewPlan: 'Ver mi plan',
+  },
+  trainer: {
+    title: 'Tu entrenador',
+    whatsapp: 'Escribir por WhatsApp',
   },
   error: {
     retry: 'Intentar de nuevo',

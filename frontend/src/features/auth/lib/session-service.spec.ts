@@ -2,6 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   bootstrapAuthSession,
   loginWithPassword,
+  registerAccount,
   logoutCurrentSession,
   resetAuthBootstrap,
 } from '@/features/auth/lib/session-service';
@@ -85,6 +86,21 @@ describe('auth session service', () => {
     const user = await loginWithPassword(clientA.email, 'any-password');
     expect(user).toEqual(clientA);
     expect(getAccessToken()).toBe('login-access-token');
+  });
+
+  it('registers, then loads the authenticated user into memory', async () => {
+    const user = await registerAccount({
+      firstName: 'Client',
+      lastName: 'A',
+      email: clientA.email,
+      password: 'secure-password',
+      primaryGoal: 'GENERAL_FITNESS',
+      experienceLevel: 'BEGINNER',
+      acceptTerms: true,
+    });
+
+    expect(user).toEqual(clientA);
+    expect(getAccessToken()).toBe('register-access-token');
   });
 
   it('clears the memory token even when logout HTTP fails', async () => {

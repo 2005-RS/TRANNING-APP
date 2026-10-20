@@ -175,7 +175,9 @@ function BodyProgressBlock({
 
       <p className="mt-3 text-sm text-muted-foreground">
         {bodyProgress.progressPhotoCount > 0
-          ? `${formatCompactNumber(bodyProgress.progressPhotoCount)} ${clientDashboardCopy.progress.photos.toLowerCase()}`
+          ? `${formatCompactNumber(bodyProgress.progressPhotoCount)} ${
+              clientDashboardCopy.progress.photos.toLowerCase()
+            }`
           : clientDashboardCopy.progress.photosEmpty}
       </p>
     </div>

@@ -169,10 +169,12 @@ export function LandingHero() {
             {landing.body}
           </motion.p>
           <motion.div className="mt-9 flex flex-wrap items-center gap-3" {...useEnter(ENTER.cta, 14)}>
-            <CtaLink to={account.to}>{account.signedIn ? account.label : landing.primary}</CtaLink>
-            <CtaLink to="/" hash="la-app" variant="ghost">
-              {landing.secondary}
-            </CtaLink>
+            <CtaLink to={account.signedIn ? account.to : '/register'}>{account.signedIn ? account.label : landing.primary}</CtaLink>
+            {account.signedIn ? null : (
+              <CtaLink to="/login" variant="ghost">
+                {landing.secondary}
+              </CtaLink>
+            )}
           </motion.div>
           <motion.p className="mt-5 max-w-md text-xs leading-relaxed text-muted-foreground/80" {...useEnter(ENTER.cta + 0.1, 8)}>
             {copy.accessNote}

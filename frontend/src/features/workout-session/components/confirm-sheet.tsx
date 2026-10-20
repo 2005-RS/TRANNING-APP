@@ -30,7 +30,11 @@ export function ConfirmSheet({
 }) {
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side="bottom" showCloseButton={false} className="px-4 pb-[calc(1rem+env(safe-area-inset-bottom))] pt-2">
+      <SheetContent
+        side="bottom"
+        showCloseButton={false}
+        className="px-4 pb-[calc(1rem+env(safe-area-inset-bottom))] pt-2"
+      >
         <SheetHeader className="pr-4">
           <SheetTitle>{title}</SheetTitle>
           <SheetDescription>{description}</SheetDescription>

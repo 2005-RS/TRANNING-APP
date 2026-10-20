@@ -34,6 +34,7 @@ import {
   WorkoutTemplatesService,
 } from '../workout-templates/workout-templates.service';
 import { CreateTrainingPlanDto } from './dto/create-training-plan.dto';
+import { CreateSelfTrainingPlanDto } from './dto/create-self-training-plan.dto';
 import { ListTrainingPlansQueryDto } from './dto/list-training-plans-query.dto';
 import { TrainingPlanWorkoutInputDto } from './dto/replace-training-plan-workouts.dto';
 import { UpdateTrainingPlanDto } from './dto/update-training-plan.dto';
@@ -53,6 +54,7 @@ import {
   TrainingPlanSortField,
 } from './enums/training-plan-sort-field.enum';
 import { TrainingPlanStatus } from './enums/training-plan-status.enum';
+import { TRAINER_PLAN_ACTIVE_MESSAGE } from './training-plans.constants';
 import { assertTrainingPlanPrescription } from './training-plan-prescription.util';
 import {
   toTrainingPlanResponse,
@@ -125,6 +127,104 @@ export class TrainingPlansService {
     return toTrainingPlanResponse(saved, []);
   }
 
+  async createSelf(
+    dto: CreateSelfTrainingPlanDto,
+    actor: AuthenticatedUser,
+  ): Promise<TrainingPlanResponseDto> {
+    const profile = await this.requireOwnClientProfile(actor);
+    this.assertClientMutable(profile);
+    const planId = await this.dataSource.transaction(async (manager) => {
+      const lockedClient = await this.clients.lockByIdWithUser(
+        manager,
+        profile.id,
+      );
+      if (!lockedClient) throw new NotFoundException('Client not found');
+      this.assertClientMutable(lockedClient);
+      const previous = await manager
+        .getRepository(TrainingPlan)
+        .createQueryBuilder('plan')
+        .setLock('pessimistic_write')
+        .where('plan.clientProfileId = :clientProfileId', {
+          clientProfileId: profile.id,
+        })
+        .andWhere('plan.status = :status', {
+          status: TrainingPlanStatus.ACTIVE,
+        })
+        .getOne();
+      if (previous && previous.createdByUserId !== actor.id)
+        throw new ConflictException(TRAINER_PLAN_ACTIVE_MESSAGE);
+      if (previous) {
+        previous.status = TrainingPlanStatus.ARCHIVED;
+        previous.archivedAt = new Date();
+        await manager.getRepository(TrainingPlan).save(previous);
+      }
+      // Sequential on purpose: one transaction connection, one query at a time.
+      const snapshots: UsableWorkoutTemplate[] = [];
+      for (const workout of dto.workouts) {
+        snapshots.push(
+          await this.templates.requireUsableLibraryTemplateWithItems(
+            workout.workoutTemplateId,
+            manager,
+          ),
+        );
+      }
+      const plan = await manager.getRepository(TrainingPlan).save(
+        manager.getRepository(TrainingPlan).create({
+          clientProfileId: profile.id,
+          name: normalizeTemplateName(dto.name ?? 'Mi rutina'),
+          description: null,
+          status: TrainingPlanStatus.DRAFT,
+          startDate: null,
+          endDate: null,
+          createdByUserId: actor.id,
+          activatedAt: null,
+          archivedAt: null,
+        }),
+      );
+      for (const [index, input] of dto.workouts.entries()) {
+        const { template, items } = snapshots[index];
+        const workout = await manager.getRepository(TrainingPlanWorkout).save(
+          manager.getRepository(TrainingPlanWorkout).create({
+            trainingPlanId: plan.id,
+            sourceWorkoutTemplateId: template.id,
+            nameSnapshot: template.name,
+            descriptionSnapshot: template.description,
+            position: index + 1,
+            scheduledDay: input.scheduledDay ?? null,
+            notes: null,
+          }),
+        );
+        await manager.getRepository(TrainingPlanExercise).save(
+          items.map((item, exerciseIndex) =>
+            manager.getRepository(TrainingPlanExercise).create({
+              trainingPlanWorkoutId: workout.id,
+              exerciseId: item.exerciseId,
+              exerciseNameSnapshot: item.exercise.name,
+              position: exerciseIndex + 1,
+              sets: item.sets,
+              prescriptionType: item.prescriptionType,
+              repsMin: item.repsMin,
+              repsMax: item.repsMax,
+              durationSeconds: item.durationSeconds,
+              restSeconds: item.restSeconds,
+              targetLoadKg: null,
+              targetRpe: item.targetRpe,
+              targetRir: item.targetRir,
+              tempo: item.tempo,
+              notes: item.notes,
+            }),
+          ),
+        );
+      }
+      await this.assertPlanActivatable(plan.id, manager);
+      plan.status = TrainingPlanStatus.ACTIVE;
+      plan.activatedAt = new Date();
+      await manager.getRepository(TrainingPlan).save(plan);
+      return plan.id;
+    });
+    return this.loadDetailResponse(profile.id, planId);
+  }
+
   async listForClient(
     clientProfileId: string,
     query: ListTrainingPlansQueryDto,
@@ -176,6 +276,7 @@ export class TrainingPlansService {
     const profile = await this.requireOwnClientProfile(actor);
     const plan = await this.plans
       .createQueryBuilder('plan')
+      .leftJoinAndSelect('plan.clientProfile', 'clientProfile')
       .leftJoinAndSelect('plan.workouts', 'workout')
       .leftJoinAndSelect('workout.exercises', 'exercise')
       .where('plan.clientProfileId = :clientProfileId', {
@@ -728,6 +829,7 @@ export class TrainingPlansService {
   ): Promise<TrainingPlan> {
     const plan = await this.plans
       .createQueryBuilder('plan')
+      .leftJoinAndSelect('plan.clientProfile', 'clientProfile')
       .leftJoinAndSelect('plan.workouts', 'workout')
       .leftJoinAndSelect('workout.exercises', 'exercise')
       .where('plan.id = :planId', { planId })

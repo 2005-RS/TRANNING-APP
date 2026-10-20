@@ -32,6 +32,8 @@ import { WorkoutTemplatesModule } from './modules/workout-templates/workout-temp
 import { ChatModule } from './modules/chat/chat.module';
 import { NutritionNutrientsModule } from './modules/nutrition-nutrients/nutrition-nutrients.module';
 import { NutritionJournalModule } from './modules/nutrition-journal/nutrition-journal.module';
+import { SubscriptionsModule } from './modules/subscriptions/subscriptions.module';
+import { RegistrationModule } from './modules/registration/registration.module';
 
 @Module({
   imports: [
@@ -61,6 +63,8 @@ import { NutritionJournalModule } from './modules/nutrition-journal/nutrition-jo
     AuthModule,
     TrainersModule,
     ClientsModule,
+    SubscriptionsModule,
+    RegistrationModule,
     TrainerClientAssignmentsModule,
     ExercisesModule,
     WorkoutTemplatesModule,

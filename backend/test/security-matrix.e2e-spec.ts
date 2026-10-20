@@ -165,6 +165,13 @@ describe('Security matrix (e2e)', () => {
       email: 'client-b@example.com',
       firstName: 'Cody',
     });
+    for (const client of [clientA, clientB]) {
+      await request(http)
+        .patch(`/api/v1/clients/${client.id}/subscription`)
+        .set('Authorization', admin.authorization)
+        .send({ complimentary: true })
+        .expect(200);
+    }
     await request(http)
       .put(`/api/v1/clients/${clientA.id}/trainer`)
       .set('Authorization', admin.authorization)

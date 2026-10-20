@@ -8,6 +8,7 @@ import {
   validateAdminDashboardSearch,
   validateAdminExercisesSearch,
   validateAdminPeopleSearch,
+  validateAdminPaymentsSearch,
 } from '@/features/admin-workspace/lib/search';
 import { rootRoute } from '@/routes/__root';
 import { validateNotificationsSearch } from '@/features/notifications/lib/search';
@@ -125,6 +126,33 @@ const adminExerciseDetailRoute = createRoute({
 });
 
 const foodsMeta = getRouteMeta('/admin/foods');
+const paymentsMeta = getRouteMeta('/admin/payments');
+const adminPaymentsRoute = createRoute({
+  getParentRoute: () => adminRoute,
+  path: 'payments',
+  validateSearch: validateAdminPaymentsSearch,
+  staticData: paymentsMeta,
+  head: () => ({ meta: [{ title: paymentsMeta.documentTitle }] }),
+  component: lazyRouteComponent(
+    () => import('@/features/admin-workspace/components/admin-payments-page'),
+    'AdminPaymentsPage',
+  ),
+});
+
+const adminLibraryRoute = createRoute({
+  getParentRoute: () => adminRoute,
+  path: 'library',
+  staticData: {
+    title: 'Biblioteca de rutinas',
+    documentTitle: documentTitleFor('Biblioteca de rutinas'),
+    description: 'Rutinas disponibles para clientes.',
+  },
+  head: () => ({ meta: [{ title: documentTitleFor('Biblioteca de rutinas') }] }),
+  component: lazyRouteComponent(
+    () => import('@/features/admin-workspace/components/admin-library-page'),
+    'AdminLibraryPage',
+  ),
+});
 const adminFoodsRoute = createRoute({
   getParentRoute: () => adminRoute,
   path: 'foods',
@@ -170,8 +198,10 @@ export const adminRouteTree = adminRoute.addChildren([
   adminClientDetailRoute,
   adminAssignmentsRoute,
   adminExercisesRoute,
+  adminLibraryRoute,
   adminExerciseDetailRoute,
   adminFoodsRoute,
+  adminPaymentsRoute,
   adminFoodDetailRoute,
   adminNotificationsRoute,
 ]);

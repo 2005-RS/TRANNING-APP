@@ -360,7 +360,7 @@ Whenever a Client-facing feature ships, keep the Trainer-facing counterpart for 
 
 Recorded for later phases. Not permission to fake frontend data or change backend in an unauthorized task:
 
-- No register UI/flow
+- ~~No register UI/flow~~ — resolved 2026-10-10: public `/register` creates a FREE client (subscriptions P1/P2a)
 - CLIENT generic exercise/media access may be limited — re-check generated contract per feature
 - Trainer cannot create Clients if the contract remains unchanged
 - Owning TRAINER can upload exercise media on exercises they created; ADMIN-owned catalog media stays read-only

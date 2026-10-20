@@ -81,6 +81,9 @@ export class WorkoutTemplateSummaryResponseDto {
   status!: WorkoutTemplateStatus;
 
   @ApiProperty()
+  isLibraryPublished!: boolean;
+
+  @ApiProperty()
   createdByUserId!: string;
 
   @ApiProperty()

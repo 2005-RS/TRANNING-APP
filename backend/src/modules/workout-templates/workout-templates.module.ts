@@ -4,6 +4,7 @@ import { ExercisesModule } from '../exercises/exercises.module';
 import { WorkoutTemplateExercise } from './entities/workout-template-exercise.entity';
 import { WorkoutTemplate } from './entities/workout-template.entity';
 import { WorkoutTemplatesController } from './workout-templates.controller';
+import { ClientWorkoutLibraryController } from './client-workout-library.controller';
 import { WorkoutTemplatesService } from './workout-templates.service';
 
 @Module({
@@ -11,7 +12,7 @@ import { WorkoutTemplatesService } from './workout-templates.service';
     TypeOrmModule.forFeature([WorkoutTemplate, WorkoutTemplateExercise]),
     ExercisesModule,
   ],
-  controllers: [WorkoutTemplatesController],
+  controllers: [ClientWorkoutLibraryController, WorkoutTemplatesController],
   providers: [WorkoutTemplatesService],
   exports: [WorkoutTemplatesService],
 })

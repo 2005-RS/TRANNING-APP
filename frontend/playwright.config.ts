@@ -46,6 +46,12 @@ export default defineConfig({
     baseURL,
     trace: 'on-first-retry',
     navigationTimeout: 30_000,
+    // The product defaults to Spanish; the E2E suite asserts the English copy, so every
+    // browser starts with the stored English preference. Language specs switch explicitly.
+    storageState: {
+      cookies: [],
+      origins: [{ origin: baseURL, localStorage: [{ name: 'UI_LANGUAGE', value: 'en' }] }],
+    },
   },
   webServer: {
     command: 'node scripts/e2e-preview.mjs',

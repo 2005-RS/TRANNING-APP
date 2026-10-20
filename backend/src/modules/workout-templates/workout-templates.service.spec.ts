@@ -292,4 +292,44 @@ describe('WorkoutTemplatesService', () => {
     expect(detail.status).toBe(WorkoutTemplateStatus.ACTIVE);
     expect(detail.items[0].exercise.status).toBe(ExerciseStatus.ARCHIVED);
   });
+
+  it('rejects publishing a DRAFT template', async () => {
+    const { service } = buildService({
+      lockGetOne: jest.fn(async () => ({
+        id: 'tpl-1',
+        status: WorkoutTemplateStatus.DRAFT,
+      })),
+    });
+
+    await expect(
+      service.updateLibraryPublication('tpl-1', true),
+    ).rejects.toMatchObject({
+      message: 'Only ACTIVE templates can be published',
+    });
+  });
+
+  it('unpublishes a template when it is archived', async () => {
+    const template = {
+      id: 'tpl-1',
+      createdByUserId: 'trainer-a',
+      status: WorkoutTemplateStatus.ACTIVE,
+      isLibraryPublished: true,
+    };
+    const { service, templates } = buildService({
+      lockGetOne: jest.fn(async () => template),
+    });
+
+    await service.updateStatus(
+      'tpl-1',
+      WorkoutTemplateLifecycleStatus.ARCHIVED,
+      actor({ id: 'trainer-a', role: UserRole.TRAINER }),
+    );
+
+    expect(templates.save).toHaveBeenCalledWith(
+      expect.objectContaining({
+        status: WorkoutTemplateStatus.ARCHIVED,
+        isLibraryPublished: false,
+      }),
+    );
+  });
 });

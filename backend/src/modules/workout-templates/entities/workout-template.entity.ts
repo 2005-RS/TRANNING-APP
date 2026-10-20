@@ -31,6 +31,9 @@ export class WorkoutTemplate {
   })
   status!: WorkoutTemplateStatus;
 
+  @Column({ name: 'is_library_published', type: 'boolean', default: false })
+  isLibraryPublished!: boolean;
+
   @Column({ name: 'created_by_user_id', type: 'uuid' })
   createdByUserId!: string;
 

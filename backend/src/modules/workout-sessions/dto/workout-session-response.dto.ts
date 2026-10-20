@@ -65,6 +65,20 @@ export class WorkoutSessionPrescriptionResponseDto {
   notes!: string | null;
 }
 
+export class WorkoutPreviousSetDto {
+  @ApiProperty()
+  setNumber!: number;
+
+  @ApiPropertyOptional({ nullable: true, type: Number })
+  actualReps!: number | null;
+
+  @ApiPropertyOptional({ nullable: true, type: Number })
+  actualDurationSeconds!: number | null;
+
+  @ApiPropertyOptional({ nullable: true, type: Number })
+  actualLoadKg!: number | null;
+}
+
 export class WorkoutSessionExerciseResponseDto {
   @ApiProperty()
   id!: string;
@@ -86,6 +100,9 @@ export class WorkoutSessionExerciseResponseDto {
 
   @ApiProperty({ type: [WorkoutSetResponseDto] })
   sets!: WorkoutSetResponseDto[];
+
+  @ApiProperty({ type: [WorkoutPreviousSetDto] })
+  previousSets!: WorkoutPreviousSetDto[];
 
   @ApiPropertyOptional({
     type: ExerciseMediaResponseDto,

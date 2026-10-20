@@ -173,6 +173,11 @@ describe('Training plans (e2e)', () => {
     trainerId: string,
   ) {
     await request(http)
+      .patch(`/api/v1/clients/${clientId}/subscription`)
+      .set('Authorization', authorization)
+      .send({ complimentary: true })
+      .expect(200);
+    await request(http)
       .put(`/api/v1/clients/${clientId}/trainer`)
       .set('Authorization', authorization)
       .send({ trainerId })

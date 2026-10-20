@@ -127,6 +127,7 @@ describe('Trainer-client assignments (e2e)', () => {
   async function provisionClient(
     authorization: string,
     overrides: Record<string, unknown> = {},
+    makePro = true,
   ) {
     const response = await request(http)
       .post('/api/v1/clients')
@@ -141,10 +142,48 @@ describe('Trainer-client assignments (e2e)', () => {
         ...overrides,
       })
       .expect(201);
-    return response.body as { id: string; user: { id: string; email: string } };
+    const client = response.body as {
+      id: string;
+      user: { id: string; email: string };
+    };
+    if (makePro) {
+      await request(http)
+        .patch(`/api/v1/clients/${client.id}/subscription`)
+        .set('Authorization', authorization)
+        .send({ complimentary: true })
+        .expect(200);
+    }
+    return client;
   }
 
   describe('admin assignment', () => {
+    it('blocks FREE clients and allows Pro clients to be assigned and unassigned', async () => {
+      const { authorization } = await createAdmin();
+      const trainer = await provisionTrainer(authorization);
+      const client = await provisionClient(authorization, {}, false);
+
+      await request(http)
+        .put(`/api/v1/clients/${client.id}/trainer`)
+        .set('Authorization', authorization)
+        .send({ trainerId: trainer.id })
+        .expect(409);
+
+      await request(http)
+        .patch(`/api/v1/clients/${client.id}/subscription`)
+        .set('Authorization', authorization)
+        .send({ complimentary: true })
+        .expect(200);
+      await request(http)
+        .put(`/api/v1/clients/${client.id}/trainer`)
+        .set('Authorization', authorization)
+        .send({ trainerId: trainer.id })
+        .expect(200);
+      await request(http)
+        .delete(`/api/v1/clients/${client.id}/trainer`)
+        .set('Authorization', authorization)
+        .expect(204);
+    });
+
     it('assigns, is idempotent, reassigns atomically, and preserves history on unassign', async () => {
       const { authorization } = await createAdmin();
       const trainerA = await provisionTrainer(authorization);

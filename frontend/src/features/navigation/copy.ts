@@ -58,6 +58,12 @@ export const clientCopySource = {
     title: 'Nutrition',
     description: 'Your current assigned meal plan and daily targets.',
   },
+  plan: { label: 'My plan', title: 'My plan', description: 'Your Pro subscription and payment status.' },
+  profile: {
+    label: 'My profile',
+    title: 'My profile',
+    description: 'Your account and training preferences.',
+  },
   more: { label: 'More', title: 'More', description: 'Body, check-ins, and notifications.' },
   body: {
     label: 'Body progress',
@@ -142,6 +148,7 @@ export const adminCopySource = {
     description: 'Manage the shared exercise catalog.',
   },
   foods: { label: 'Foods', title: 'Foods', description: 'Manage the nutrition food catalog.' },
+  payments: { label: 'Payments', title: 'Payments', description: 'Review reported subscription payments.' },
   notifications: {
     label: 'Notifications',
     title: 'Notifications',

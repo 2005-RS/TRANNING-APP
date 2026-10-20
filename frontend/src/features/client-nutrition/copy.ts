@@ -8,6 +8,9 @@ export const clientNutritionCopySource = {
   emptyTitle: 'No nutrition plan is assigned yet.',
   emptyBody: 'Your coach will assign a plan. Meals and daily targets will appear here.',
   prescribedHint: 'This is a prescribed plan, not a log of what you ate.',
+  previousPlans: 'Previous plans',
+  previousPlansEmpty: 'You do not have previous plans yet.',
+  previousPlanDetails: 'Previous plan details',
   plan: {
     eyebrow: 'Current plan',
     statusActive: 'Active',
@@ -111,9 +114,6 @@ export const clientNutritionCopySource = {
     databaseHint: 'Search your plan, recent foods and the catalog',
     barcode: 'Scan barcode',
     barcodeHint: 'Packaged products',
-    photo: 'Scan meal',
-    photoBeta: 'Beta',
-    photoHint: 'Coming soon: suggests foods from a photo for you to confirm.',
   },
   search: {
     title: 'Find food',

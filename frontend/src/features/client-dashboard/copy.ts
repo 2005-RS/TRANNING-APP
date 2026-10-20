@@ -12,6 +12,12 @@ export const clientDashboardCopySource = {
     afternoonLine: 'Here is where things stand.',
     eveningLine: 'Here is where things stand.',
   },
+  today: {
+    upNext: 'Up next',
+    exerciseCount: (count: number) => (count === 1 ? '1 exercise' : `${count} exercises`),
+    emptyTitle: 'Start training today',
+    emptyBody: 'Pick a routine from the library and log your first workout in minutes.',
+  },
   primary: {
     inProgressEyebrow: 'In progress',
     planEyebrow: 'Current plan',
@@ -78,6 +84,14 @@ export const clientDashboardCopySource = {
     waitingReview: 'Waiting for review',
     submittedAt: 'Submitted',
     reviewedAt: 'Reviewed',
+  },
+  subscription: {
+    upgradeTitle: 'Upgrade to Pro: a trainer builds your plan',
+    viewPlan: 'View my plan',
+  },
+  trainer: {
+    title: 'Your trainer',
+    whatsapp: 'Message on WhatsApp',
   },
   error: {
     retry: 'Try again',

@@ -33,6 +33,7 @@ import type {
   AuthUserResponseDto,
   ForgotPasswordDto,
   LoginDto,
+  RegisterDto,
   ResetPasswordDto
 } from '.././models';
 
@@ -566,3 +567,75 @@ export function useAuthMe<TData = Awaited<ReturnType<typeof authMe>>, TError = v
 
 
 
+/**
+ * @summary Create a free client account and authenticate immediately
+ */
+export const getRegistrationRegisterUrl = () => {
+
+
+  
+
+  return `/api/v1/auth/register`
+}
+
+export const registrationRegister = async (registerDto: RegisterDto, options?: RequestInit): Promise<AuthTokenResponseDto> => {
+  
+  return apiFetch<AuthTokenResponseDto>(getRegistrationRegisterUrl(),
+  {      
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      registerDto,)
+  }
+);}
+
+
+
+
+export const getRegistrationRegisterMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof registrationRegister>>, TError,{data: RegisterDto}, TContext>, request?: SecondParameter<typeof apiFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof registrationRegister>>, TError,{data: RegisterDto}, TContext> => {
+
+const mutationKey = ['registrationRegister'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof registrationRegister>>, {data: RegisterDto}> = (props) => {
+          const {data} = props ?? {};
+
+          return  registrationRegister(data,requestOptions)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type RegistrationRegisterMutationResult = NonNullable<Awaited<ReturnType<typeof registrationRegister>>>
+    export type RegistrationRegisterMutationBody = RegisterDto
+    export type RegistrationRegisterMutationError = unknown
+
+    /**
+ * @summary Create a free client account and authenticate immediately
+ */
+export const useRegistrationRegister = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof registrationRegister>>, TError,{data: RegisterDto}, TContext>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof registrationRegister>>,
+        TError,
+        {data: RegisterDto},
+        TContext
+      > => {
+
+      const mutationOptions = getRegistrationRegisterMutationOptions(options);
+
+      return useMutation(mutationOptions, queryClient);
+    }
+    

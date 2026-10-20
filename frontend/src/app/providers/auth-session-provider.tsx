@@ -8,7 +8,7 @@ import {
   type ReactNode,
 } from 'react';
 import { getAuthMeQueryKey } from '@/generated/auth/auth';
-import type { AuthUserResponseDto } from '@/generated/models';
+import type { AuthUserResponseDto, RegisterDto } from '@/generated/models';
 import {
   AuthSessionContext,
   type AuthStatus,
@@ -16,6 +16,7 @@ import {
 import {
   bootstrapAuthSession,
   loginWithPassword,
+  registerAccount,
   logoutAllSessions,
   logoutCurrentSession,
   resetAuthBootstrap,
@@ -128,6 +129,14 @@ export function AuthSessionProvider({
     [becomeAuthenticated],
   );
 
+  const register = useCallback(
+    async (input: RegisterDto) => {
+      const nextUser = await registerAccount(input);
+      becomeAuthenticated(nextUser);
+    },
+    [becomeAuthenticated],
+  );
+
   const logout = useCallback(async () => {
     await logoutCurrentSession();
     becomeUnauthenticated();
@@ -155,12 +164,13 @@ export function AuthSessionProvider({
       status,
       user,
       login,
+      register,
       logout,
       logoutAll,
       retryRestore,
       continueToSignIn,
     }),
-    [continueToSignIn, login, logout, logoutAll, retryRestore, status, user],
+    [continueToSignIn, login, logout, logoutAll, register, retryRestore, status, user],
   );
 
   return (

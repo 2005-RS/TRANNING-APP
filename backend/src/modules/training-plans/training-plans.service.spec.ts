@@ -10,6 +10,7 @@ import { TrainingPlanStatus } from './enums/training-plan-status.enum';
 import { TrainingPlan } from './entities/training-plan.entity';
 import { TrainingPlansService } from './training-plans.service';
 import { WorkoutPrescriptionType } from '../workout-templates/enums/workout-prescription-type.enum';
+import { TRAINER_PLAN_ACTIVE_MESSAGE } from './training-plans.constants';
 
 function actor(
   overrides: Partial<AuthenticatedUser> & { id: string; role: UserRole },
@@ -40,6 +41,7 @@ describe('TrainingPlansService', () => {
     assertCanAccessClient?: jest.Mock;
     lockGetOne?: jest.Mock;
     requireUsable?: jest.Mock;
+    requireUsableLibrary?: jest.Mock;
     requireActiveByIds?: jest.Mock;
     publish?: jest.Mock;
   }) {
@@ -66,6 +68,8 @@ describe('TrainingPlansService', () => {
     };
     const templates = {
       requireUsableTemplateWithItems: overrides?.requireUsable ?? jest.fn(),
+      requireUsableLibraryTemplateWithItems:
+        overrides?.requireUsableLibrary ?? jest.fn(),
     };
     const exercises = {
       requireActiveByIds:
@@ -97,6 +101,7 @@ describe('TrainingPlansService', () => {
       })),
     };
     const planRepo = {
+      create: plans.create,
       createQueryBuilder: jest.fn(() => ({
         setLock: jest.fn().mockReturnThis(),
         where: jest.fn().mockReturnThis(),
@@ -135,6 +140,7 @@ describe('TrainingPlansService', () => {
       publisher,
       lockGetOne,
       workoutRepo,
+      templates,
     };
   }
 
@@ -285,5 +291,108 @@ describe('TrainingPlansService', () => {
         actor({ id: 'admin-1', role: UserRole.ADMIN }),
       ),
     ).rejects.toThrow('forced publisher failure');
+  });
+
+  it('archives the previous self plan and activates a new plan owned by the client', async () => {
+    const previous = {
+      id: 'previous-plan',
+      clientProfileId: 'client-1',
+      createdByUserId: 'client-user',
+      status: TrainingPlanStatus.ACTIVE,
+      archivedAt: null,
+    };
+    const { service, plans, templates } = buildService({
+      lockGetOne: jest.fn(async () => previous),
+      requireUsableLibrary: jest.fn(async () => ({
+        template: {
+          id: 'template-1',
+          name: 'Full body',
+          description: null,
+        },
+        items: [
+          {
+            exerciseId: 'exercise-1',
+            exercise: { name: 'Squat' },
+            sets: 3,
+            prescriptionType: WorkoutPrescriptionType.REPS,
+            repsMin: 8,
+            repsMax: 12,
+            durationSeconds: null,
+            restSeconds: 90,
+            targetRpe: null,
+            targetRir: null,
+            tempo: null,
+            notes: null,
+          },
+        ],
+      })),
+    });
+    const internal = service as unknown as {
+      assertPlanActivatable: jest.Mock;
+      loadDetailResponse: jest.Mock;
+    };
+    jest.spyOn(internal, 'assertPlanActivatable').mockResolvedValue(undefined);
+    jest
+      .spyOn(internal, 'loadDetailResponse')
+      .mockResolvedValue({ id: 'plan-1', workouts: [] } as never);
+
+    await service.createSelf(
+      { workouts: [{ workoutTemplateId: 'template-1' }] },
+      actor({ id: 'client-user', role: UserRole.CLIENT }),
+    );
+
+    expect(previous).toMatchObject({
+      status: TrainingPlanStatus.ARCHIVED,
+      archivedAt: expect.any(Date),
+    });
+    expect(
+      templates.requireUsableLibraryTemplateWithItems,
+    ).toHaveBeenCalledWith('template-1', expect.anything());
+    expect(plans.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        createdByUserId: 'client-user',
+        status: TrainingPlanStatus.DRAFT,
+      }),
+    );
+    expect(plans.save).toHaveBeenLastCalledWith(
+      expect.objectContaining({
+        status: TrainingPlanStatus.ACTIVE,
+        createdByUserId: 'client-user',
+      }),
+    );
+  });
+
+  it('rejects self-plan creation while a trainer-authored plan is active', async () => {
+    const { service } = buildService({
+      lockGetOne: jest.fn(async () => ({
+        id: 'trainer-plan',
+        clientProfileId: 'client-1',
+        createdByUserId: 'trainer-user',
+        status: TrainingPlanStatus.ACTIVE,
+      })),
+    });
+
+    await expect(
+      service.createSelf(
+        { workouts: [{ workoutTemplateId: 'template-1' }] },
+        actor({ id: 'client-user', role: UserRole.CLIENT }),
+      ),
+    ).rejects.toMatchObject({ message: TRAINER_PLAN_ACTIVE_MESSAGE });
+  });
+
+  it('propagates a missing or unpublished library template as not found', async () => {
+    const { service } = buildService({
+      lockGetOne: jest.fn(async () => null),
+      requireUsableLibrary: jest.fn(async () => {
+        throw new NotFoundException('Workout library item not found');
+      }),
+    });
+
+    await expect(
+      service.createSelf(
+        { workouts: [{ workoutTemplateId: 'template-1' }] },
+        actor({ id: 'client-user', role: UserRole.CLIENT }),
+      ),
+    ).rejects.toBeInstanceOf(NotFoundException);
   });
 });

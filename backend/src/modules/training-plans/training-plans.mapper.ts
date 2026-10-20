@@ -22,6 +22,7 @@ export function toTrainingPlanSummary(
     endDate: toIsoDateString(plan.endDate),
     clientProfileId: plan.clientProfileId,
     createdByUserId: plan.createdByUserId,
+    isSelfAuthored: plan.createdByUserId === plan.clientProfile?.userId,
     activatedAt: plan.activatedAt,
     archivedAt: plan.archivedAt,
     createdAt: plan.createdAt,

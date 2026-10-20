@@ -250,7 +250,7 @@ describe('ChatService (public visitors)', () => {
     expect(system).toContain('Pricing published: false');
     expect(system).toContain('Configured public contact channel: none');
     expect(system).toContain(
-      'When a price, specific commercial plan, discount, payment method, contact detail, or trainer availability is not in the authoritative knowledge, NEVER guess.',
+      'Never guess a price, discount, payment detail, contact detail, or trainer availability.',
     );
   });
 

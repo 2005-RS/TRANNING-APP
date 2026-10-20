@@ -1,4 +1,5 @@
 import { AdminFormError } from '@/features/admin-workspace/components/admin-primitives';
+import type { ReactNode } from 'react';
 import { Button } from '@/shared/ui/button';
 import {
   Sheet,
@@ -24,7 +25,7 @@ export function ConfirmSheet({
   open: boolean;
   onOpenChange: (open: boolean) => void;
   title: string;
-  description: string;
+  description: ReactNode;
   confirmLabel: string;
   pendingLabel?: string;
   cancelLabel: string;

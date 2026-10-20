@@ -8,6 +8,7 @@ export const idleAuthContext: AuthSessionValue = {
   status: 'BOOTSTRAPPING',
   user: null,
   login: async () => undefined,
+  register: async () => undefined,
   logout: async () => undefined,
   logoutAll: async () => undefined,
   retryRestore: async () => undefined,

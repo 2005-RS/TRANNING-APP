@@ -47,7 +47,7 @@ function AccountAction({ onNavigate, className }: { onNavigate?: () => void; cla
         className,
       )}
     >
-      {account.signedIn ? account.label : copy.nav.start}
+      {account.signedIn ? account.label : copy.nav.createAccount}
     </Link>
   );
 }

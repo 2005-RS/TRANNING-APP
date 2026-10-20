@@ -10,20 +10,21 @@ export const esPublicSite: LooseCopy<typeof publicSiteCopySource> = {
     progress: 'Progreso',
     about: 'Acerca de',
     signIn: 'Iniciar sesión',
+    createAccount: 'Crear cuenta',
     goToApp: 'Ir a mi espacio',
     openMenu: 'Abrir menú del sitio',
     closeMenu: 'Cerrar menú del sitio',
     nutrition: 'Nutrición',
     how: 'Cómo funciona',
-    start: 'Comenzar',
+    start: 'Crear cuenta gratis',
     pages: 'Páginas',
   },
   landing: {
     eyebrow: 'Coaching, entrenamiento y nutrición en una sola app',
     headline: ['Entrena.', 'Aliméntate.', 'Evoluciona.'],
     body: 'Planes de entrenamiento personalizados, planes de alimentación, seguimiento de tu progreso y un coach que acompaña cada paso, en una sola experiencia.',
-    primary: 'Comenzar',
-    secondary: 'Conocer más',
+    primary: 'Crear cuenta gratis',
+    secondary: 'Iniciar sesión',
     demoLabel: 'Vista de la app · datos de ejemplo',
     scrollHint: 'Desliza',
     screens: {
@@ -143,8 +144,23 @@ export const esPublicSite: LooseCopy<typeof publicSiteCopySource> = {
     },
     final: {
       title: ['Tu cambio', 'empieza hoy.'],
-      body: 'Pide acceso a tu coach o a tu organización, inicia sesión y comienza.',
-      primary: 'Comenzar',
+      body: 'Crea tu cuenta gratis y usa la app por tu cuenta. Elige Pro cuando quieras un entrenador a tu lado.',
+      primary: 'Crear cuenta gratis',
+      secondary: 'Iniciar sesión',
+    },
+    plans: {
+      eyebrow: 'Planes',
+      title: ['Elige cómo', 'quieres entrenar'],
+      body: 'Crea tu cuenta gratis y usa la app por tu cuenta. Pro incluye un entrenador, se paga por SINPE Móvil y se activa cuando el equipo verifica el pago.',
+      free: {
+        title: 'Gratis',
+        features: ['Registra entrenamientos y progreso', 'Diario de alimentos', 'Medidas corporales', 'Training Assistant'],
+      },
+      pro: {
+        title: 'Pro',
+        features: ['Todo lo de Gratis', 'Un entrenador asignado', 'Planes de entrenamiento y nutrición hechos para ti', 'Revisiones de check-ins'],
+      },
+      cta: 'Crear cuenta gratis',
     },
     footer: {
       explore: 'Explora',
@@ -153,13 +169,13 @@ export const esPublicSite: LooseCopy<typeof publicSiteCopySource> = {
   },
   footer: {
     note: 'Plataforma privada de coaching para entrenadores y sus clientes.',
-    access: 'No hay registro público. Las cuentas las crea un administrador.',
+    access: 'Crea tu cuenta gratis y usa la app por tu cuenta. Pro incluye un entrenador y se paga por SINPE Móvil tras la verificación del equipo.',
   },
   accessNote:
-    'No hay registro público. El administrador de la organización que usa la plataforma crea tu cuenta.',
+    'Crea tu cuenta gratis y usa la app por tu cuenta. Pro incluye un entrenador, se paga por SINPE Móvil y se activa cuando el equipo verifica el pago.',
   cta: {
-    title: '¿Ya tienes una cuenta?',
-    body: 'Inicia sesión con el correo y la contraseña que te dio tu entrenador o administrador.',
+    title: 'Crea tu cuenta gratis',
+    body: 'Usa la app por tu cuenta o elige Pro para tener un entrenador que asigne planes y revise tu progreso.',
     signIn: 'Iniciar sesión',
   },
   assistant: {
@@ -190,8 +206,8 @@ export const esPublicSite: LooseCopy<typeof publicSiteCopySource> = {
     stepsTitle: 'Cómo funciona',
     steps: {
       one: {
-        title: 'Se crean las cuentas',
-        body: 'Un administrador crea las cuentas de entrenadores y clientes y asigna cada cliente a un entrenador.',
+        title: 'Crea tu cuenta',
+        body: 'Crea una cuenta gratis y empieza a usar la app por tu cuenta.',
       },
       two: {
         title: 'El entrenador planifica',
@@ -311,7 +327,7 @@ export const esPublicSite: LooseCopy<typeof publicSiteCopySource> = {
       },
       access: {
         title: 'Acceso',
-        body: 'No hay registro público ni pagos dentro de la app. Las cuentas las crea un administrador de la organización.',
+        body: 'Crea una cuenta gratis y usa la app por tu cuenta. Pro incluye un entrenador, se paga por SINPE Móvil y se activa cuando el equipo verifica el pago.',
       },
       assistant: {
         title: 'Training Assistant',

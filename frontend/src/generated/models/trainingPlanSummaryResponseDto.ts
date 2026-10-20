@@ -23,6 +23,7 @@ export interface TrainingPlanSummaryResponseDto {
   endDate?: string | null;
   clientProfileId: string;
   createdByUserId: string;
+  isSelfAuthored: boolean;
   /** @nullable */
   activatedAt?: string | null;
   /** @nullable */

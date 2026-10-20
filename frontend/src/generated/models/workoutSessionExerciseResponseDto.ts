@@ -11,6 +11,7 @@ Refresh secrets stay in an HttpOnly cookie and are never returned in JSON.
  */
 import type { WorkoutSessionPrescriptionResponseDto } from './workoutSessionPrescriptionResponseDto';
 import type { WorkoutSetResponseDto } from './workoutSetResponseDto';
+import type { WorkoutPreviousSetDto } from './workoutPreviousSetDto';
 import type { WorkoutSessionExerciseResponseDtoDemonstrationMedia } from './workoutSessionExerciseResponseDtoDemonstrationMedia';
 
 export interface WorkoutSessionExerciseResponseDto {
@@ -21,6 +22,7 @@ export interface WorkoutSessionExerciseResponseDto {
   position: number;
   prescription: WorkoutSessionPrescriptionResponseDto;
   sets: WorkoutSetResponseDto[];
+  previousSets: WorkoutPreviousSetDto[];
   /**
    * First READY demonstration for this catalog exercise. Metadata only; signed URLs are issued separately and must not be persisted.
    * @nullable

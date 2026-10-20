@@ -130,7 +130,7 @@ Están listados en `frontend-roadmap.md` → "Known gaps". Cada uno es una tarea
 
 ### A9. Módulo de suscripciones: plan gratis + Pro por SINPE Móvil (asignado 2026-10-01)
 Plan completo en [`docs/subscriptions/suscripciones-sinpe.md`](subscriptions/suscripciones-sinpe.md).
-- **P1 (backend):** ya está planificada en `.ai/CURRENT_TASK.md` (`STATUS: READY`). Empieza con `npm run ai:implement`.
+- ✅ **Terminada el 2026-10-10 por la línea B** (P1, P2a y P2b). Ver "Reportes cruzados" y [`HANDOFF-CURSOR.md`](HANDOFF-CURSOR.md).
 - **P2 (pantallas):** toca `public-site` y el login, que son de la línea B. Ronny autoriza tocarlos para esta tarea. Antes de empezar P2, trae el último merge de `ronny`.
 - Un PR por fase.
 
@@ -185,3 +185,22 @@ Anota aquí lo que encuentres en el área del otro: fecha, archivo y problema.
   - `NutritionFoodResponseDto` ahora exige `portions` y `visibility`; ya están agregados a los fixtures de `admin-workspace/tests/msw-admin.ts`.
   - Los alimentos PRIVATE de clientes no aparecen en el catálogo de Admin: ni ADMIN los ve (D5).
 - **2026-09-30 · Ronny → Eli:** N1 regeneró `frontend/src/generated/**`. Por eso se agregaron `source`, `nameOrigin` y `nutrients` a los fixtures `NutritionFoodResponseDto` de `frontend/src/features/admin-workspace/tests/msw-admin.ts`. Es solo de test y lo exigía el contrato nuevo. Haz merge de `main` antes de tocar ese archivo.
+- **2026-10-10 · Ronny (Claude + Codex) → Eli: A9 Suscripciones TERMINADA. No la empieces.**
+  - P1 (backend), P2a (registro y textos) y P2b ("Mi plan" y "Pagos") están hechas en `ronny`, sin commit todavía.
+  - **Archivos de la línea A que se tocaron:**
+    - `clients` (fila FREE al crear un cliente);
+    - `trainer-client-assignments` (409 si el cliente no es Pro);
+    - auth/sesión (`register` en el contexto y `router-context`);
+    - `admin-workspace` (página Pagos, plan y cortesía en el detalle, mensaje 409);
+    - `client-dashboard` (tarjeta "Pásate a Pro");
+    - `msw-admin.ts`;
+    - E2E del backend que asignan entrenador: ahora dan Pro de cortesía antes de asignar.
+  - **Migración:** `1758153600000-CreateSubscriptions`. Revisa que no choque con una tuya.
+  - **Traspaso y tareas pendientes:** [`HANDOFF-CURSOR.md`](HANDOFF-CURSOR.md).
+- **2026-10-10 · Ronny (Claude + Codex) → Eli: rediseño de la experiencia del cliente, autorizado por Ronny.** Toca archivos de la línea A en `features/workout-session/**`, `features/client-dashboard/**` y la biblioteca de rutinas del Admin, más el backend:
+  - `workout-templates`: flag `is_library_published` y biblioteca para clientes;
+  - `training-plans`: plan propio del cliente, "Mi rutina";
+  - `workout-sessions`: `previousSets`;
+  - migración `1758240000000`.
+
+  El plan está en [`client-experience/rediseno-experiencia-cliente.md`](client-experience/rediseno-experiencia-cliente.md). Haz merge de `ronny` antes de tocar esas zonas.

@@ -1,5 +1,5 @@
 import { createContext } from 'react';
-import type { AuthUserResponseDto } from '@/generated/models';
+import type { AuthUserResponseDto, RegisterDto } from '@/generated/models';
 
 export type AuthStatus =
   | 'BOOTSTRAPPING'
@@ -15,6 +15,7 @@ export type AuthSessionValue = {
   status: AuthStatus;
   user: AuthUserResponseDto | null;
   login: (input: { email: string; password: string }) => Promise<void>;
+  register: (input: RegisterDto) => Promise<void>;
   logout: () => Promise<void>;
   logoutAll: () => Promise<void>;
   retryRestore: () => Promise<void>;

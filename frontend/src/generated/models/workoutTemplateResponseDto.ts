@@ -18,6 +18,7 @@ export interface WorkoutTemplateResponseDto {
   /** @nullable */
   description?: string | null;
   status: WorkoutTemplateResponseDtoStatus;
+  isLibraryPublished: boolean;
   createdByUserId: string;
   createdAt: string;
   updatedAt: string;

@@ -104,6 +104,9 @@ export class TrainingPlanSummaryResponseDto {
   @ApiProperty()
   createdByUserId!: string;
 
+  @ApiProperty()
+  isSelfAuthored!: boolean;
+
   @ApiPropertyOptional({ nullable: true, type: Date })
   activatedAt!: Date | null;
 

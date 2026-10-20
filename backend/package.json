@@ -28,6 +28,7 @@
     "migration:run:prod": "node ./node_modules/typeorm/cli.js migration:run -d dist/database/data-source.js",
     "seed:admin": "ts-node --files -r tsconfig-paths/register src/database/seed-admin.ts",
     "seed:performance": "ts-node --files -r tsconfig-paths/register src/database/seed-performance.ts",
+    "seed:starter-routines": "ts-node --files -r tsconfig-paths/register src/database/seed-starter-routines.ts",
     "import:exercise-library": "ts-node --files -r tsconfig-paths/register src/database/import-exercise-library/import-exercise-library.ts",
     "exercises:import": "ts-node --files -r tsconfig-paths/register src/database/import-exercise-library/import-exercise-library.ts"
   },

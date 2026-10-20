@@ -13,7 +13,7 @@ function conflictMessage(error: ApiError, context: AdminMutationContext, copy: A
     case 'account':
       return hasMessage(error, 'email') ? copy.common.emailInUse : copy.common.conflictBody;
     case 'assignment':
-      return copy.clients.assignmentConflict;
+      return hasMessage(error, 'no active pro') ? copy.clients.noActivePro : copy.clients.assignmentConflict;
     case 'exercise':
       return hasMessage(error, 'name') ? copy.exercises.nameInUse : copy.common.conflictBody;
     case 'exerciseMedia':

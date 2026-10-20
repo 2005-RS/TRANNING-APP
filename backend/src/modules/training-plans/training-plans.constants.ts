@@ -9,3 +9,9 @@ export const TRAINING_PLAN_LIST_MAX_LIMIT = 100;
 export const TRAINING_PLAN_MAX_WORKOUTS = 21;
 export const TRAINING_PLAN_TARGET_LOAD_MIN = 0;
 export const TRAINING_PLAN_TARGET_LOAD_MAX = 99_999.99;
+export const SELF_TRAINING_PLAN_MIN_WORKOUTS = 1;
+export const SELF_TRAINING_PLAN_MAX_WORKOUTS = 7;
+export const SELF_TRAINING_PLAN_THROTTLE_LIMIT = 10;
+export const SELF_TRAINING_PLAN_THROTTLE_TTL_MS = 60_000;
+export const TRAINER_PLAN_ACTIVE_MESSAGE =
+  'Your trainer manages your active plan';

@@ -7,7 +7,9 @@ import type {
   ExerciseMediaResponseDto,
   ExerciseResponseDto,
   NutritionFoodResponseDto,
+  SubscriptionResponseDto,
   TrainerResponseDto,
+  WorkoutTemplateSummaryResponseDto,
 } from '@/generated/models';
 import {
   ClientResponseDtoExperienceLevel,
@@ -26,6 +28,7 @@ import {
   NutritionFoodResponseDtoVisibility,
   TrainerUserResponseDtoRole,
   TrainerUserResponseDtoStatus,
+  WorkoutTemplateSummaryResponseDtoStatus,
 } from '@/generated/models';
 
 const API = 'http://localhost:3000/api/v1';
@@ -125,6 +128,17 @@ export const readyAdminMedia: ExerciseMediaResponseDto = {
   finalizedAt: '2026-01-01T00:00:00.000Z',
 };
 
+export const adminWorkoutTemplate: WorkoutTemplateSummaryResponseDto = {
+  id: 'aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee',
+  name: 'Full body foundation',
+  description: 'A balanced full-body routine.',
+  status: WorkoutTemplateSummaryResponseDtoStatus.ACTIVE,
+  isLibraryPublished: false,
+  createdByUserId: '44444444-4444-4444-8444-444444444444',
+  createdAt: '2026-01-01T00:00:00.000Z',
+  updatedAt: '2026-01-01T00:00:00.000Z',
+};
+
 function paginate<T>(data: T[], page = 1, limit = 10) {
   return {
     data,
@@ -149,6 +163,7 @@ type AdminMockState = {
   createExerciseStatus: number;
   createTrainerStatus: number;
   assignmentStatus: number;
+  assignmentConflictMessage: string;
   assignmentReadStatus: number;
   assignmentReadDelayMs: number;
   unreadCount: number;
@@ -165,6 +180,11 @@ type AdminMockState = {
   lastStoragePosted: boolean;
   lastDeletedMediaId: string | null;
   failStorage: boolean;
+  lastApprovedSubscriptionPaymentId: string | null;
+  lastRejectedSubscriptionPayment: { id: string; reason: string } | null;
+  lastComplimentaryValue: boolean | null;
+  workoutTemplates: WorkoutTemplateSummaryResponseDto[];
+  lastLibraryPublication: { id: string; published: boolean } | null;
 };
 
 function seedTrainers(): TrainerResponseDto[] {
@@ -187,6 +207,7 @@ export const adminMockState: AdminMockState = {
   createExerciseStatus: 201,
   createTrainerStatus: 201,
   assignmentStatus: 200,
+  assignmentConflictMessage: 'Trainer is disabled',
   assignmentReadStatus: 200,
   assignmentReadDelayMs: 0,
   unreadCount: 99,
@@ -203,6 +224,11 @@ export const adminMockState: AdminMockState = {
   lastStoragePosted: false,
   lastDeletedMediaId: null,
   failStorage: false,
+  lastApprovedSubscriptionPaymentId: null,
+  lastRejectedSubscriptionPayment: null,
+  lastComplimentaryValue: null,
+  workoutTemplates: [{ ...adminWorkoutTemplate }],
+  lastLibraryPublication: null,
 };
 
 export function resetAdminMockState(): void {
@@ -217,6 +243,7 @@ export function resetAdminMockState(): void {
   adminMockState.createExerciseStatus = 201;
   adminMockState.createTrainerStatus = 201;
   adminMockState.assignmentStatus = 200;
+  adminMockState.assignmentConflictMessage = 'Trainer is disabled';
   adminMockState.assignmentReadStatus = 200;
   adminMockState.assignmentReadDelayMs = 0;
   adminMockState.unreadCount = 99;
@@ -233,6 +260,11 @@ export function resetAdminMockState(): void {
   adminMockState.lastStoragePosted = false;
   adminMockState.lastDeletedMediaId = null;
   adminMockState.failStorage = false;
+  adminMockState.lastApprovedSubscriptionPaymentId = null;
+  adminMockState.lastRejectedSubscriptionPayment = null;
+  adminMockState.lastComplimentaryValue = null;
+  adminMockState.workoutTemplates = [{ ...adminWorkoutTemplate }];
+  adminMockState.lastLibraryPublication = null;
 }
 
 export function useEmptyAdminCatalogs(): void {
@@ -250,6 +282,55 @@ async function maybeDelay() {
 }
 
 export const adminHandlers = [
+  http.get(`${API}/workout-templates`, () =>
+    HttpResponse.json(paginate(adminMockState.workoutTemplates, 1, 100)),
+  ),
+  http.patch(`${API}/workout-templates/:id/library`, async ({ params, request }) => {
+    const body = (await request.json()) as { published: boolean };
+    const id = String(params.id);
+    adminMockState.lastLibraryPublication = { id, published: body.published };
+    adminMockState.workoutTemplates = adminMockState.workoutTemplates.map((template) =>
+      template.id === id ? { ...template, isLibraryPublished: body.published } : template,
+    );
+    const updated = adminMockState.workoutTemplates.find((template) => template.id === id);
+    return updated
+      ? HttpResponse.json(updated)
+      : jsonError(404, 'NOT_FOUND', 'Workout template not found', `/api/v1/workout-templates/${id}`);
+  }),
+  http.get(`${API}/clients/:clientId/subscription`, () =>
+    HttpResponse.json({ plan: 'FREE', periodDays: 30, sinpe: null, pendingPayment: null, lastRejectedPayment: null } satisfies SubscriptionResponseDto),
+  ),
+  http.patch(`${API}/clients/:clientId/subscription`, async ({ request }) => {
+    const body = (await request.json()) as { complimentary: boolean };
+    adminMockState.lastComplimentaryValue = body.complimentary;
+    return HttpResponse.json({ plan: body.complimentary ? 'PRO' : 'FREE', source: body.complimentary ? 'COMPLIMENTARY' : null, proUntil: null, periodDays: 30, sinpe: null, pendingPayment: null, lastRejectedPayment: null } satisfies SubscriptionResponseDto);
+  }),
+  http.get(`${API}/admin/subscription-payments`, () => HttpResponse.json({
+    data: [{
+      id: 'subscription-payment-1',
+      status: 'PENDING',
+      amountCrc: 10000,
+      reference: 'SINPE-123',
+      payerPhone: '88888888',
+      paidOn: '2026-10-10',
+      createdAt: '2026-10-10T00:00:00.000Z',
+      client: { id: ADMIN_CLIENT_ID, firstName: 'Ada', lastName: 'Client', email: 'ada@example.test' },
+    }],
+    meta: { page: 1, limit: 10, totalItems: 1, totalPages: 1 },
+  })),
+  http.post(`${API}/admin/subscription-payments/:id/approve`, ({ params }) => {
+    adminMockState.lastApprovedSubscriptionPaymentId = String(params.id);
+    return HttpResponse.json({ proUntil: '2026-11-10T00:00:00.000Z' });
+  }),
+  http.post(`${API}/admin/subscription-payments/:id/reject`, async ({ params, request }) => {
+    const body = (await request.json()) as { reason: string };
+    adminMockState.lastRejectedSubscriptionPayment = { id: String(params.id), reason: body.reason };
+    return HttpResponse.json({ id: String(params.id), status: 'REJECTED' });
+  }),
+  http.get(`${API}/admin/subscriptions/expired-with-trainer`, () => HttpResponse.json({
+    data: [{ id: ADMIN_CLIENT_ID, firstName: 'Ada', lastName: 'Client', email: 'ada@example.test' }],
+    meta: { page: 1, limit: 10, totalItems: 1, totalPages: 1 },
+  })),
   http.get(`${API}/admin/dashboard`, async ({ request }) => {
     adminMockState.dashboardRequests += 1;
     await maybeDelay();
@@ -395,7 +476,12 @@ export const adminHandlers = [
   }),
   http.put(`${API}/clients/:clientId/trainer`, async ({ params, request }) => {
     if (adminMockState.assignmentStatus === 409) {
-      return jsonError(409, 'CONFLICT', 'Trainer is disabled', `/api/v1/clients/${String(params.clientId)}/trainer`);
+      return jsonError(
+        409,
+        'CONFLICT',
+        adminMockState.assignmentConflictMessage,
+        `/api/v1/clients/${String(params.clientId)}/trainer`,
+      );
     }
     const body = (await request.json()) as { trainerId: string };
     const selected =

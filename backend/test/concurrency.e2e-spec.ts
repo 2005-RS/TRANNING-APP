@@ -142,6 +142,11 @@ describe('Concurrency safeguards (e2e)', () => {
       })
       .expect(201);
     await request(http)
+      .patch(`/api/v1/clients/${clientRes.body.id as string}/subscription`)
+      .set('Authorization', adminAuth)
+      .send({ complimentary: true })
+      .expect(200);
+    await request(http)
       .put(`/api/v1/clients/${clientRes.body.id as string}/trainer`)
       .set('Authorization', adminAuth)
       .send({ trainerId: trainerRes.body.id as string })

@@ -1,7 +1,20 @@
-import { Controller, Get, Param, ParseUUIDPipe, Query } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  HttpCode,
+  HttpStatus,
+  Param,
+  ParseUUIDPipe,
+  Post,
+  Query,
+} from '@nestjs/common';
+import { Throttle } from '@nestjs/throttler';
 import {
   ApiBadRequestResponse,
   ApiBearerAuth,
+  ApiConflictResponse,
+  ApiCreatedResponse,
   ApiForbiddenResponse,
   ApiNotFoundResponse,
   ApiOkResponse,
@@ -21,12 +34,43 @@ import {
   TrainingPlanResponseDto,
 } from './dto/training-plan-response.dto';
 import { TrainingPlansService } from './training-plans.service';
+import { CreateSelfTrainingPlanDto } from './dto/create-self-training-plan.dto';
+import {
+  SELF_TRAINING_PLAN_THROTTLE_LIMIT,
+  SELF_TRAINING_PLAN_THROTTLE_TTL_MS,
+} from './training-plans.constants';
 
 @ApiTags('client-training-plans')
 @ApiBearerAuth('access-token')
 @Controller('clients/me/training-plans')
 export class ClientTrainingPlansController {
   constructor(private readonly plans: TrainingPlansService) {}
+
+  @Post('self')
+  @Roles(UserRole.CLIENT)
+  @HttpCode(HttpStatus.CREATED)
+  @Throttle({
+    default: {
+      limit: SELF_TRAINING_PLAN_THROTTLE_LIMIT,
+      ttl: SELF_TRAINING_PLAN_THROTTLE_TTL_MS,
+    },
+  })
+  @ApiOperation({
+    summary:
+      'Create and activate the client own plan ("Mi rutina") from published library routines',
+  })
+  @ApiCreatedResponse({ type: TrainingPlanResponseDto })
+  @ApiBadRequestResponse()
+  @ApiUnauthorizedResponse()
+  @ApiForbiddenResponse()
+  @ApiNotFoundResponse({ description: 'A routine is missing or not published' })
+  @ApiConflictResponse({ description: 'The client has an ACTIVE trainer plan' })
+  createSelf(
+    @Body() dto: CreateSelfTrainingPlanDto,
+    @CurrentUser() user: AuthenticatedUser,
+  ): Promise<TrainingPlanResponseDto> {
+    return this.plans.createSelf(dto, user);
+  }
 
   @Get()
   @Roles(UserRole.CLIENT)

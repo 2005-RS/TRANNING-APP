@@ -100,6 +100,11 @@ export type AdminCatalogSearch = {
   status?: ExercisesListStatus | NutritionFoodsListStatus;
 };
 
+export type AdminPaymentsSearch = { page?: number; status?: 'PENDING' | 'APPROVED' | 'REJECTED' };
+export function validateAdminPaymentsSearch(search: Record<string, unknown>): AdminPaymentsSearch {
+  return { page: parsePage(search.page), status: parseSet(search.status, new Set(['PENDING', 'APPROVED', 'REJECTED'])) };
+}
+
 export function validateAdminCatalogSearch(search: Record<string, unknown>): AdminCatalogSearch {
   return {
     page: parsePage(search.page),

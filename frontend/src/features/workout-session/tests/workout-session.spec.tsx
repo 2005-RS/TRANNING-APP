@@ -22,6 +22,8 @@ import {
   resetWorkoutMockState,
   workoutMockState,
 } from '@/features/workout-session/tests/msw-workout';
+import { dashboardMockState } from '@/features/client-dashboard/tests/msw-dashboard';
+import type { SubscriptionResponseDto } from '@/generated/models';
 
 const timeout = 8000;
 
@@ -103,7 +105,27 @@ describe('Workout experience', { timeout: 15_000 }, () => {
     expect(screen.queryByText(/stack/i)).not.toBeInTheDocument();
   });
 
-  it('logs a set against the generated replace-sets contract and shows rest remaining', async () => {
+  it('opens the first incomplete exercise and shows its previous set', async () => {
+    workoutMockState.currentSession = createInProgressSession();
+    renderClient(`/client/workout/${SESSION_ID}`);
+
+    expect(
+      await screen.findByRole('heading', { name: 'Lower A' }, { timeout }),
+    ).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Back squat/ })).toHaveAttribute(
+      'aria-expanded',
+      'true',
+    );
+    expect(screen.getByRole('button', { name: /Plank/ })).toHaveAttribute(
+      'aria-expanded',
+      'false',
+    );
+    expect(screen.getByText('75 × 10')).toBeInTheDocument();
+    expect(screen.getByLabelText('Set 1, kilograms')).toHaveValue('75');
+    expect(screen.getByLabelText('Set 1, repetitions')).toHaveValue('10');
+  });
+
+  it('logs a set against the generated replace-sets contract and shows rest controls', async () => {
     const user = userEvent.setup();
     workoutMockState.currentSession = createInProgressSession();
     renderClient(`/client/workout/${SESSION_ID}`);
@@ -111,23 +133,27 @@ describe('Workout experience', { timeout: 15_000 }, () => {
     expect(
       await screen.findByRole('heading', { name: 'Lower A' }, { timeout }),
     ).toBeInTheDocument();
-    expect(screen.getByLabelText(workoutCopy.focus.load)).toHaveValue('80');
-    expect(screen.getByLabelText(workoutCopy.focus.reps)).toHaveValue('8');
     expect(screen.queryByRole('navigation', { name: clientCopy.mainNav })).not.toBeInTheDocument();
     expect(screen.queryByText(SESSION_ID)).not.toBeInTheDocument();
     expect(screen.queryByText(SQUAT_SESSION_EXERCISE_ID)).not.toBeInTheDocument();
 
-    await user.click(screen.getByRole('button', { name: workoutCopy.focus.logSet }));
+    await user.click(screen.getByRole('button', { name: 'Record set 1' }));
 
     expect(
       await screen.findByRole('timer', undefined, { timeout }),
-    ).toHaveAccessibleName(`${workoutCopy.focus.restRemaining} 1:30`);
+    ).toBeInTheDocument();
     expect(screen.getByText('1:30')).toBeInTheDocument();
-    expect(screen.getByText(/1 \/ 4/)).toBeInTheDocument();
+    expect(
+      screen.getByRole('button', { name: workoutCopy.focus.restSubtract15 }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole('button', { name: workoutCopy.focus.restAdd15 }),
+    ).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: workoutCopy.focus.skipRest })).toBeInTheDocument();
     expect(workoutMockState.lastReplaceSets).toEqual({
       sessionId: SESSION_ID,
       sessionExerciseId: SQUAT_SESSION_EXERCISE_ID,
-      sets: [{ actualReps: 8, actualLoadKg: 80 }],
+      sets: [{ actualReps: 10, actualLoadKg: 75 }],
     });
   });
 
@@ -140,7 +166,7 @@ describe('Workout experience', { timeout: 15_000 }, () => {
     expect(screen.getByRole('button', { name: workoutCopy.focus.complete })).toBeDisabled();
     expect(screen.getByText(workoutCopy.focus.completeNeedSets)).toBeInTheDocument();
 
-    await user.click(screen.getByRole('button', { name: workoutCopy.focus.logSet }));
+    await user.click(screen.getByRole('button', { name: 'Record set 1' }));
     await screen.findByRole('timer', undefined, { timeout });
     await user.click(screen.getByRole('button', { name: workoutCopy.focus.skipRest }));
 
@@ -153,9 +179,93 @@ describe('Workout experience', { timeout: 15_000 }, () => {
     );
 
     expect(
-      await screen.findByRole('heading', { name: workoutCopy.hub.title }, { timeout }),
+      await screen.findByRole(
+        'heading',
+        { name: workoutCopy.focus.completedTitle },
+        { timeout },
+      ),
     ).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: workoutCopy.focus.proSummary })).toHaveAttribute(
+      'href',
+      '/client/plan',
+    );
     expect(workoutMockState.sessions[SESSION_ID]?.status).toBe('COMPLETED');
+  });
+
+  it('hides the summary Pro prompt from Pro clients', async () => {
+    const user = userEvent.setup();
+    dashboardMockState.subscription = {
+      ...dashboardMockState.subscription,
+      plan: 'PRO',
+      source: 'PAID',
+      proUntil: '2026-11-01T00:00:00.000Z',
+    } satisfies SubscriptionResponseDto;
+    workoutMockState.currentSession = createInProgressSession();
+    renderClient(`/client/workout/${SESSION_ID}`);
+
+    await screen.findByRole('heading', { name: 'Lower A' }, { timeout });
+    await user.click(screen.getByRole('button', { name: 'Record set 1' }));
+    await screen.findByRole('timer', undefined, { timeout });
+    await user.click(screen.getByRole('button', { name: workoutCopy.focus.skipRest }));
+    await user.click(screen.getByRole('button', { name: workoutCopy.focus.complete }));
+    const dialog = await screen.findByRole('dialog', undefined, { timeout });
+    await user.click(
+      within(dialog).getByRole('button', { name: workoutCopy.focus.completeConfirm }),
+    );
+
+    await screen.findByRole(
+      'heading',
+      { name: workoutCopy.focus.completedTitle },
+      { timeout },
+    );
+    expect(screen.queryByRole('link', { name: workoutCopy.focus.proSummary })).not.toBeInTheDocument();
+  });
+
+  it('only removes the last recorded set after confirmation', async () => {
+    const user = userEvent.setup();
+    workoutMockState.currentSession = createInProgressSession();
+    renderClient(`/client/workout/${SESSION_ID}`);
+
+    await screen.findByRole('heading', { name: 'Lower A' }, { timeout });
+    await user.click(screen.getByRole('button', { name: 'Record set 1' }));
+    await screen.findByRole('button', { name: 'Remove set 1' }, { timeout });
+    await user.click(screen.getByRole('button', { name: 'Remove set 1' }));
+
+    const dialog = await screen.findByRole('dialog', undefined, { timeout });
+    await user.click(
+      within(dialog).getByRole('button', {
+        name: workoutCopy.focus.undoConfirm,
+      }),
+    );
+
+    expect(workoutMockState.lastReplaceSets).toEqual({
+      sessionId: SESSION_ID,
+      sessionExerciseId: SQUAT_SESSION_EXERCISE_ID,
+      sets: [],
+    });
+  });
+
+  it('shows seconds for a duration exercise', async () => {
+    const user = userEvent.setup();
+    workoutMockState.currentSession = createInProgressSession();
+    renderClient(`/client/workout/${SESSION_ID}`);
+
+    await screen.findByRole('heading', { name: 'Lower A' }, { timeout });
+    await user.click(screen.getByRole('button', { name: /Plank/ }));
+
+    expect(screen.getByLabelText('Set 1, seconds')).toHaveValue('45');
+  });
+
+  it('shows the stale-session alert after twelve hours', async () => {
+    workoutMockState.currentSession = createInProgressSession({
+      startedAt: new Date(Date.now() - 13 * 60 * 60 * 1000).toISOString(),
+    });
+    workoutMockState.sessions[SESSION_ID] = workoutMockState.currentSession;
+    renderClient(`/client/workout/${SESSION_ID}`);
+
+    expect(
+      await screen.findByText(/This session started 1 day ago/, undefined, { timeout }),
+    ).toBeInTheDocument();
   });
 
   it('cancels an in-progress session after confirm', async () => {

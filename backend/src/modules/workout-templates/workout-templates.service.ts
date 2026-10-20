@@ -33,6 +33,7 @@ import {
 } from './enums/workout-template-sort-field.enum';
 import { WorkoutTemplateLifecycleStatus } from './enums/workout-template-lifecycle-status.enum';
 import { WorkoutTemplateStatus } from './enums/workout-template-status.enum';
+import { WorkoutLibraryItemResponseDto } from './dto/workout-library-response.dto';
 import { assertWorkoutTemplatePrescription } from './workout-template-prescription.util';
 import {
   normalizeTemplateName,
@@ -43,6 +44,7 @@ import {
   toWorkoutTemplateResponse,
   toWorkoutTemplateSummary,
 } from './workout-templates.mapper';
+import { toWorkoutLibraryItem } from './workout-library.mapper';
 
 export interface UsableWorkoutTemplate {
   template: WorkoutTemplate;
@@ -331,6 +333,7 @@ export class WorkoutTemplatesService {
 
       if (status === WorkoutTemplateLifecycleStatus.ARCHIVED) {
         template.status = WorkoutTemplateStatus.ARCHIVED;
+        template.isLibraryPublished = false;
       } else if (previous !== WorkoutTemplateStatus.ACTIVE) {
         const items = await this.loadItems(template.id, manager);
         await this.assertUsablePrescription(items, manager);
@@ -358,6 +361,91 @@ export class WorkoutTemplatesService {
     });
 
     return this.loadDetailResponse(saved.id);
+  }
+
+  async updateLibraryPublication(
+    id: string,
+    published: boolean,
+  ): Promise<WorkoutTemplateResponseDto> {
+    const saved = await this.dataSource.transaction(async (manager) => {
+      const template = await this.lockTemplate(id, manager);
+      if (published && template.status !== WorkoutTemplateStatus.ACTIVE) {
+        throw new ConflictException('Only ACTIVE templates can be published');
+      }
+      template.isLibraryPublished = published;
+      return manager.getRepository(WorkoutTemplate).save(template);
+    });
+    return this.loadDetailResponse(saved.id);
+  }
+
+  async listLibrary(): Promise<WorkoutLibraryItemResponseDto[]> {
+    const templates = await this.templates
+      .createQueryBuilder('template')
+      .leftJoinAndSelect('template.items', 'item')
+      .leftJoinAndSelect('item.exercise', 'exercise')
+      .where('template.status = :status', {
+        status: WorkoutTemplateStatus.ACTIVE,
+      })
+      .andWhere('template.isLibraryPublished = true')
+      .andWhere('item.id IS NOT NULL')
+      .andWhere('exercise.status = :exerciseStatus', {
+        exerciseStatus: 'ACTIVE',
+      })
+      .andWhere(
+        `NOT EXISTS (SELECT 1 FROM workout_template_exercises invalid_item INNER JOIN exercises invalid_exercise ON invalid_exercise.id = invalid_item.exercise_id WHERE invalid_item.workout_template_id = template.id AND invalid_exercise.status <> :exerciseStatus)`,
+      )
+      .orderBy('template.name', 'ASC')
+      .addOrderBy('item.position', 'ASC')
+      .take(100)
+      .getMany();
+    return templates.map(toWorkoutLibraryItem);
+  }
+
+  async getLibraryById(id: string): Promise<WorkoutLibraryItemResponseDto> {
+    const template = await this.templates
+      .createQueryBuilder('template')
+      .leftJoinAndSelect('template.items', 'item')
+      .leftJoinAndSelect('item.exercise', 'exercise')
+      .where('template.id = :id', { id })
+      .andWhere('template.status = :status', {
+        status: WorkoutTemplateStatus.ACTIVE,
+      })
+      .andWhere('template.isLibraryPublished = true')
+      .andWhere('item.id IS NOT NULL')
+      .andWhere('exercise.status = :exerciseStatus', {
+        exerciseStatus: 'ACTIVE',
+      })
+      .andWhere(
+        `NOT EXISTS (SELECT 1 FROM workout_template_exercises invalid_item INNER JOIN exercises invalid_exercise ON invalid_exercise.id = invalid_item.exercise_id WHERE invalid_item.workout_template_id = template.id AND invalid_exercise.status <> :exerciseStatus)`,
+      )
+      .orderBy('item.position', 'ASC')
+      .getOne();
+    if (!template) {
+      throw new NotFoundException('Workout library item not found');
+    }
+    return toWorkoutLibraryItem(template);
+  }
+
+  async requireUsableLibraryTemplateWithItems(
+    id: string,
+    manager: EntityManager,
+  ): Promise<UsableWorkoutTemplate> {
+    const template = await this.loadDetail(id, manager);
+    if (
+      !template.isLibraryPublished ||
+      template.status !== WorkoutTemplateStatus.ACTIVE
+    ) {
+      throw new NotFoundException('Workout library item not found');
+    }
+    try {
+      await this.assertUsablePrescription(template.items, manager);
+    } catch (error) {
+      if (error instanceof ConflictException) {
+        throw new NotFoundException('Workout library item not found');
+      }
+      throw error;
+    }
+    return { template, items: template.items };
   }
 
   /**

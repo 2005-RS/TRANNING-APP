@@ -3,6 +3,7 @@ import { LandingFinal, LandingSteps } from '@/features/public-site/components/la
 import { LandingGoals } from '@/features/public-site/components/landing/landing-goals';
 import { LandingHero } from '@/features/public-site/components/landing/landing-hero';
 import { LandingNutrition } from '@/features/public-site/components/landing/landing-nutrition';
+import { LandingPlans } from '@/features/public-site/components/landing/landing-plans';
 import { LandingProgress } from '@/features/public-site/components/landing/landing-progress';
 import { LandingShowcase } from '@/features/public-site/components/landing/landing-showcase';
 import { LandingTraining } from '@/features/public-site/components/landing/landing-training';
@@ -22,6 +23,7 @@ export function PublicHomePage() {
       <LandingTraining />
       <LandingNutrition />
       <LandingProgress />
+      <LandingPlans />
       <LandingSteps />
       <LandingFinal />
     </>

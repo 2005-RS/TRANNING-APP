@@ -18,6 +18,9 @@ import { trainingAssistantCopySource } from '@/features/training-assistant/copy'
 import { publicSiteCopySource } from '@/features/public-site/copy';
 import { notificationsCopySource } from '@/features/notifications/copy';
 import { passwordResetCopySource } from '@/features/password-reset/copy';
+import { clientSubscriptionCopySource } from '@/features/client-subscription/copy';
+import { clientWelcomeCopySource } from '@/features/client-welcome/copy';
+import { clientProfileCopySource } from '@/features/client-profile/copy';
 import { commonCopySource } from '@/i18n/locales/en/common';
 import { esCommon } from '@/i18n/locales/es/common';
 import { esAuth } from '@/i18n/locales/es/auth';
@@ -34,6 +37,9 @@ import { esTrainingAssistant } from '@/i18n/locales/es/training-assistant';
 import { esPublicSite } from '@/i18n/locales/es/public-site';
 import { esNotifications } from '@/i18n/locales/es/notifications';
 import { esPasswordReset } from '@/i18n/locales/es/password-reset';
+import { esClientSubscription } from '@/i18n/locales/es/client-subscription';
+import { esClientWelcome } from '@/i18n/locales/es/client-welcome';
+import { esClientProfile } from '@/i18n/locales/es/client-profile';
 import {
   DEFAULT_LANGUAGE,
   isAppLanguage,
@@ -69,6 +75,9 @@ void i18nInstance.use(initReactI18next).init({
       publicSite: publicSiteCopySource,
       notifications: notificationsCopySource,
       passwordReset: passwordResetCopySource,
+      clientSubscription: clientSubscriptionCopySource,
+      clientWelcome: clientWelcomeCopySource,
+      clientProfile: clientProfileCopySource,
     },
     es: {
       common: esCommon,
@@ -89,6 +98,9 @@ void i18nInstance.use(initReactI18next).init({
       publicSite: esPublicSite,
       notifications: esNotifications,
       passwordReset: esPasswordReset,
+      clientSubscription: esClientSubscription,
+      clientWelcome: esClientWelcome,
+      clientProfile: esClientProfile,
     },
   },
 });

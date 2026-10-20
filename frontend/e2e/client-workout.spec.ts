@@ -57,6 +57,14 @@ function createSession(sets: Array<{ actualReps: number; actualLoadKg: number }>
           createdAt: '2026-01-01T00:00:00.000Z',
           finalizedAt: '2026-01-01T00:00:00.000Z',
         },
+        previousSets: [
+          {
+            setNumber: 1,
+            actualLoadKg: 75,
+            actualReps: 10,
+            actualDurationSeconds: null,
+          },
+        ],
         sets: sets.map((set, index) => ({
           id: `${String(index + 1).padStart(8, '0')}-aaaa-4aaa-8aaa-aaaaaaaaaaaa`,
           setNumber: index + 1,
@@ -195,13 +203,17 @@ test.describe('client workout', () => {
       timeout: 20_000,
     });
     await expect(page.getByRole('navigation', { name: 'Main' })).toHaveCount(0);
-    await expect(page.getByRole('textbox', { name: 'Load (kg)' })).toHaveValue('80');
-    await expect(page.getByRole('textbox', { name: 'Reps' })).toHaveValue('8');
+    await expect(page.getByRole('textbox', { name: 'Set 1, kilograms' })).toHaveValue('75');
+    await expect(page.getByRole('textbox', { name: 'Set 1, repetitions' })).toHaveValue('10');
+    await expect(page.getByText('75 × 10')).toBeVisible();
 
-    await page.getByRole('button', { name: 'Log set' }).click();
-    await expect(page.getByRole('timer')).toHaveAccessibleName('Rest remaining 1:30');
+    await page.getByRole('button', { name: 'Record set 1' }).click();
+    await expect(page.getByRole('timer')).toHaveText('1:30');
     await expect(page.getByText('1:30')).toBeVisible();
-    await expect(page.getByText('1 / 4')).toBeVisible();
+    await expect(page.getByRole('button', { name: '−15 s' })).toBeVisible();
+    await expect(page.getByRole('button', { name: '+15 s' })).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Skip rest' })).toBeVisible();
+    await expect(page.getByText('1/4 ✓')).toBeVisible();
   });
 
   test('shows a demonstration without blocking set logging', async ({ page }) => {
@@ -211,14 +223,17 @@ test.describe('client workout', () => {
       waitUntil: 'domcontentloaded',
       timeout: 30_000,
     });
-    await expect(page.getByRole('heading', { name: 'Back squat' })).toBeVisible({
-      timeout: 20_000,
-    });
+    await expect(page.getByText('Back squat', { exact: true })).toBeVisible({ timeout: 20_000 });
+    await page.getByRole('button', { name: 'View demonstration' }).click();
     await expect(
-      page.getByRole('button', { name: /Play demonstration|Pause demonstration|Retry/ }),
+      page
+        .getByRole('dialog')
+        .getByRole('button', { name: /Play demonstration|Pause demonstration|Retry/ }),
     ).toBeVisible();
-    await expect(page.getByRole('textbox', { name: 'Reps' })).toBeEnabled();
-    await page.getByRole('button', { name: 'Log set' }).click();
+    await page.getByRole('button', { name: 'Close navigation' }).click();
+    await expect(page.getByRole('dialog')).toBeHidden();
+    await expect(page.getByRole('textbox', { name: 'Set 1, repetitions' })).toBeEnabled();
+    await page.getByRole('button', { name: 'Record set 1' }).click();
     await expect(page.getByRole('timer')).toBeVisible();
   });
 
@@ -243,11 +258,13 @@ test.describe('client workout', () => {
       waitUntil: 'domcontentloaded',
       timeout: 30_000,
     });
-    await expect(page.getByRole('heading', { name: 'Back squat' })).toBeVisible({
-      timeout: 20_000,
-    });
-    await expect(page.getByRole('textbox', { name: 'Reps' })).toBeEnabled();
-    await page.getByRole('button', { name: 'Log set' }).click();
+    await expect(page.getByText('Back squat', { exact: true })).toBeVisible({ timeout: 20_000 });
+    await page.getByRole('button', { name: 'View demonstration' }).click();
+    await expect(page.getByRole('dialog').getByText('Demonstration could not be loaded.')).toBeVisible();
+    await page.getByRole('button', { name: 'Close navigation' }).click();
+    await expect(page.getByRole('dialog')).toBeHidden();
+    await expect(page.getByRole('textbox', { name: 'Set 1, repetitions' })).toBeEnabled();
+    await page.getByRole('button', { name: 'Record set 1' }).click();
     await expect(page.getByRole('timer')).toBeVisible();
   });
 
@@ -265,7 +282,7 @@ test.describe('client workout', () => {
     await expect(page.getByRole('button', { name: /Appearance, Light/ })).toBeVisible();
     await expectNoSeriousA11yViolations(page, 'focus mode, light');
 
-    await page.getByRole('button', { name: 'Log set' }).click();
+    await page.getByRole('button', { name: 'Record set 1' }).click();
     await expect(page.getByRole('timer')).toBeVisible();
     await expectNoSeriousA11yViolations(page, 'focus mode, resting');
   });
@@ -274,13 +291,17 @@ test.describe('client workout', () => {
     test.setTimeout(45_000);
     await mockClientWorkout(page);
     await page.goto(`/client/workout/${sessionId}`, { waitUntil: 'domcontentloaded', timeout: 30_000 });
-    const reps = page.getByRole('textbox', { name: 'Reps' });
-    await expect(reps).toHaveValue('8', { timeout: 20_000 });
-    await reps.focus();
+    const load = page.getByRole('textbox', { name: 'Set 1, kilograms' });
+    const reps = page.getByRole('textbox', { name: 'Set 1, repetitions' });
+    await expect(reps).toHaveValue('10', { timeout: 20_000 });
+    await load.focus();
+    await page.keyboard.press('Tab');
+    await expect(reps).toBeFocused();
     await page.keyboard.press('Control+A');
     await page.keyboard.type('9');
-    const logSet = page.getByRole('button', { name: 'Log set' });
-    await logSet.focus();
+    const logSet = page.getByRole('button', { name: 'Record set 1' });
+    await page.keyboard.press('Tab');
+    await expect(logSet).toBeFocused();
     await page.keyboard.press('Enter');
     await expect(page.getByRole('timer')).toBeVisible();
   });
@@ -295,12 +316,13 @@ test.describe('client workout', () => {
       waitUntil: 'domcontentloaded',
       timeout: 30_000,
     });
-    await expect(page.getByRole('heading', { name: 'Back squat' })).toBeVisible({
-      timeout: 20_000,
-    });
+    await expect(page.getByText('Back squat', { exact: true })).toBeVisible({ timeout: 20_000 });
+    await page.getByRole('button', { name: 'View demonstration' }).click();
     await expect(page.getByRole('button', { name: /Play demonstration/ })).toBeVisible();
-    await expect(page.getByRole('textbox', { name: 'Reps' })).toBeEnabled();
-    await page.getByRole('button', { name: 'Log set' }).click();
+    await page.getByRole('button', { name: 'Close navigation' }).click();
+    await expect(page.getByRole('dialog')).toBeHidden();
+    await expect(page.getByRole('textbox', { name: 'Set 1, repetitions' })).toBeEnabled();
+    await page.getByRole('button', { name: 'Record set 1' }).click();
     await expect(page.getByRole('timer')).toBeVisible();
     await expect(page.getByText('Rest remaining')).toBeVisible();
   });
@@ -341,14 +363,12 @@ test.describe('client workout focus layout', () => {
         timeout: 20_000,
       });
       await expect(page.getByRole('navigation', { name: 'Main' })).toHaveCount(0);
-      await expect(page.locator('table')).toHaveCount(0);
+      await expect(page.locator('ol')).toHaveCount(1);
 
-      const load = page.getByRole('textbox', { name: 'Load (kg)' });
-      const decrease = page.getByRole('button', { name: 'Decrease Load (kg)' });
-      const logSet = page.getByRole('button', { name: 'Log set' });
+      const load = page.getByRole('textbox', { name: 'Set 1, kilograms' });
+      const logSet = page.getByRole('button', { name: 'Record set 1' });
       await load.scrollIntoViewIfNeeded();
       await expect(load).toBeVisible();
-      await expect(decrease).toBeVisible();
       await expect(logSet).toBeVisible();
       await expect(load).toBeEnabled();
 
@@ -361,6 +381,20 @@ test.describe('client workout focus layout', () => {
       }
 
       await assertNoHorizontalOverflow(page);
+
+      await logSet.click();
+      await expect(page.getByRole('timer')).toBeVisible();
+      // The rest bar is fixed; at the end of the page the last set row must clear it.
+      const restBar = page.locator('aside[aria-live="polite"]');
+      const lastSet = page.locator('ol > li').last();
+      await page.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight));
+      const restBox = await restBar.boundingBox();
+      const lastSetBox = await lastSet.boundingBox();
+      expect(restBox).not.toBeNull();
+      expect(lastSetBox).not.toBeNull();
+      if (restBox && lastSetBox) {
+        expect(lastSetBox.y + lastSetBox.height).toBeLessThanOrEqual(restBox.y);
+      }
 
       await page.getByRole('button', { name: /Appearance, Dark/ }).click();
       await expect(page.getByRole('button', { name: /Appearance, Light/ })).toBeVisible();

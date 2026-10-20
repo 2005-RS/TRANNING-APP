@@ -8,6 +8,7 @@ import { homeForRole } from '@/features/auth/lib/role-home';
 import { publicSiteCopySource as copy } from '@/features/public-site/copy';
 import { isPublicSitePath } from '@/features/public-site/lib/public-paths';
 import { trainingAssistantCopySource as assistantCopy } from '@/features/training-assistant/copy';
+import { esPublicSite } from '@/i18n/locales/es/public-site';
 
 vi.mock('socket.io-client', async () => {
   const fake = await import('@/features/training-assistant/tests/fake-socket');
@@ -63,6 +64,7 @@ describe('public website', () => {
       expect(within(pages).getByRole('link', { name: copy.nav[key] })).toBeInTheDocument();
     }
     expect(screen.getAllByRole('link', { name: copy.nav.signIn })[0]).toHaveAttribute('href', '/login');
+    expect(screen.getAllByRole('link', { name: copy.nav.createAccount })[0]).toHaveAttribute('href', '/register');
     expect(screen.getByRole('button', { name: assistantCopy.launcherLabel })).toBeInTheDocument();
     expect(screen.queryByRole('link', { name: copy.nav.goToApp })).not.toBeInTheDocument();
   });
@@ -96,7 +98,12 @@ describe('public website', () => {
 
     expect(screen.getAllByText(copy.landing.demoLabel).length).toBeGreaterThan(0);
     expect(screen.getByText(copy.landing.nutrition.disclaimer)).toBeInTheDocument();
-    expect(screen.getAllByRole('link', { name: new RegExp(copy.landing.primary, 'i') })[0]).toHaveAttribute('href', '/login');
+    for (const link of screen.getAllByRole('link', { name: copy.landing.primary })) {
+      expect(link).toHaveAttribute('href', '/register');
+    }
+    for (const link of screen.getAllByRole('link', { name: copy.landing.secondary })) {
+      expect(link).toHaveAttribute('href', '/login');
+    }
   });
 
   it('navigates between public pages', async () => {
@@ -114,6 +121,7 @@ describe('public website', () => {
     expect(await screen.findByRole('heading', { level: 1, name: HOME_HEADING }, { timeout: 4000 })).toBeInTheDocument();
     expect(screen.getAllByRole('link', { name: copy.nav.goToApp })[0]).toHaveAttribute('href', homeForRole(trainerA.role));
     expect(screen.queryByRole('link', { name: copy.nav.signIn })).not.toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: copy.nav.createAccount })).not.toBeInTheDocument();
   });
 
   it('points a signed-in client at the client home', async () => {
@@ -129,11 +137,13 @@ describe('public website', () => {
     expect(await screen.findByRole('heading', { level: 1, name: copy.platform.heading })).toBeInTheDocument();
   });
 
-  it('does not promise sign-up or prices', async () => {
+  it('offers free account creation without prices in English and Spanish', async () => {
     render(<TestApp initialEntry="/" status="UNAUTHENTICATED" />);
     await screen.findByRole('heading', { level: 1, name: HOME_HEADING }, { timeout: 4000 });
 
-    expect(screen.queryByRole('link', { name: /sign up|register|pricing/i })).not.toBeInTheDocument();
+    expect(screen.getAllByText(copy.landing.plans.body).length).toBeGreaterThan(0);
+    expect(esPublicSite.nav.createAccount).toBe('Crear cuenta');
+    expect(esPublicSite.landing.primary).toBe('Crear cuenta gratis');
     expect(screen.queryByText(/\$\d|€\d|free trial/i)).not.toBeInTheDocument();
   });
 

@@ -11,6 +11,7 @@ import { resetAuthBootstrap } from '@/features/auth/lib/session-service';
 import { clearAccessToken } from '@/shared/lib/access-token';
 import { greetingHeadline } from '@/features/client-dashboard/lib/greeting';
 import { clientDashboardCopy } from '@/features/client-dashboard/copy';
+import { workoutCopy } from '@/features/workout-session/copy';
 import {
   dashboardMockState,
   resetDashboardMockState,
@@ -23,6 +24,7 @@ import {
 } from '@/features/client-dashboard/tests/fixtures';
 import { clientCopy, navigationCopy } from '@/features/navigation/copy';
 import { commonCopy } from '@/i18n/locales/common-live';
+import type { SubscriptionResponseDto } from '@/generated/models';
 
 const timeout = 4000;
 
@@ -45,6 +47,7 @@ describe('Client dashboard', () => {
     authServer.listen({ onUnhandledRequest: 'error' });
     resetAuthMockState();
     resetDashboardMockState();
+    dashboardMockState.mirrorCurrentPlan = true;
     resetAuthBootstrap();
     clearAccessToken();
   });
@@ -87,9 +90,7 @@ describe('Client dashboard', () => {
 
     expect(await findGreeting()).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: 'Lower A' })).toBeInTheDocument();
-    expect(screen.getByText('Hypertrophy block 4')).toBeInTheDocument();
-    expect(screen.getByText('6 exercises')).toBeInTheDocument();
-    expect(screen.getByText('8 sets recorded')).toBeInTheDocument();
+    expect(screen.getByText(clientDashboardCopy.primary.inProgressEyebrow)).toBeInTheDocument();
     expect(
       screen.getByRole('link', { name: clientDashboardCopy.primary.continueTraining }),
     ).toHaveAttribute('href', '/client/workout/cccccccc-cccc-4ccc-8ccc-cccccccccccc');
@@ -122,6 +123,91 @@ describe('Client dashboard', () => {
     expect(screen.getByRole('navigation', { name: clientCopy.mainNav })).toBeInTheDocument();
   });
 
+  it('shows the upgrade card only to Free clients and keeps the dashboard usable if it fails', async () => {
+    dashboardMockState.body = populatedClientDashboard;
+    renderDashboard();
+
+    await findGreeting();
+    expect(screen.getByRole('link', { name: clientDashboardCopy.subscription.viewPlan })).toHaveAttribute(
+      'href',
+      '/client/plan',
+    );
+
+    dashboardMockState.subscription = {
+      ...dashboardMockState.subscription,
+      plan: 'PRO',
+      source: 'PAID',
+      proUntil: '2026-11-01T00:00:00.000Z',
+    } satisfies SubscriptionResponseDto;
+    dashboardMockState.subscriptionStatus = 200;
+    renderDashboard();
+    expect(await findGreeting()).toBeInTheDocument();
+    expect(screen.queryAllByRole('link', { name: clientDashboardCopy.subscription.viewPlan })).toHaveLength(1);
+
+    dashboardMockState.subscriptionStatus = 500;
+    renderDashboard();
+    expect(await findGreeting()).toBeInTheDocument();
+  });
+
+  it('shows a Pro trainer card with a normalized WhatsApp link', async () => {
+    dashboardMockState.subscription = {
+      ...dashboardMockState.subscription,
+      plan: 'PRO',
+      source: 'PAID',
+      proUntil: '2026-11-01T00:00:00.000Z',
+    } satisfies SubscriptionResponseDto;
+    dashboardMockState.trainer = {
+      trainer: {
+        id: '33333333-3333-4333-8333-333333333333',
+        user: {
+          id: '33333333-3333-4333-8333-333333333333',
+          email: 'tess@example.test',
+          firstName: 'Tess',
+          lastName: 'Trainer',
+          role: 'TRAINER',
+          status: 'ACTIVE',
+        },
+        phone: '(506) 8888-0000',
+        professionalTitle: 'Strength coach',
+        bio: 'Coaching clients with sustainable training habits.',
+        createdAt: '2026-01-01T00:00:00.000Z',
+        updatedAt: '2026-01-01T00:00:00.000Z',
+      },
+    };
+    renderDashboard();
+
+    await findGreeting();
+    expect(
+      await screen.findByRole(
+        'heading',
+        { name: clientDashboardCopy.trainer.title },
+        { timeout: 10_000 },
+      ),
+    ).toBeInTheDocument();
+    expect(screen.getByText('Tess Trainer')).toBeInTheDocument();
+    expect(
+      screen.getByRole('link', { name: clientDashboardCopy.trainer.whatsapp }),
+    ).toHaveAttribute('href', 'https://wa.me/50688880000');
+  });
+
+  it('hides the trainer card when the client has no trainer or its query fails', async () => {
+    dashboardMockState.subscription = {
+      ...dashboardMockState.subscription,
+      plan: 'PRO',
+      source: 'PAID',
+      proUntil: '2026-11-01T00:00:00.000Z',
+    } satisfies SubscriptionResponseDto;
+    renderDashboard();
+
+    await findGreeting();
+    expect(screen.queryByRole('heading', { name: clientDashboardCopy.trainer.title })).not.toBeInTheDocument();
+
+    dashboardMockState.trainerStatus = 500;
+    renderDashboard();
+    await findGreeting();
+    expect(screen.queryByRole('heading', { name: clientDashboardCopy.trainer.title })).not.toBeInTheDocument();
+  });
+
   it(
     'navigates the primary CTA into the in-progress workout',
     { timeout: 15_000 },
@@ -147,7 +233,10 @@ describe('Client dashboard', () => {
     renderDashboard();
 
     await findGreeting();
-    expect(screen.getByRole('heading', { name: 'Hypertrophy block 4' })).toBeInTheDocument();
+    // Today card: plan name as eyebrow, the workout that is up next, and one Start action.
+    expect(await screen.findByText('Hypertrophy block 4', undefined, { timeout })).toBeInTheDocument();
+    expect(screen.getByText(clientDashboardCopy.today.upNext)).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: workoutCopy.hub.start })).toBeEnabled();
     expect(
       screen.getByRole('link', { name: clientDashboardCopy.primary.viewTraining }),
     ).toHaveAttribute('href', '/client/training');
@@ -158,12 +247,22 @@ describe('Client dashboard', () => {
 
   it('renders a polished empty state when no plan is assigned', async () => {
     dashboardMockState.body = emptyClientDashboard;
+    // A Pro client without a plan yet still sees the (empty) check-in card.
+    dashboardMockState.subscription = {
+      ...dashboardMockState.subscription,
+      plan: 'PRO',
+      source: 'COMPLIMENTARY',
+    } satisfies SubscriptionResponseDto;
     renderDashboard();
 
     await findGreeting();
     expect(
-      screen.getByRole('heading', { name: clientDashboardCopy.primary.emptyTitle }),
+      screen.getByRole('heading', { name: clientDashboardCopy.today.emptyTitle }),
     ).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: workoutCopy.hub.chooseRoutine })).toHaveAttribute(
+      'href',
+      '/client/training?tab=library',
+    );
     expect(screen.getByText(clientDashboardCopy.weekly.empty)).toBeInTheDocument();
     const weeklyCard = screen
       .getByRole('heading', { name: clientDashboardCopy.weekly.title })
@@ -187,12 +286,20 @@ describe('Client dashboard', () => {
     expect(screen.queryByText('Invalid Date')).not.toBeInTheDocument();
   });
 
+  it('hides the check-in card from Free clients without check-ins', async () => {
+    dashboardMockState.body = emptyClientDashboard;
+    renderDashboard();
+
+    await findGreeting();
+    expect(screen.queryByText(clientDashboardCopy.checkIn.emptyTitle)).not.toBeInTheDocument();
+  });
+
   it('stays usable when optional dashboard fields are missing', async () => {
     dashboardMockState.body = partialOptionalClientDashboard;
     renderDashboard();
 
     await findGreeting();
-    expect(screen.getByRole('heading', { name: 'Foundation plan' })).toBeInTheDocument();
+    expect(await screen.findByText('Foundation plan', undefined, { timeout })).toBeInTheDocument();
     expect(screen.getByText('Full body')).toBeInTheDocument();
     expect(screen.getByText(clientDashboardCopy.checkIn.draft)).toBeInTheDocument();
     expect(screen.getByText(clientDashboardCopy.progress.photosEmpty)).toBeInTheDocument();

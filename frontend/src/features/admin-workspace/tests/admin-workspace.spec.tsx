@@ -274,6 +274,19 @@ describe('Admin workspace', () => {
       expect(screen.queryByText('Trainer is disabled')).not.toBeInTheDocument();
     });
 
+    it('explains that a Free client needs Pro before assignment', async () => {
+      const user = userEvent.setup();
+      adminMockState.assignmentStatus = 409;
+      adminMockState.assignmentConflictMessage = 'Client has no active Pro plan';
+      renderAdmin(`/admin/clients/${ADMIN_CLIENT_ID}`);
+      await user.click(await screen.findByRole('button', { name: copy.clients.assignTrainer }, { timeout }));
+      const assign = await screen.findByRole('dialog', { name: copy.clients.assignTrainer });
+      await user.click(await within(assign).findByRole('radio', { name: /Tess Trainer/ }, { timeout }));
+      await user.click(within(assign).getByRole('button', { name: copy.clients.assignTrainer }));
+      expect(await within(assign).findByText(copy.clients.noActivePro, undefined, { timeout })).toBeInTheDocument();
+      expect(screen.queryByText('Client has no active Pro plan')).not.toBeInTheDocument();
+    });
+
     it('does not offer assignment for a disabled client', async () => {
       adminMockState.clients = adminMockState.clients.map((row) => ({
         ...row,

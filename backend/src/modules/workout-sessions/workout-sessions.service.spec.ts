@@ -200,6 +200,7 @@ describe('WorkoutSessionsService', () => {
       }),
     };
     const dataSource = {
+      query: jest.fn().mockResolvedValue([]),
       transaction: jest.fn(
         async (run: (m: typeof manager) => Promise<unknown>) => run(manager),
       ),
@@ -218,6 +219,7 @@ describe('WorkoutSessionsService', () => {
       ),
       plans,
       access,
+      dataSource,
     };
   }
 
@@ -285,5 +287,51 @@ describe('WorkoutSessionsService', () => {
         actor({ id: 'client-user', role: UserRole.CLIENT }),
       ),
     ).rejects.toBeInstanceOf(ConflictException);
+  });
+
+  it('loads the latest completed sets for all session exercises in one query', async () => {
+    const { service, dataSource } = buildService();
+    dataSource.query.mockResolvedValue([
+      {
+        exercise_id: 'ex-1',
+        set_number: 1,
+        actual_reps: 10,
+        actual_duration_seconds: null,
+        actual_load_kg: '72.5',
+      },
+    ]);
+    const internal = service as unknown as {
+      findPreviousSets: (
+        session: unknown,
+        exercises: unknown,
+      ) => Promise<Map<string, unknown[]>>;
+    };
+
+    const result = await internal.findPreviousSets(
+      detailSession,
+      detailSession.exercises,
+    );
+
+    expect(dataSource.query).toHaveBeenCalledTimes(1);
+    expect(dataSource.query).toHaveBeenCalledWith(
+      expect.stringContaining(
+        'SELECT DISTINCT ON (session_exercise.exercise_id)',
+      ),
+      ['client-1', WorkoutSessionStatus.COMPLETED, 'session-1', ['ex-1']],
+    );
+    expect(dataSource.query.mock.calls[0][0]).toContain(
+      'previous_session.id <> $3',
+    );
+    expect(dataSource.query.mock.calls[0][0]).toContain(
+      'previous_session.completed_at DESC',
+    );
+    expect(result.get('ex-1')).toEqual([
+      {
+        setNumber: 1,
+        actualReps: 10,
+        actualDurationSeconds: null,
+        actualLoadKg: 72.5,
+      },
+    ]);
   });
 });

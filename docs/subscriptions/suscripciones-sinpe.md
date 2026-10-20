@@ -1,7 +1,7 @@
 # Módulo de suscripciones — Plan gratis + Pro pagado por SINPE Móvil
 
 **Asignado a:** Eli (línea A) · **Producto:** Ronny · **Creado:** 2026-10-01
-**Estado:** P1 planificada y lista (`.ai/CURRENT_TASK.md`, `STATUS: READY`). P2 y P3 están pendientes.
+**Estado (2026-10-10):** P1, P2a y P2b terminadas y aprobadas en la rama `ronny`, sin commit. P3 está pendiente. Ver [`docs/HANDOFF-CURSOR.md`](../HANDOFF-CURSOR.md).
 
 ## Por qué
 

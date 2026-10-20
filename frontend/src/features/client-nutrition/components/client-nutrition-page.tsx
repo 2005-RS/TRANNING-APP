@@ -8,6 +8,7 @@ import { clientNutritionCopy } from '@/features/client-nutrition/copy';
 import { useCurrentNutritionPlan } from '@/features/client-nutrition/hooks/use-current-nutrition-plan';
 import { sortedMeals } from '@/features/client-nutrition/lib/plan-helpers';
 import { PageContainer, PageDescription, PageHeader, PageTitle } from '@/shared/ui/page';
+import { NutritionPlanHistory } from '@/features/client-nutrition/components/nutrition-plan-history';
 
 export function ClientNutritionPage() {
   const query = useCurrentNutritionPlan();
@@ -62,6 +63,10 @@ export function ClientNutritionPage() {
           </p>
         </section>
       )}
+      {/* Previous plans stay reachable even when there is no current plan. */}
+      <div className="mt-8">
+        <NutritionPlanHistory />
+      </div>
     </PageContainer>
   );
 }

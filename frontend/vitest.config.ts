@@ -16,9 +16,10 @@ export default defineConfig({
     'import.meta.env.VITE_API_URL': JSON.stringify('http://localhost:3000'),
   },
   test: {
+    testTimeout: 15_000,
     environment: 'jsdom',
     globals: false,
-    setupFiles: ['./tests/setup.ts'],
+    setupFiles: ['./tests/setup-language.ts', './tests/setup.ts'],
     include: ['src/**/*.spec.ts', 'src/**/*.spec.tsx', 'tests/**/*.spec.ts'],
     fileParallelism: false,
     env: {

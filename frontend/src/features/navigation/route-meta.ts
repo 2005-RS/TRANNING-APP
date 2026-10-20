@@ -11,6 +11,8 @@ export type AppPath =
   | '/client/progress'
   | '/client/body'
   | '/client/nutrition'
+  | '/client/plan'
+  | '/client/profile'
   | '/client/check-ins'
   | '/client/notifications'
   | '/trainer/dashboard'
@@ -26,7 +28,9 @@ export type AppPath =
   | '/admin/clients'
   | '/admin/assignments'
   | '/admin/exercises'
+  | '/admin/library'
   | '/admin/foods'
+  | '/admin/payments'
   | '/admin/notifications';
 
 export type RouteMeta = {
@@ -41,6 +45,8 @@ const APP_PATHS = new Set<string>([
   '/client/progress',
   '/client/body',
   '/client/nutrition',
+  '/client/plan',
+  '/client/profile',
   '/client/check-ins',
   '/client/notifications',
   '/trainer/dashboard',
@@ -56,7 +62,9 @@ const APP_PATHS = new Set<string>([
   '/admin/clients',
   '/admin/assignments',
   '/admin/exercises',
+  '/admin/library',
   '/admin/foods',
+  '/admin/payments',
   '/admin/notifications',
 ]);
 
@@ -74,6 +82,8 @@ export function getAllRouteMeta(): Record<AppPath, RouteMeta> {
     '/client/training': meta(clientCopy.training.title, clientCopy.training.description),
     '/client/progress': meta(clientCopy.progress.title, clientCopy.progress.description),
     '/client/nutrition': meta(clientCopy.nutrition.title, clientCopy.nutrition.description),
+    '/client/plan': meta(clientCopy.plan.title, clientCopy.plan.description),
+    '/client/profile': meta(clientCopy.profile.title, clientCopy.profile.description),
     '/client/body': meta(clientCopy.body.title, clientCopy.body.description),
     '/client/check-ins': meta(clientCopy.checkIns.title, clientCopy.checkIns.description),
     '/client/notifications': meta(
@@ -96,7 +106,9 @@ export function getAllRouteMeta(): Record<AppPath, RouteMeta> {
     '/admin/clients': meta(adminCopy.clients.title, adminCopy.clients.description),
     '/admin/assignments': meta(adminCopy.assignments.title, adminCopy.assignments.description),
     '/admin/exercises': meta(adminCopy.exercises.title, adminCopy.exercises.description),
+    '/admin/library': meta('Biblioteca de rutinas', 'Rutinas disponibles para clientes.'),
     '/admin/foods': meta(adminCopy.foods.title, adminCopy.foods.description),
+    '/admin/payments': meta(adminCopy.payments.title, adminCopy.payments.description),
     '/admin/notifications': meta(
       adminCopy.notifications.title,
       adminCopy.notifications.description,

@@ -5,6 +5,7 @@ import { getRouteMeta } from '@/features/navigation/route-meta';
 import { validateProgressSearch } from '@/features/client-progress/lib/progress-search';
 import { validateJournalSearch } from '@/features/client-nutrition/lib/journal-search';
 import { validateNotificationsSearch } from '@/features/notifications/lib/search';
+import { isTrainingTab, type TrainingTab } from '@/features/workout-session/lib/training-search';
 import { rootRoute } from '@/routes/__root';
 
 export const clientRoute = createRoute({
@@ -22,6 +23,15 @@ const clientIndexRoute = createRoute({
 });
 
 const clientDashboardMeta = getRouteMeta('/client/dashboard');
+
+const clientWelcomeRoute = createRoute({
+  getParentRoute: () => clientRoute,
+  path: 'welcome',
+  component: lazyRouteComponent(
+    () => import('@/features/client-welcome/components/client-welcome-page'),
+    'ClientWelcomePage',
+  ),
+});
 
 const clientDashboardRoute = createRoute({
   getParentRoute: () => clientRoute,
@@ -41,6 +51,8 @@ const clientTrainingMeta = getRouteMeta('/client/training');
 const clientTrainingRoute = createRoute({
   getParentRoute: () => clientRoute,
   path: 'training',
+  validateSearch: (search: Record<string, unknown>): { tab?: TrainingTab } =>
+    isTrainingTab(search.tab) ? { tab: search.tab } : {},
   staticData: clientTrainingMeta,
   head: () => ({
     meta: [{ title: clientTrainingMeta.documentTitle }],
@@ -67,6 +79,17 @@ const clientWorkoutRoute = createRoute({
   component: lazyRouteComponent(
     () => import('@/features/workout-session/components/workout-focus-page'),
     'WorkoutFocusPage',
+  ),
+});
+
+const clientTrainingPlanHistoryRoute = createRoute({
+  getParentRoute: () => clientRoute,
+  path: 'training/plans/$planId',
+  staticData: clientTrainingMeta,
+  head: () => ({ meta: [{ title: clientTrainingMeta.documentTitle }] }),
+  component: lazyRouteComponent(
+    () => import('@/features/workout-session/components/training-plan-history-page'),
+    'TrainingPlanHistoryPage',
   ),
 });
 
@@ -122,6 +145,30 @@ const clientBodyRoute = createRoute({
 });
 
 const clientNutritionMeta = getRouteMeta('/client/nutrition');
+const clientProfileMeta = getRouteMeta('/client/profile');
+
+const clientProfileRoute = createRoute({
+  getParentRoute: () => clientRoute,
+  path: 'profile',
+  staticData: clientProfileMeta,
+  head: () => ({ meta: [{ title: clientProfileMeta.documentTitle }] }),
+  component: lazyRouteComponent(
+    () => import('@/features/client-profile/components/client-profile-page'),
+    'ClientProfilePage',
+  ),
+});
+
+const clientPlanMeta = getRouteMeta('/client/plan');
+const clientPlanRoute = createRoute({
+  getParentRoute: () => clientRoute,
+  path: 'plan',
+  staticData: clientPlanMeta,
+  head: () => ({ meta: [{ title: clientPlanMeta.documentTitle }] }),
+  component: lazyRouteComponent(
+    () => import('@/features/client-subscription/components/client-plan-page'),
+    'ClientPlanPage',
+  ),
+});
 
 const clientNutritionRoute = createRoute({
   getParentRoute: () => clientRoute,
@@ -147,6 +194,17 @@ const clientNutritionPlanRoute = createRoute({
   component: lazyRouteComponent(
     () => import('@/features/client-nutrition/components/client-nutrition-page'),
     'ClientNutritionPage',
+  ),
+});
+
+const clientNutritionPlanHistoryRoute = createRoute({
+  getParentRoute: () => clientRoute,
+  path: 'nutrition/plans/$planId',
+  staticData: clientNutritionMeta,
+  head: () => ({ meta: [{ title: clientNutritionMeta.documentTitle }] }),
+  component: lazyRouteComponent(
+    () => import('@/features/client-nutrition/components/nutrition-plan-history-page'),
+    'NutritionPlanHistoryPage',
   ),
 });
 
@@ -258,14 +316,19 @@ const clientNotificationsRoute = createRoute({
 
 export const clientRouteTree = clientRoute.addChildren([
   clientIndexRoute,
+  clientWelcomeRoute,
   clientDashboardRoute,
   clientTrainingRoute,
   clientWorkoutRoute,
+  clientTrainingPlanHistoryRoute,
   clientProgressRoute,
   clientExerciseProgressRoute,
   clientBodyRoute,
+  clientProfileRoute,
   clientNutritionRoute,
+  clientPlanRoute,
   clientNutritionPlanRoute,
+  clientNutritionPlanHistoryRoute,
   clientNutritionAddRoute,
   clientNutritionNewFoodRoute,
   clientNutritionFoodRoute,

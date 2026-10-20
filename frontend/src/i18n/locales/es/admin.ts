@@ -170,7 +170,17 @@ export const esAdminWorkspace: LooseCopy<typeof adminWorkspaceCopySource> = {
     noActiveTrainers: 'No hay entrenadores activos que coincidan. Crea o activa un entrenador primero.',
     loadingTrainers: 'Cargando entrenadores',
     assignmentConflict: 'El cliente o el entrenador está deshabilitado, o la asignación cambió. Actualiza e inténtalo de nuevo.',
+    noActivePro: 'Este cliente no tiene plan Pro activo. Activa Pro (pago aprobado o cortesía) antes de asignar un entrenador.',
     historyEmpty: 'Aún no hay asignaciones.',
+    plan: 'Plan',
+    freePlan: 'Gratis',
+    complimentaryPlan: 'Pro cortesía',
+    paidPlanUntil: 'Pro hasta {{date}}',
+    grantComplimentary: 'PRO de cortesía',
+    revokeComplimentary: 'Quitar Pro de cortesía',
+    changeComplimentaryTitle: 'Cambiar Pro de cortesía',
+    changeComplimentaryBody: 'Confirma el cambio de plan de este cliente.',
+    confirmComplimentary: 'Confirmar',
     assignmentUnavailable: 'No se pudo cargar la asignación actual.',
   },
   assignments: {
@@ -196,6 +206,14 @@ export const esAdminWorkspace: LooseCopy<typeof adminWorkspaceCopySource> = {
     change: 'Cambiar',
     loadingTrainer: 'Cargando entrenador',
     trainerUnavailable: 'No se pudo cargar',
+  },
+  payments: {
+    title: 'Pagos', description: 'Revisa pagos por SINPE Móvil y el estado de suscripción.', pending: 'Pendientes', approved: 'Aprobados', rejected: 'Rechazados', all: 'Todos', reported: 'Reportado', client: 'Cliente', amount: 'Monto', receipt: 'Comprobante', paidOn: 'Fecha de pago', reviewed: 'Revisado', reason: 'Motivo', approve: 'Aprobar', reject: 'Rechazar', approveTitle: '¿Aprobar pago?', approveBody: 'Confirma que verificaste el SINPE en el banco antes de aprobar.', rejectTitle: 'Rechazar pago', rejectReason: 'Motivo del rechazo', expired: 'Vencidos con entrenador', expiredBody: 'Estos clientes ya no tienen Pro activo pero aún tienen un entrenador asignado.', emptyTitle: 'No hay pagos', emptyBody: 'Los pagos reportados aparecerán aquí.',
+  },
+  library: {
+    title: 'Biblioteca de rutinas',
+    description: 'Publica las rutinas activas que los clientes pueden usar para crear su plan.',
+    publishedNamed: (name: string) => `Publicada: ${name}`,
   },
   exercises: {
     title: 'Ejercicios',

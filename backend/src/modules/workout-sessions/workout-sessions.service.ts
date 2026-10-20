@@ -31,6 +31,7 @@ import {
   CurrentWorkoutSessionResponseDto,
   PaginatedWorkoutSessionsResponseDto,
   WorkoutSessionResponseDto,
+  WorkoutPreviousSetDto,
 } from './dto/workout-session-response.dto';
 import { WorkoutSessionExercise } from './entities/workout-session-exercise.entity';
 import { WorkoutSession } from './entities/workout-session.entity';
@@ -522,7 +523,61 @@ export class WorkoutSessionsService {
       session,
       exercises,
       demonstrationByExerciseId,
+      await this.findPreviousSets(session, exercises),
     );
+  }
+
+  private async findPreviousSets(
+    session: WorkoutSession,
+    exercises: WorkoutSessionExercise[],
+  ): Promise<Map<string, WorkoutPreviousSetDto[]>> {
+    const exerciseIds = [
+      ...new Set(exercises.map((exercise) => exercise.exerciseId)),
+    ];
+    const result = new Map<string, WorkoutPreviousSetDto[]>();
+    exerciseIds.forEach((exerciseId) => result.set(exerciseId, []));
+    if (exerciseIds.length === 0) return result;
+
+    const rows: Array<{
+      exercise_id: string;
+      set_number: number;
+      actual_reps: number | null;
+      actual_duration_seconds: number | null;
+      actual_load_kg: string | number | null;
+    }> = await this.dataSource.query(
+      `SELECT previous.exercise_id, workout_set.set_number, workout_set.actual_reps, workout_set.actual_duration_seconds, workout_set.actual_load_kg
+       FROM workout_sets workout_set
+       INNER JOIN (
+         SELECT DISTINCT ON (session_exercise.exercise_id) session_exercise.exercise_id, session_exercise.id
+         FROM workout_session_exercises session_exercise
+         INNER JOIN workout_sessions previous_session ON previous_session.id = session_exercise.workout_session_id
+         WHERE previous_session.client_profile_id = $1
+           AND previous_session.status = $2
+           AND previous_session.id <> $3
+           AND session_exercise.exercise_id = ANY($4::uuid[])
+         ORDER BY session_exercise.exercise_id, previous_session.completed_at DESC, previous_session.id DESC
+       ) previous ON previous.id = workout_set.workout_session_exercise_id
+       ORDER BY previous.exercise_id, workout_set.set_number ASC`,
+      [
+        session.clientProfileId,
+        WorkoutSessionStatus.COMPLETED,
+        session.id,
+        exerciseIds,
+      ],
+    );
+    for (const row of rows) {
+      result.get(row.exercise_id)?.push({
+        setNumber: Number(row.set_number),
+        actualReps: row.actual_reps === null ? null : Number(row.actual_reps),
+        actualDurationSeconds:
+          row.actual_duration_seconds === null
+            ? null
+            : Number(row.actual_duration_seconds),
+        actualLoadKg:
+          row.actual_load_kg === null ? null : Number(row.actual_load_kg),
+      });
+    }
+    return result;
   }
 
   private throwMappedPersistenceError(error: unknown): never {

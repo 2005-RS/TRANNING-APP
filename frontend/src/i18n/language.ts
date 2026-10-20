@@ -1,5 +1,6 @@
 import {
   DEFAULT_LANGUAGE,
+  TEST_LANGUAGE,
   LANGUAGE_STORAGE_KEY,
   isAppLanguage,
   type AppLanguage,
@@ -45,9 +46,9 @@ export async function changeAppLanguage(language: AppLanguage): Promise<void> {
 }
 
 export function resetLanguageForTests(): void {
-  persistLanguagePreference(DEFAULT_LANGUAGE);
-  applyHtmlLang(DEFAULT_LANGUAGE);
+  persistLanguagePreference(TEST_LANGUAGE);
+  applyHtmlLang(TEST_LANGUAGE);
   if (i18nInstance.isInitialized) {
-    void i18nInstance.changeLanguage(DEFAULT_LANGUAGE);
+    void i18nInstance.changeLanguage(TEST_LANGUAGE);
   }
 }

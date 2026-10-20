@@ -12,6 +12,10 @@ export function readEnvironment(
       'HTTP_JSON_BODY_LIMIT_BYTES',
       { infer: true },
     ),
+    SUBSCRIPTION_PRO_PERIOD_DAYS: config.getOrThrow(
+      'SUBSCRIPTION_PRO_PERIOD_DAYS',
+      { infer: true },
+    ),
     SWAGGER_ENABLED: config.get('SWAGGER_ENABLED', { infer: true }),
     DATABASE_HOST: config.getOrThrow('DATABASE_HOST', { infer: true }),
     DATABASE_PORT: config.getOrThrow('DATABASE_PORT', { infer: true }),

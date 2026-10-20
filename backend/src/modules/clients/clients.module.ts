@@ -5,9 +5,15 @@ import { UsersModule } from '../users/users.module';
 import { ClientsController } from './clients.controller';
 import { ClientsService } from './clients.service';
 import { ClientProfile } from './entities/client-profile.entity';
+import { SubscriptionsModule } from '../subscriptions/subscriptions.module';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([ClientProfile]), UsersModule, AuthModule],
+  imports: [
+    TypeOrmModule.forFeature([ClientProfile]),
+    UsersModule,
+    AuthModule,
+    SubscriptionsModule,
+  ],
   controllers: [ClientsController],
   providers: [ClientsService],
   exports: [ClientsService],

@@ -2,7 +2,9 @@ import { useState } from 'react';
 import { Link } from '@tanstack/react-router';
 import { useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
-import { useNutritionPlansGetById, useNutritionPlansUpdateStatus } from '@/generated/nutrition-plans/nutrition-plans';
+import type { UpdateNutritionPlanDto } from '@/generated/models';
+import { useNutritionPlansGetById, useNutritionPlansUpdate, useNutritionPlansUpdateStatus } from '@/generated/nutrition-plans/nutrition-plans';
+import { NutritionPlanEditSheet } from './plan-edit-sheets';
 import { WorkspaceSurface } from './workspace-surface';
 import { NutritionMealEditor } from './nutrition-meal-editor';
 import { StatusBadge } from './status-badge';
@@ -29,10 +31,12 @@ function NutritionPlanDetail({ clientId, planId }: { clientId: string; planId: s
   const queryClient = useQueryClient();
   const [error, setError] = useState<string | null>(null);
   const [dirty, setDirty] = useState(false);
+  const [editOpen, setEditOpen] = useState(false);
   const planQuery = useNutritionPlansGetById(clientId, planId, {
     query: { enabled: Boolean(clientId && planId), staleTime: TRAINER_STALE_TIME_MS, refetchOnWindowFocus: false },
   });
   const updateStatus = useNutritionPlansUpdateStatus();
+  const updatePlan = useNutritionPlansUpdate();
 
   if (planQuery.isPending) return <WorkspaceSurface><TrainerSectionSkeleton label={copy.loadingLabel} /></WorkspaceSurface>;
   if (planQuery.isError || !planQuery.data) return (
@@ -41,6 +45,7 @@ function NutritionPlanDetail({ clientId, planId }: { clientId: string; planId: s
   );
   const plan = planQuery.data;
   const editable = plan.status === 'DRAFT';
+  const canEdit = plan.status !== 'ARCHIVED';
   const changeStatus = async (status: 'ACTIVE' | 'ARCHIVED') => {
     setError(null);
     try {
@@ -58,7 +63,10 @@ function NutritionPlanDetail({ clientId, planId }: { clientId: string; planId: s
           <h2 className="mt-2 break-words text-xl font-semibold tracking-tight">{plan.name}</h2>
           <p className="mt-1 text-sm text-muted-foreground">{copy.prescribedHint}</p>
         </div>
-        <StatusBadge status={plan.status} />
+        <div className="flex items-center gap-2">
+          {canEdit ? <Button variant="outline" size="sm" onClick={() => setEditOpen(true)}>{copy.editPlan}</Button> : null}
+          <StatusBadge status={plan.status} />
+        </div>
       </div>
       {error ? <Alert variant="danger">{error}</Alert> : null}
       <PlanTotals plan={plan} variant="trainer" />
@@ -104,6 +112,46 @@ function NutritionPlanDetail({ clientId, planId }: { clientId: string; planId: s
             onClick={() => void changeStatus('ARCHIVED')}>{trainerWorkspaceCopy.archive}</Button> : null}
         </>
       )}
+      <NutritionPlanEditSheet
+        key={`${plan.id}-${plan.updatedAt}`}
+        open={editOpen}
+        onOpenChange={setEditOpen}
+        pending={updatePlan.isPending}
+        values={{
+          name: plan.name,
+          description: plan.description ?? '',
+          startDate: plan.startDate ?? '',
+          endDate: plan.endDate ?? '',
+          targetCaloriesKcal: plan.targets.caloriesKcal == null ? '' : String(plan.targets.caloriesKcal),
+          targetProteinG: plan.targets.proteinG == null ? '' : String(plan.targets.proteinG),
+          targetCarbohydratesG: plan.targets.carbohydratesG == null ? '' : String(plan.targets.carbohydratesG),
+          targetFatG: plan.targets.fatG == null ? '' : String(plan.targets.fatG),
+        }}
+        onSave={async (data, fail) => {
+          try {
+            await updatePlan.mutateAsync({
+              clientId,
+              planId,
+              data: {
+                ...data,
+                description: data.description || null,
+                startDate: data.startDate || null,
+                endDate: data.endDate || null,
+                targetCaloriesKcal: data.targetCaloriesKcal === '' ? null : Number(data.targetCaloriesKcal),
+                targetProteinG: data.targetProteinG === '' ? null : Number(data.targetProteinG),
+                targetCarbohydratesG: data.targetCarbohydratesG === '' ? null : Number(data.targetCarbohydratesG),
+                targetFatG: data.targetFatG === '' ? null : Number(data.targetFatG),
+              } as UpdateNutritionPlanDto,
+            });
+            await invalidateTrainerNutrition(queryClient, clientId);
+            toast.success(trainerWorkspaceCopy.changesSaved);
+            setEditOpen(false);
+          } catch (err) {
+            const mapped = mapApiError(err);
+            fail(mapped.kind === 'invalid' ? trainerWorkspaceCopy.checkFields : mapped.kind === 'conflict' ? trainerWorkspaceCopy.notEditable : mapped.description);
+          }
+        }}
+      />
     </div>
   );
 }

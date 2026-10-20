@@ -32,6 +32,7 @@ import { ClientSelfUpdateDto } from './dto/client-self-update.dto';
 import { ClientProfile } from './entities/client-profile.entity';
 import { ClientSortField, SortDirection } from './enums/client-sort-field.enum';
 import { toClientResponse } from './clients.mapper';
+import { SubscriptionsService } from '../subscriptions/subscriptions.service';
 
 const SORT_COLUMNS: Record<ClientSortField, string> = {
   [ClientSortField.CreatedAt]: 'profile.createdAt',
@@ -51,6 +52,7 @@ export class ClientsService {
     private readonly passwords: PasswordHasherService,
     private readonly sessions: RefreshSessionService,
     private readonly dataSource: DataSource,
+    private readonly subscriptions: SubscriptionsService,
   ) {}
 
   async create(input: CreateClientDto): Promise<ClientResponseDto> {
@@ -86,6 +88,7 @@ export class ClientsService {
           experienceLevel: input.experienceLevel,
         });
         const saved = await profiles.save(profile);
+        await this.subscriptions.createFreeForProfile(manager, saved.id);
         saved.user = user;
         return saved;
       });

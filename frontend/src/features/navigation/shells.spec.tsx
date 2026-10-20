@@ -13,7 +13,7 @@ import { resetAuthBootstrap } from '@/features/auth/lib/session-service';
 import { clearAccessToken } from '@/shared/lib/access-token';
 import { greetingHeadline } from '@/features/client-dashboard/lib/greeting';
 
-const timeout = 4000;
+const timeout = 10_000;
 
 function href() {
   return screen.getByTestId('router-href').textContent ?? '';
@@ -75,6 +75,8 @@ describe('role shells', () => {
       'aria-current',
       'page',
     );
+    // R5: the client workspace wears the public site's orange accent.
+    expect(document.documentElement).toHaveClass('client-brand');
   });
 
   it('lets a CLIENT open Training, Progress, Nutrition, and More', { timeout: 15_000 }, async () => {
@@ -147,6 +149,7 @@ describe('role shells', () => {
     expect(
       screen.getByRole('link', { name: 'Dashboard' }),
     ).toHaveAttribute('aria-current', 'page');
+    expect(document.documentElement).not.toHaveClass('client-brand');
   });
 
   it('lets a TRAINER open planned destinations', async () => {

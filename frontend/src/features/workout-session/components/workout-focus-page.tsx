@@ -1,28 +1,20 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Link, useNavigate, useParams } from '@tanstack/react-router';
-import { CheckCircle2, CircleX } from 'lucide-react';
-import { AnimatePresence, motion } from 'motion/react';
+import { CircleX } from 'lucide-react';
 import { toast } from 'sonner';
 import { Alert } from '@/shared/ui/alert';
 import { Button } from '@/shared/ui/button';
 import { PageContainer } from '@/shared/ui/page';
-import {
-  motionTransition,
-  revealHidden,
-  revealVisible,
-  useReducedMotion,
-} from '@/shared/lib/motion';
 import { ApiError, mapApiError } from '@/shared/errors/api-error';
-import {
-  UpdateWorkoutSessionStatusDtoStatus,
-  WorkoutSessionPrescriptionResponseDtoType,
-  WorkoutSessionResponseDtoStatus,
-} from '@/generated/models';
+import { UpdateWorkoutSessionStatusDtoStatus, WorkoutSessionResponseDtoStatus } from '@/generated/models';
+import type { WorkoutSessionExerciseResponseDto } from '@/generated/models';
 import { workoutCopy } from '@/features/workout-session/copy';
 import { ConfirmSheet } from '@/features/workout-session/components/confirm-sheet';
-import { ExerciseFocus } from '@/features/workout-session/components/exercise-focus';
-import { RestTimer } from '@/features/workout-session/components/rest-timer';
-import { SetLogger } from '@/features/workout-session/components/set-logger';
+import { ExerciseAccordion } from '@/features/workout-session/components/exercise-accordion';
+import { RestBar } from '@/features/workout-session/components/rest-bar';
+import { SessionHeader } from '@/features/workout-session/components/session-header';
+import { StaleSessionAlert } from '@/features/workout-session/components/stale-session-alert';
+import { WorkoutSummary } from '@/features/workout-session/components/workout-summary';
 import { WorkoutErrorState } from '@/features/workout-session/components/workout-error-state';
 import { WorkoutLoadingState } from '@/features/workout-session/components/workout-loading-state';
 import { useRestTimer } from '@/features/workout-session/hooks/use-rest-timer';
@@ -30,81 +22,33 @@ import {
   useWorkoutSessionById,
   useWorkoutSessionMutations,
 } from '@/features/workout-session/hooks/use-workout-session';
-import {
-  appendSetPayload,
-  createSetDraft,
-  withoutLastSetPayload,
-  type SetDraft,
-} from '@/features/workout-session/lib/set-payload';
-import {
-  clampExerciseIndex,
-  initialExerciseIndex,
-  isSessionInProgress,
-  recordedSetCount,
-} from '@/features/workout-session/lib/session-helpers';
+import { appendSetPayload, withoutLastSetPayload, type SetDraft } from '@/features/workout-session/lib/set-payload';
+import { initialExerciseIndex, recordedSetCount } from '@/features/workout-session/lib/session-helpers';
 import { isUuid } from '@/features/workout-session/lib/session-ids';
+import { isPersonalRecord } from '@/features/workout-session/lib/personal-record';
+import { isStaleSession } from '@/features/workout-session/lib/stale-session';
 
 export function WorkoutFocusPage() {
   const { sessionId } = useParams({ from: '/client/workout/$sessionId' });
   const navigate = useNavigate();
-  const reduceMotion = useReducedMotion();
-  const sessionQuery = useWorkoutSessionById(sessionId);
+  const query = useWorkoutSessionById(sessionId);
   const { replaceSets, updateStatus } = useWorkoutSessionMutations();
   const rest = useRestTimer();
-  const [exerciseIndex, setExerciseIndex] = useState(0);
-  const [draft, setDraft] = useState<SetDraft>({
-    actualLoadKg: 0,
-    actualReps: 0,
-    actualDurationSeconds: 0,
-  });
+  const [openIndex, setOpenIndex] = useState(0);
   const [confirm, setConfirm] = useState<'complete' | 'cancel' | 'undo' | null>(null);
+  const [undoExercise, setUndoExercise] = useState<WorkoutSessionExerciseResponseDto | null>(null);
   const [actionError, setActionError] = useState<unknown>(null);
-
-  const session = sessionQuery.data;
-  const exercises = session?.exercises ?? [];
-  const safeIndex = clampExerciseIndex(exerciseIndex, exercises.length);
-  const activeExercise = exercises[safeIndex];
+  const [records, setRecords] = useState<Record<string, Set<number>>>({});
+  const loadedSessionId = useRef<string | null>(null);
+  const session = query.data;
 
   useEffect(() => {
-    if (!session) {
-      return;
+    if (session && loadedSessionId.current !== session.id) {
+      loadedSessionId.current = session.id;
+      setOpenIndex(initialExerciseIndex(session.exercises));
+      setActionError(null);
     }
-    setExerciseIndex(initialExerciseIndex(session.exercises));
-    rest.skip();
-    setActionError(null);
-    // Session identity only: do not reset the selected exercise on every set write.
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- rest.skip is stable for this screen's purpose
-  }, [session?.id]);
-
-  useEffect(() => {
-    if (!activeExercise) {
-      return;
-    }
-    setDraft(createSetDraft(activeExercise));
-    rest.skip();
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- changing exercise resets local rest/draft only
-  }, [activeExercise?.id]);
-
-  const inProgress = session ? isSessionInProgress(session) : false;
-  const hasSets = session ? recordedSetCount(session) > 0 : false;
-  const durationExercise =
-    activeExercise?.prescription.type ===
-    WorkoutSessionPrescriptionResponseDtoType.DURATION;
-  const mappedActionError = actionError ? mapApiError(actionError) : null;
-  const pendingWrite = replaceSets.isPending || updateStatus.isPending;
-
-  const recordedSummary = useMemo(() => {
-    if (!session) {
-      return [];
-    }
-    return session.exercises.flatMap((exercise) =>
-      exercise.sets.map((set) => ({
-        key: set.id,
-        label: `${exercise.exerciseName} · ${set.setNumber}`,
-      })),
-    );
   }, [session]);
-
   if (!isUuid(sessionId)) {
     return (
       <WorkoutErrorState
@@ -114,8 +58,8 @@ export function WorkoutFocusPage() {
             code: 'NOT_FOUND',
             message: 'This resource is not available.',
             path: '/client/workout',
-            timestamp: '2026-09-04T00:00:00.000Z',
-            requestId: 'client-invalid-session',
+            timestamp: '',
+            requestId: 'invalid',
           })
         }
         retrying={false}
@@ -126,226 +70,187 @@ export function WorkoutFocusPage() {
     );
   }
 
-  if (sessionQuery.isPending) {
+  if (query.isPending) {
     return <WorkoutLoadingState label={workoutCopy.focus.loadingLabel} />;
   }
 
-  if (sessionQuery.isError || !session) {
+  if (query.isError || !session) {
     return (
       <WorkoutErrorState
-        error={sessionQuery.error}
-        retrying={sessionQuery.isFetching}
+        error={query.error}
+        retrying={query.isFetching}
         onRetry={() => {
-          if (!sessionQuery.isFetching) {
-            void sessionQuery.refetch();
-          }
+          void query.refetch();
         }}
       />
     );
   }
 
-  async function logSet() {
-    if (!activeExercise || !session) {
-      return;
-    }
+  const workoutSession = session;
+  const total = workoutSession.exercises.reduce(
+    (count, exercise) => count + exercise.prescription.sets,
+    0,
+  );
+  const recorded = recordedSetCount(workoutSession);
+  const inProgress =
+    workoutSession.status === WorkoutSessionResponseDtoStatus.IN_PROGRESS;
+  const allRecords = workoutSession.exercises.flatMap((exercise) =>
+    exercise.sets
+      .filter((set) => isPersonalRecord(set, exercise.previousSets))
+      .map((set) => `${exercise.exerciseName} · ${set.setNumber}`),
+  );
+
+  async function record(
+    exercise: WorkoutSessionExerciseResponseDto,
+    draft: SetDraft,
+  ) {
     setActionError(null);
     try {
-      await replaceSets.mutateAsync({
-        sessionId: session.id,
-        sessionExerciseId: activeExercise.id,
-        data: { sets: appendSetPayload(activeExercise, draft) },
-      });
-      rest.start(activeExercise.prescription.restSeconds);
+      const nextNumber = exercise.sets.length + 1;
+       await replaceSets.mutateAsync({
+         sessionId: workoutSession.id,
+         sessionExerciseId: exercise.id,
+         data: { sets: appendSetPayload(exercise, draft) },
+       });
+       if (
+         isPersonalRecord(
+           {
+             actualLoadKg: draft.actualLoadKg,
+             actualReps: draft.actualReps,
+           },
+           exercise.previousSets,
+         )
+       ) {
+         setRecords((current) => ({
+           ...current,
+           [exercise.id]: new Set([
+             ...(current[exercise.id] ?? []),
+             nextNumber,
+           ]),
+         }));
+         toast.success(workoutCopy.focus.personalRecord);
+       }
+       rest.start(exercise.prescription.restSeconds);
     } catch (error) {
       setActionError(error);
     }
   }
-
-  async function undoLastSet() {
-    if (!activeExercise || !session || activeExercise.sets.length === 0) {
+  async function undo() {
+    if (!undoExercise) {
       return;
     }
-    setActionError(null);
+
     try {
       await replaceSets.mutateAsync({
-        sessionId: session.id,
-        sessionExerciseId: activeExercise.id,
-        data: { sets: withoutLastSetPayload(activeExercise) },
+        sessionId: workoutSession.id,
+        sessionExerciseId: undoExercise.id,
+        data: { sets: withoutLastSetPayload(undoExercise) },
       });
       rest.skip();
       setConfirm(null);
+      setUndoExercise(null);
     } catch (error) {
       setActionError(error);
     }
   }
 
-  async function patchStatus(status: (typeof UpdateWorkoutSessionStatusDtoStatus)[keyof typeof UpdateWorkoutSessionStatusDtoStatus]) {
-    if (!session) {
-      return;
-    }
-    setActionError(null);
+  async function update(status: UpdateWorkoutSessionStatusDtoStatus) {
     try {
       await updateStatus.mutateAsync({
-        sessionId: session.id,
+        sessionId: workoutSession.id,
         data: { status },
       });
       setConfirm(null);
-      toast.success(
-        status === UpdateWorkoutSessionStatusDtoStatus.COMPLETED
-          ? workoutCopy.toast.completed
-          : workoutCopy.toast.cancelled,
-      );
-      await navigate({ to: '/client/training' });
+
+      if (status === UpdateWorkoutSessionStatusDtoStatus.CANCELLED) {
+        void navigate({ to: '/client/training' });
+      }
     } catch (error) {
       setActionError(error);
     }
   }
 
+  if (!inProgress) {
+    return (
+      <PageContainer density="client" className="mx-auto max-w-lg pb-8">
+        {workoutSession.status === WorkoutSessionResponseDtoStatus.COMPLETED ? (
+          <WorkoutSummary session={workoutSession} records={allRecords} />
+        ) : (
+          <section className="client-surface-card space-y-4">
+            <CircleX className="size-6 text-muted-foreground" />
+            <h1 className="text-xl font-semibold">
+              {workoutCopy.focus.cancelledTitle}
+            </h1>
+            <Link to="/client/training" className="text-primary underline">
+              {workoutCopy.focus.backToTraining}
+            </Link>
+          </section>
+        )}
+      </PageContainer>
+    );
+  }
+
   return (
-    <PageContainer density="client" className="mx-auto max-w-lg min-w-0 pb-8">
-      <header className="mb-6 space-y-1">
-        <p className="text-sm font-medium text-muted-foreground">
-          {workoutCopy.focus.eyebrow}
-        </p>
-        <h1 className="text-[1.75rem] font-semibold leading-tight tracking-tight text-foreground">
-          {session.workoutName}
-        </h1>
-      </header>
-
-      {mappedActionError ? (
-        <Alert variant="danger" className="mb-5">
-          <p className="font-medium">{mappedActionError.title}</p>
-          <p className="mt-1 text-muted-foreground">{mappedActionError.description}</p>
-        </Alert>
+    <PageContainer
+      density="client"
+      className={`mx-auto max-w-lg min-w-0 ${rest.isResting ? 'pb-48' : 'pb-8'}`}
+    >
+      <SessionHeader
+        workoutName={workoutSession.workoutName}
+        startedAt={workoutSession.startedAt}
+        recorded={recorded}
+        total={total}
+        canFinish={recorded > 0}
+        pending={updateStatus.isPending}
+        onFinish={() => setConfirm('complete')}
+      />
+      <main className="space-y-4 pt-4">
+        {actionError ? (
+          <Alert variant="danger">
+            <p>{mapApiError(actionError).description}</p>
+          </Alert>
+        ) : null}
+        {isStaleSession(workoutSession.startedAt) ? (
+          <StaleSessionAlert startedAt={workoutSession.startedAt} />
+        ) : null}
+        <ExerciseAccordion
+          exercises={workoutSession.exercises}
+          openIndex={openIndex}
+          pending={replaceSets.isPending}
+          prSets={records}
+          onOpen={setOpenIndex}
+          onRecord={record}
+          onUndo={(exercise) => {
+            setUndoExercise(exercise);
+            setConfirm('undo');
+          }}
+        />
+        <Button
+          variant="outline"
+          className="min-h-12 w-full"
+          onClick={() => setConfirm('cancel')}
+        >
+          {workoutCopy.focus.cancel}
+        </Button>
+      </main>
+      {rest.isResting ? (
+        <RestBar
+          remainingSeconds={rest.remainingSeconds}
+          durationSeconds={rest.durationSeconds}
+          onAdjust={rest.adjust}
+          onSkip={rest.skip}
+        />
       ) : null}
-
-      {!inProgress ? (
-        <section className="client-surface-card space-y-4">
-          <div className="flex items-start gap-3">
-            {session.status === WorkoutSessionResponseDtoStatus.COMPLETED ? (
-              <CheckCircle2 className="mt-0.5 size-6 text-success" aria-hidden />
-            ) : (
-              <CircleX className="mt-0.5 size-6 text-muted-foreground" aria-hidden />
-            )}
-            <h2 className="text-lg font-semibold tracking-tight">
-              {session.status === WorkoutSessionResponseDtoStatus.COMPLETED
-                ? workoutCopy.focus.completedTitle
-                : workoutCopy.focus.cancelledTitle}
-            </h2>
-          </div>
-          <p className="text-sm text-muted-foreground">{workoutCopy.focus.terminalHint}</p>
-          {recordedSummary.length > 0 ? (
-            <ul className="space-y-1 text-sm text-muted-foreground">
-              {recordedSummary.map((item) => (
-                <li key={item.key}>{item.label}</li>
-              ))}
-            </ul>
-          ) : null}
-          <Link
-            to="/client/training"
-            className="inline-flex min-h-12 items-center font-medium underline-offset-4 hover:underline"
-          >
-            {workoutCopy.focus.backToTraining}
-          </Link>
-        </section>
-      ) : exercises.length === 0 ? (
-        <p className="text-sm text-muted-foreground">{workoutCopy.focus.noExercises}</p>
-      ) : activeExercise ? (
-        <div className="space-y-6">
-          <ExerciseFocus
-            exercise={activeExercise}
-            index={safeIndex}
-            total={exercises.length}
-            onPrevious={() => setExerciseIndex((value) => Math.max(0, value - 1))}
-            onNext={() =>
-              setExerciseIndex((value) => Math.min(exercises.length - 1, value + 1))
-            }
-          />
-
-          <AnimatePresence initial={false} mode="popLayout">
-            {rest.isResting || rest.isComplete ? (
-              <motion.div
-                key="rest-timer"
-                initial={revealHidden(reduceMotion)}
-                animate={revealVisible}
-                exit={reduceMotion ? undefined : { opacity: 0 }}
-                transition={motionTransition('fast', reduceMotion)}
-              >
-                <RestTimer
-                  remainingSeconds={rest.remainingSeconds}
-                  complete={rest.isComplete}
-                  onSkip={rest.skip}
-                />
-              </motion.div>
-            ) : (
-              <motion.div
-                key="set-logger"
-                initial={revealHidden(reduceMotion)}
-                animate={revealVisible}
-                exit={reduceMotion ? undefined : { opacity: 0 }}
-                transition={motionTransition('fast', reduceMotion)}
-              >
-                <SetLogger
-                  draft={draft}
-                  durationExercise={durationExercise}
-                  pending={replaceSets.isPending}
-                  onChange={setDraft}
-                  onLog={() => {
-                    void logSet();
-                  }}
-                />
-              </motion.div>
-            )}
-          </AnimatePresence>
-
-          {activeExercise.sets.length > 0 ? (
-            <Button
-              variant="ghost"
-              className="min-h-12 w-full"
-              disabled={pendingWrite}
-              onClick={() => setConfirm('undo')}
-            >
-              {workoutCopy.focus.undoLastSet}
-            </Button>
-          ) : null}
-
-          <div className="space-y-3 pt-2">
-            {!hasSets ? (
-              <p className="text-sm text-muted-foreground">
-                {workoutCopy.focus.completeNeedSets}
-              </p>
-            ) : null}
-            <Button
-              className="min-h-14 w-full"
-              disabled={!hasSets || pendingWrite}
-              onClick={() => setConfirm('complete')}
-            >
-              {workoutCopy.focus.complete}
-            </Button>
-            <Button
-              variant="outline"
-              className="min-h-12 w-full"
-              disabled={pendingWrite}
-              onClick={() => setConfirm('cancel')}
-            >
-              {workoutCopy.focus.cancel}
-            </Button>
-          </div>
-        </div>
-      ) : null}
-
       <ConfirmSheet
         open={confirm === 'complete'}
         onOpenChange={(open) => setConfirm(open ? 'complete' : null)}
         title={workoutCopy.focus.completeTitle}
         description={workoutCopy.focus.completeBody}
-        confirmLabel={
-          updateStatus.isPending ? workoutCopy.focus.completing : workoutCopy.focus.completeConfirm
-        }
+        confirmLabel={workoutCopy.focus.completeConfirm}
         cancelLabel={workoutCopy.focus.keepTraining}
         pending={updateStatus.isPending}
         onConfirm={() => {
-          void patchStatus(UpdateWorkoutSessionStatusDtoStatus.COMPLETED);
+          void update(UpdateWorkoutSessionStatusDtoStatus.COMPLETED);
         }}
       />
       <ConfirmSheet
@@ -353,14 +258,12 @@ export function WorkoutFocusPage() {
         onOpenChange={(open) => setConfirm(open ? 'cancel' : null)}
         title={workoutCopy.focus.cancelTitle}
         description={workoutCopy.focus.cancelBody}
-        confirmLabel={
-          updateStatus.isPending ? workoutCopy.focus.cancelling : workoutCopy.focus.cancelConfirm
-        }
+        confirmLabel={workoutCopy.focus.cancelConfirm}
         cancelLabel={workoutCopy.focus.keepTraining}
         pending={updateStatus.isPending}
         danger
         onConfirm={() => {
-          void patchStatus(UpdateWorkoutSessionStatusDtoStatus.CANCELLED);
+          void update(UpdateWorkoutSessionStatusDtoStatus.CANCELLED);
         }}
       />
       <ConfirmSheet
@@ -373,7 +276,7 @@ export function WorkoutFocusPage() {
         pending={replaceSets.isPending}
         danger
         onConfirm={() => {
-          void undoLastSet();
+          void undo();
         }}
       />
     </PageContainer>

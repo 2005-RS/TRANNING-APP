@@ -46,11 +46,11 @@ import { RefreshSessionService } from './services/refresh-session.service';
   controllers: [AuthController],
   providers: [
     AuthService,
+    AuthCookieService,
     AccessTokenService,
     RefreshSessionService,
     PasswordHasherService,
     PasswordResetService,
-    AuthCookieService,
     AccessAuthGuard,
     RolesGuard,
     { provide: APP_GUARD, useClass: AccessAuthGuard },
@@ -61,6 +61,7 @@ import { RefreshSessionService } from './services/refresh-session.service';
     RefreshSessionService,
     AccessTokenService,
     AuthService,
+    AuthCookieService,
   ],
 })
 export class AuthModule {}

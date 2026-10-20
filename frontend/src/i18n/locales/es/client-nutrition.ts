@@ -8,6 +8,9 @@ export const esClientNutrition: LooseCopy<typeof clientNutritionCopySource> = {
   emptyTitle: 'Todavía no tienes un plan de nutrición asignado.',
   emptyBody: 'Tu entrenador te asignará un plan. Aquí aparecerán las comidas y los objetivos diarios.',
   prescribedHint: 'Este es un plan prescrito, no un registro de lo que comiste.',
+  previousPlans: 'Planes anteriores',
+  previousPlansEmpty: 'Todavía no tienes planes anteriores.',
+  previousPlanDetails: 'Detalle de plan anterior',
   plan: {
     eyebrow: 'Plan actual',
     statusActive: 'Activo',
@@ -111,9 +114,6 @@ export const esClientNutrition: LooseCopy<typeof clientNutritionCopySource> = {
     databaseHint: 'Busca en tu plan, tus recientes y el catálogo',
     barcode: 'Escanear código de barras',
     barcodeHint: 'Productos empacados',
-    photo: 'Escanear comida',
-    photoBeta: 'Beta',
-    photoHint: 'Próximamente: sugiere alimentos a partir de una foto para que tú confirmes.',
   },
   search: {
     title: 'Buscar alimento',

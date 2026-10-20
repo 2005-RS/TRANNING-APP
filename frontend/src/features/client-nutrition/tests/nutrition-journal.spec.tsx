@@ -79,11 +79,8 @@ describe('Client nutrition journal', { timeout: 20_000 }, () => {
     const dialog = await screen.findByRole('dialog', { name: copy.addSheet.title });
     expect(within(dialog).getByRole('link', { name: new RegExp(copy.addSheet.database) })).toBeInTheDocument();
     expect(within(dialog).getByRole('link', { name: new RegExp(copy.addSheet.barcode) })).toBeInTheDocument();
-    // U3: the photo option is visible but not actionable.
-    expect(within(dialog).getByText(copy.addSheet.photo).closest('[aria-disabled]')).toHaveAttribute(
-      'aria-disabled',
-      'true',
-    );
+    // The unfinished photo option was removed: no fake or disabled features in client screens.
+    expect(within(dialog).queryByText(/photo|foto/i)).not.toBeInTheDocument();
   });
 
   it('searches foods and logs two portions of a food', async () => {

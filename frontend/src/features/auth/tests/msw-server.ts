@@ -2,6 +2,7 @@ import { http, HttpResponse } from 'msw';
 import { setupServer } from 'msw/node';
 import { journalHandlers } from '@/features/client-nutrition/tests/msw-journal';
 import { clientA } from '@/features/auth/tests/fixtures';
+import { profileHandlers, resetProfileMockState } from '@/features/client-profile/tests/msw-profile';
 import {
   dashboardHandlers,
   resetDashboardMockState,
@@ -42,6 +43,7 @@ type AuthMockState = {
   refreshOk: boolean;
   meOk: boolean;
   loginOk: boolean;
+  registerOk: boolean;
   currentUser: typeof clientA;
 };
 
@@ -49,6 +51,7 @@ export const authMockState: AuthMockState = {
   refreshOk: false,
   meOk: true,
   loginOk: true,
+  registerOk: true,
   currentUser: clientA,
 };
 
@@ -56,8 +59,10 @@ export function resetAuthMockState(): void {
   authMockState.refreshOk = false;
   authMockState.meOk = true;
   authMockState.loginOk = true;
+  authMockState.registerOk = true;
   authMockState.currentUser = clientA;
   resetDashboardMockState();
+  resetProfileMockState();
   resetWorkoutMockState();
   resetProgressMockState();
   resetNutritionMockState();
@@ -87,6 +92,28 @@ export const authHandlers = [
 
     return HttpResponse.json({
       accessToken: 'login-access-token',
+      tokenType: 'Bearer',
+      expiresIn: 900,
+      user: authMockState.currentUser,
+    });
+  }),
+  http.post(`${API}/register`, async ({ request }) => {
+    const body = (await request.json()) as { email?: string };
+    if (!authMockState.registerOk || body.email === 'duplicate@example.com') {
+      return HttpResponse.json(
+        {
+          statusCode: 409,
+          code: 'CONFLICT',
+          message: 'Account already exists',
+          path: '/api/v1/auth/register',
+          timestamp: '2026-10-10T00:00:00.000Z',
+          requestId: 'req-register',
+        },
+        { status: 409 },
+      );
+    }
+    return HttpResponse.json({
+      accessToken: 'register-access-token',
       tokenType: 'Bearer',
       expiresIn: 900,
       user: authMockState.currentUser,
@@ -137,6 +164,8 @@ export const authHandlers = [
 
 export const authServer = setupServer(
   ...authHandlers,
+  // Before admin/trainer handlers so '/clients/:clientId' does not capture '/clients/me'.
+  ...profileHandlers,
   ...dashboardHandlers,
   ...workoutHandlers,
   ...progressHandlers,

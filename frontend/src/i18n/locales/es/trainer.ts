@@ -6,6 +6,7 @@ export const esTrainerWorkspace: LooseCopy<typeof trainerWorkspaceCopySource> = 
   retry: 'Intentar de nuevo',
   retrying: 'Reintentando…',
   save: 'Guardar',
+  changesSaved: 'Cambios guardados.',
   saving: 'Guardando…',
   create: 'Crear',
   creating: 'Creando…',
@@ -21,6 +22,10 @@ export const esTrainerWorkspace: LooseCopy<typeof trainerWorkspaceCopySource> = 
   notSet: 'Sin definir',
   yes: 'Sí',
   no: 'No',
+  editDescription: 'Actualiza los detalles y guarda los cambios.',
+  checkFields: 'Revisa los campos.',
+  endBeforeStart: 'La fecha de fin debe ser igual o posterior a la fecha de inicio.',
+  notEditable: 'Este elemento ya no se puede editar.',
   status: {
     ACTIVE: 'Activo',
     DISABLED: 'Deshabilitado',
@@ -203,6 +208,9 @@ export const esTrainerWorkspace: LooseCopy<typeof trainerWorkspaceCopySource> = 
     tempo: 'Tempo',
     saveExercise: 'Guardar ejercicio',
     openPlan: 'Abrir plan',
+    editPlan: 'Editar plan',
+    editWorkout: 'Editar entrenamiento',
+    nameRequired: 'El nombre del plan es obligatorio.',
   },
   templates: {
     title: 'Entrenamiento',
@@ -280,6 +288,8 @@ export const esTrainerWorkspace: LooseCopy<typeof trainerWorkspaceCopySource> = 
     openTemplate: 'Abrir plantilla',
     close: 'Cerrar',
     backToLibrary: 'Plantillas de entrenamiento',
+    editTitle: 'Editar plantilla',
+    editTemplate: 'Editar',
   },
   nutritionJournal: {
     title: 'Diario de comidas',
@@ -343,6 +353,7 @@ export const esTrainerWorkspace: LooseCopy<typeof trainerWorkspaceCopySource> = 
     savedSummary: 'Resumen del plan guardado',
     emptyMeal: 'Agrega un alimento para completar esta comida.',
     mealLimit: 'Hasta 14 comidas y 30 alimentos por comida.',
+    editPlan: 'Editar plan',
   },
   foods: {
     title: 'Nutrición',

@@ -16,7 +16,9 @@ import {
   TRAINER_EXERCISE_B_ID,
   TRAINER_EXERCISE_ID,
   TRAINER_NUTRITION_PLAN_ID,
+  TRAINER_PLAN_ID,
   TRAINER_TEMPLATE_B_ID,
+  TRAINER_TEMPLATE_ID,
   SIGNED_EXERCISE_MEDIA_URL,
   adminCatalogExercise,
   catalogFood,
@@ -313,6 +315,63 @@ describe('Trainer workspace', () => {
     expect(await screen.findByRole('heading', { name: 'Pull Hypertrophy' }, { timeout })).toBeInTheDocument();
     expect(screen.getByText(trainerWorkspaceCopy.templates.builderEmptyTitle)).toBeInTheDocument();
   }, 12_000);
+
+  it('edits a template name through the patch contract', async () => {
+    const user = userEvent.setup();
+    renderTrainer(`/trainer/training/${TRAINER_TEMPLATE_ID}`);
+    await user.click(await screen.findByRole('button', { name: trainerWorkspaceCopy.templates.editTemplate }, { timeout }));
+    const dialog = await screen.findByRole('dialog', { name: trainerWorkspaceCopy.templates.editTitle }, { timeout });
+    const name = within(dialog).getByLabelText(trainerWorkspaceCopy.templates.name);
+    await user.clear(name);
+    await user.type(name, 'Lower B');
+    await user.click(within(dialog).getByRole('button', { name: trainerWorkspaceCopy.save }));
+    await waitFor(() => expect(trainerMockState.lastTemplateUpdate).toEqual({ name: 'Lower B', description: null }));
+    expect(await screen.findByRole('heading', { name: 'Lower B' }, { timeout })).toBeInTheDocument();
+  }, 15_000);
+
+  it('validates and patches a training plan edit', async () => {
+    const user = userEvent.setup();
+    usePopulatedTrainerWorkspace();
+    renderTrainer(`/trainer/clients/${TRAINER_CLIENT_A_ID}/training/${TRAINER_PLAN_ID}`);
+    await user.click(
+      await screen.findByRole('button', { name: trainerWorkspaceCopy.training.editPlan }, { timeout }),
+    );
+    const dialog = await screen.findByRole('dialog', { name: trainerWorkspaceCopy.training.editPlan }, { timeout });
+    const start = within(dialog).getByLabelText(trainerWorkspaceCopy.training.startDate);
+    const end = within(dialog).getByLabelText(trainerWorkspaceCopy.training.endDate);
+    await user.clear(start);
+    await user.type(start, '2026-10-20');
+    await user.clear(end);
+    await user.type(end, '2026-10-01');
+    await user.click(within(dialog).getByRole('button', { name: trainerWorkspaceCopy.save }));
+    expect(await within(dialog).findByText(trainerWorkspaceCopy.endBeforeStart)).toBeInTheDocument();
+    expect(trainerMockState.lastTrainingUpdate).toBeNull();
+
+    await user.clear(end);
+    await user.type(end, '2026-11-20');
+    await user.click(within(dialog).getByRole('button', { name: trainerWorkspaceCopy.save }));
+    await waitFor(() =>
+      expect(trainerMockState.lastTrainingUpdate).toMatchObject({ startDate: '2026-10-20', endDate: '2026-11-20' }),
+    );
+  }, 30_000);
+
+  it('patches nutrition targets as numbers', async () => {
+    const user = userEvent.setup();
+    usePopulatedTrainerWorkspace();
+    trainerMockState.nutritionPlan = structuredClone(draftNutritionPlan);
+    renderTrainer(`/trainer/clients/${TRAINER_CLIENT_A_ID}/nutrition/${TRAINER_NUTRITION_PLAN_ID}`);
+    await user.click(
+      await screen.findByRole('button', { name: trainerWorkspaceCopy.nutrition.editPlan }, { timeout }),
+    );
+    const dialog = await screen.findByRole('dialog', { name: trainerWorkspaceCopy.nutrition.editPlan }, { timeout });
+    const kcal = within(dialog).getByLabelText(trainerWorkspaceCopy.nutrition.calories);
+    await user.clear(kcal);
+    await user.type(kcal, '2100.5');
+    await user.click(within(dialog).getByRole('button', { name: trainerWorkspaceCopy.save }));
+    await waitFor(() =>
+      expect(trainerMockState.lastNutritionUpdate).toMatchObject({ targetCaloriesKcal: 2100.5 }),
+    );
+  }, 30_000);
 
   it('filters templates through the API search and status contract', async () => {
     usePopulatedTrainerWorkspace();

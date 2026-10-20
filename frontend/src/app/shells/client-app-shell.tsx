@@ -47,6 +47,16 @@ export function ClientAppShell({ children }: { children: ReactNode }) {
     document.title = meta.documentTitle;
   }, [meta.documentTitle]);
 
+  // R5: the client workspace uses the public site's orange accent. On <html> so
+  // portaled sheets/dialogs inherit it; removed when leaving the client app.
+  useEffect(() => {
+    const root = document.documentElement;
+    root.classList.add('client-brand');
+    return () => {
+      root.classList.remove('client-brand');
+    };
+  }, []);
+
   useEffect(() => {
     if (!focusMode) {
       setMoreOpen(false);

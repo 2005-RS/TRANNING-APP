@@ -23,6 +23,8 @@ import {
   useClientsUpdateById,
   useClientsUpdateStatus,
 } from '@/generated/clients/clients';
+import { getClientSubscriptionsGetQueryKey, useClientSubscriptionsGet, useClientSubscriptionsUpdate } from '@/generated/subscriptions/subscriptions';
+import { SubscriptionResponseDtoPlan, SubscriptionResponseDtoSource } from '@/generated/models';
 import { useAdminWorkspaceCopy } from '@/features/admin-workspace/copy';
 import { ConfirmSheet } from '@/features/admin-workspace/components/confirm-sheet';
 import { AdminFormSheet, FormSelectField, FormTextField } from '@/features/admin-workspace/components/admin-form';
@@ -49,7 +51,7 @@ import { displayDate, displayDateTime, fullName, optionalText } from '@/features
 import { clientFormSchema } from '@/features/admin-workspace/lib/schemas';
 import { PAGE_SIZE } from '@/features/admin-workspace/lib/search';
 import { asOpenApiField } from '@/features/trainer-workspace/lib/openapi-field';
-import { interpolate } from '@/i18n/format';
+import { formatInstant, interpolate } from '@/i18n/format';
 import { Badge } from '@/shared/ui/badge';
 import { Button } from '@/shared/ui/button';
 import { Skeleton } from '@/shared/ui/skeleton';
@@ -279,12 +281,16 @@ export function AdminClientDetailPage() {
   const historyQuery = useClientTrainerAssignmentsListHistory(clientId, { limit: 10 }, queryOptions);
   const statusMutation = useClientsUpdateStatus();
   const unassign = useClientTrainerAssignmentsUnassign();
+  const subscriptionQuery = useClientSubscriptionsGet(clientId, queryOptions);
+  const subscriptionMutation = useClientSubscriptionsUpdate();
   const [editing, setEditing] = useState(false);
   const [assigning, setAssigning] = useState(false);
   const [confirmStatus, setConfirmStatus] = useState(false);
   const [confirmUnassign, setConfirmUnassign] = useState(false);
   const [statusError, setStatusError] = useState<string | null>(null);
   const [unassignError, setUnassignError] = useState<string | null>(null);
+  const [confirmComplimentary, setConfirmComplimentary] = useState(false);
+  const [complimentaryError, setComplimentaryError] = useState<string | null>(null);
 
   if (clientQuery.isPending) {
     return <AdminPageSkeleton label={copy.clients.loadingLabel} />;
@@ -345,6 +351,18 @@ export function AdminClientDetailPage() {
     }
   }
 
+  async function changeComplimentary() {
+    if (subscriptionMutation.isPending) return;
+    setComplimentaryError(null);
+    try {
+      await subscriptionMutation.mutateAsync({ clientId, data: { complimentary: subscriptionQuery.data?.source !== SubscriptionResponseDtoSource.COMPLIMENTARY } });
+      await queryClient.invalidateQueries({ queryKey: getClientSubscriptionsGetQueryKey(clientId) });
+      setConfirmComplimentary(false);
+    } catch (err) {
+      setComplimentaryError(adminMutationError(err, 'status', copy));
+    }
+  }
+
   return (
     <AdminPageScaffold
       title={fullName(client.user)}
@@ -358,6 +376,11 @@ export function AdminClientDetailPage() {
       }
       actions={
         <>
+          <Button variant="outline" onClick={() => setConfirmComplimentary(true)}>
+            {subscriptionQuery.data?.source === SubscriptionResponseDtoSource.COMPLIMENTARY
+              ? copy.clients.revokeComplimentary
+              : copy.clients.grantComplimentary}
+          </Button>
           <Button variant="outline" onClick={() => setEditing(true)}>
             <Edit className="size-4" aria-hidden />
             {copy.common.edit}
@@ -381,6 +404,18 @@ export function AdminClientDetailPage() {
             {copy.clients.detailTitle}
           </h2>
           <dl className="mt-4 grid gap-4 sm:grid-cols-2">
+            <Detail
+              label={copy.clients.plan}
+              value={
+                subscriptionQuery.data?.plan === SubscriptionResponseDtoPlan.PRO
+                  ? subscriptionQuery.data.source === SubscriptionResponseDtoSource.COMPLIMENTARY
+                    ? copy.clients.complimentaryPlan
+                    : interpolate(copy.clients.paidPlanUntil, {
+                        date: formatInstant(subscriptionQuery.data.proUntil) ?? '',
+                      })
+                  : copy.clients.freePlan
+              }
+            />
             <Detail label={copy.clients.primaryGoal} value={copy.goals[client.primaryGoal]} />
             <Detail label={copy.clients.experienceLevel} value={copy.experience[client.experienceLevel]} />
             <Detail label={copy.common.phone} value={optionalText(client.phone, copy.notSet)} />
@@ -504,6 +539,20 @@ export function AdminClientDetailPage() {
           </AdminSurface>
         </div>
       </div>
+      <ConfirmSheet
+        open={confirmComplimentary}
+        onOpenChange={(open) => {
+          setConfirmComplimentary(open);
+          if (!open) setComplimentaryError(null);
+        }}
+        title={copy.clients.changeComplimentaryTitle}
+        description={copy.clients.changeComplimentaryBody}
+        confirmLabel={copy.clients.confirmComplimentary}
+        cancelLabel={copy.cancel}
+        pending={subscriptionMutation.isPending}
+        error={complimentaryError}
+        onConfirm={() => void changeComplimentary()}
+      />
 
       <ClientSheet open={editing} onOpenChange={setEditing} mode="edit" client={client} />
       <AssignmentSheet

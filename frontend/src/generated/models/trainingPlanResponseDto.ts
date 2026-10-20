@@ -24,6 +24,7 @@ export interface TrainingPlanResponseDto {
   endDate?: string | null;
   clientProfileId: string;
   createdByUserId: string;
+  isSelfAuthored: boolean;
   /** @nullable */
   activatedAt?: string | null;
   /** @nullable */

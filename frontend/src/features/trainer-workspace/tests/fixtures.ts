@@ -240,6 +240,7 @@ export const submittedCheckInDetail: CheckInResponseDto = {
 
 export const draftTrainingPlan: TrainingPlanResponseDto = {
   id: TRAINER_PLAN_ID,
+  isSelfAuthored: false,
   name: 'Hypertrophy block',
   description: null,
   status: TrainingPlanResponseDtoStatus.DRAFT,
@@ -372,6 +373,7 @@ export const catalogFood: NutritionFoodResponseDto = {
 
 export const templateSummary: WorkoutTemplateSummaryResponseDto = {
   id: TRAINER_TEMPLATE_ID,
+  isLibraryPublished: false,
   name: 'Lower A',
   description: null,
   status: WorkoutTemplateSummaryResponseDtoStatus.ACTIVE,
@@ -382,6 +384,7 @@ export const templateSummary: WorkoutTemplateSummaryResponseDto = {
 
 export const templateSummaryB: WorkoutTemplateSummaryResponseDto = {
   id: TRAINER_TEMPLATE_B_ID,
+  isLibraryPublished: false,
   name: 'Push Strength',
   description: 'Upper pressing',
   status: WorkoutTemplateSummaryResponseDtoStatus.DRAFT,

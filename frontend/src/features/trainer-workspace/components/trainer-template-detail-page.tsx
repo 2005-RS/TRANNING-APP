@@ -13,8 +13,10 @@ import {
   useWorkoutTemplatesDuplicate,
   useWorkoutTemplatesGetById,
   useWorkoutTemplatesReplaceExercises,
+  useWorkoutTemplatesUpdate,
   useWorkoutTemplatesUpdateStatus,
 } from '@/generated/workout-templates/workout-templates';
+import { TemplateEditSheet } from '@/features/trainer-workspace/components/plan-edit-sheets';
 import { PrescriptionSheet, type PrescriptionSheetMode } from '@/features/trainer-workspace/components/prescription-sheet';
 import { StatusBadge } from '@/features/trainer-workspace/components/status-badge';
 import { TemplateExerciseRow } from '@/features/trainer-workspace/components/template-exercise-row';
@@ -30,6 +32,8 @@ import { useTrainerRouteId } from '@/features/trainer-workspace/lib/use-client-i
 import { mapApiError } from '@/shared/errors/api-error';
 import { cn } from '@/shared/lib/utils';
 import { Alert } from '@/shared/ui/alert';
+import { asOpenApiField } from '@/features/trainer-workspace/lib/openapi-field';
+import type { UpdateWorkoutTemplateDto } from '@/generated/models';
 import { Button } from '@/shared/ui/button';
 import { buttonVariants } from '@/shared/ui/button-variants';
 import { PageActions, PageContainer, PageDescription, PageHeader, PageTitle } from '@/shared/ui/page';
@@ -43,12 +47,14 @@ export function TrainerTemplateDetailPage() {
   const navigate = useNavigate();
   const [error, setError] = useState<string | null>(null);
   const [sheet, setSheet] = useState<PrescriptionSheetMode | null>(null);
+  const [editOpen, setEditOpen] = useState(false);
   const query = useWorkoutTemplatesGetById(templateId, {
     query: { enabled: Boolean(templateId), staleTime: TRAINER_STALE_TIME_MS, refetchOnWindowFocus: false },
   });
   const replace = useWorkoutTemplatesReplaceExercises();
   const updateStatus = useWorkoutTemplatesUpdateStatus();
   const duplicate = useWorkoutTemplatesDuplicate();
+  const update = useWorkoutTemplatesUpdate();
 
   if (query.isPending) {
     return <TrainerPageSkeleton label={copy.loadingLabel} />;
@@ -73,7 +79,7 @@ export function TrainerTemplateDetailPage() {
   const canEdit = template.status !== WorkoutTemplateResponseDtoStatus.ARCHIVED;
   const canEmpty = template.status === WorkoutTemplateResponseDtoStatus.DRAFT;
   const inputs = template.items.map((item) => itemToInput(item));
-  const busy = replace.isPending || updateStatus.isPending || duplicate.isPending;
+  const busy = replace.isPending || updateStatus.isPending || duplicate.isPending || update.isPending;
 
   async function handleDuplicate() {
     setError(null);
@@ -181,6 +187,11 @@ export function TrainerTemplateDetailPage() {
           </p>
         </div>
         <PageActions className="w-full sm:w-auto">
+          {canEdit ? (
+            <Button className="w-full sm:w-auto" variant="outline" disabled={busy} onClick={() => setEditOpen(true)}>
+              {copy.editTemplate}
+            </Button>
+          ) : null}
           <Button
             className="w-full sm:w-auto"
             variant="outline"
@@ -283,6 +294,32 @@ export function TrainerTemplateDetailPage() {
         }}
         onSave={handleSave}
         onRemove={handleRemove}
+      />
+      <TemplateEditSheet
+        key={`${template.id}-${template.updatedAt}`}
+        open={editOpen}
+        onOpenChange={setEditOpen}
+        name={template.name}
+        description={template.description}
+        pending={update.isPending}
+        onSave={async (data, fail) => {
+          try {
+            await update.mutateAsync({
+              id: templateId,
+              data: {
+                name: data.name,
+                // Nullable strings are emitted as open objects by the OpenAPI generator.
+                description: asOpenApiField<UpdateWorkoutTemplateDto['description']>(data.description),
+              },
+            });
+            await invalidateTrainerTemplates(queryClient);
+            toast.success(copy.updated);
+            setEditOpen(false);
+          } catch (err) {
+            const mapped = mapApiError(err);
+            fail(mapped.kind === 'invalid' ? trainerWorkspaceCopy.checkFields : mapped.kind === 'conflict' ? trainerWorkspaceCopy.notEditable : mapped.description);
+          }
+        }}
       />
     </PageContainer>
   );

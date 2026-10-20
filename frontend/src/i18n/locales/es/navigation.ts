@@ -58,6 +58,12 @@ export const esClientNav: LooseCopy<typeof clientCopySource> = {
     title: 'Nutrición',
     description: 'Tu plan de comidas asignado y los objetivos diarios.',
   },
+  plan: { label: 'Mi plan', title: 'Mi plan', description: 'Tu suscripción Pro y estado de pago.' },
+  profile: {
+    label: 'Mi perfil',
+    title: 'Mi perfil',
+    description: 'Tu cuenta y preferencias de entrenamiento.',
+  },
   more: { label: 'Más', title: 'Más', description: 'Cuerpo, seguimientos y notificaciones.' },
   body: {
     label: 'Progreso corporal',
@@ -150,6 +156,7 @@ export const esAdminNav: LooseCopy<typeof adminCopySource> = {
     title: 'Alimentos',
     description: 'Administra el catálogo nutricional de alimentos.',
   },
+  payments: { label: 'Pagos', title: 'Pagos', description: 'Revisa pagos de suscripción reportados.' },
   notifications: {
     label: 'Notificaciones',
     title: 'Notificaciones',

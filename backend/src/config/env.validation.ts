@@ -11,6 +11,7 @@ import {
   IsUrl,
   Max,
   MaxLength,
+  Matches,
   Min,
   MinLength,
   registerDecorator,
@@ -183,6 +184,29 @@ function toPort(value: unknown): unknown {
 }
 
 export class EnvironmentVariables {
+  @IsOptional()
+  @IsString()
+  @Matches(/^\d{8}$/)
+  SUBSCRIPTION_SINPE_PHONE?: string;
+
+  @IsOptional()
+  @IsString()
+  @IsNotEmpty()
+  SUBSCRIPTION_SINPE_HOLDER_NAME?: string;
+
+  @IsOptional()
+  @Transform(({ value }) =>
+    value === undefined || value === '' ? undefined : toPort(value),
+  )
+  @IsInt()
+  @Min(1)
+  SUBSCRIPTION_PRO_PRICE_CRC?: number;
+
+  @Transform(toIntWithDefault(30))
+  @IsInt()
+  @Min(1)
+  SUBSCRIPTION_PRO_PERIOD_DAYS!: number;
+
   @IsEnum(NodeEnvironment)
   NODE_ENV!: NodeEnvironment;
 
@@ -520,6 +544,7 @@ export function validateEnv(
     DATABASE_IDLE_TIMEOUT_MS:
       config.DATABASE_IDLE_TIMEOUT_MS ?? DATABASE_IDLE_TIMEOUT_MS_DEFAULT,
     DATABASE_SLOW_QUERY_MS: config.DATABASE_SLOW_QUERY_MS ?? 0,
+    SUBSCRIPTION_PRO_PERIOD_DAYS: config.SUBSCRIPTION_PRO_PERIOD_DAYS ?? 30,
     // Mock is a development convenience only; production must name a real provider.
     AI_PROVIDER:
       blankToUndefined(config.AI_PROVIDER) ??

@@ -4,6 +4,7 @@ import {
   WorkoutSessionExerciseResponseDto,
   WorkoutSessionResponseDto,
   WorkoutSessionSummaryResponseDto,
+  WorkoutPreviousSetDto,
   WorkoutSetResponseDto,
 } from './dto/workout-session-response.dto';
 import { WorkoutSessionExercise } from './entities/workout-session-exercise.entity';
@@ -36,6 +37,10 @@ export function toWorkoutSessionResponse(
     string,
     ExerciseMediaResponseDto
   > = new Map(),
+  previousSetsByExerciseId: ReadonlyMap<
+    string,
+    WorkoutPreviousSetDto[]
+  > = new Map(),
 ): WorkoutSessionResponseDto {
   const ordered = [...exercises].sort(
     (left, right) => left.position - right.position,
@@ -47,6 +52,7 @@ export function toWorkoutSessionResponse(
       toExerciseResponse(
         exercise,
         demonstrationByExerciseId.get(exercise.exerciseId) ?? null,
+        previousSetsByExerciseId.get(exercise.exerciseId) ?? [],
       ),
     ),
   };
@@ -55,6 +61,7 @@ export function toWorkoutSessionResponse(
 function toExerciseResponse(
   exercise: WorkoutSessionExercise,
   demonstrationMedia: ExerciseMediaResponseDto | null,
+  previousSets: WorkoutPreviousSetDto[],
 ): WorkoutSessionExerciseResponseDto {
   const sets = [...(exercise.sets ?? [])].sort(
     (left, right) => left.setNumber - right.setNumber,
@@ -80,6 +87,7 @@ function toExerciseResponse(
       notes: exercise.prescribedNotes,
     },
     sets: sets.map((set) => toSetResponse(set)),
+    previousSets,
     demonstrationMedia,
   };
 }

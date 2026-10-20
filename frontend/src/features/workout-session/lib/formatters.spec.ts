@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
+  formatElapsed,
   formatPrescription,
   formatRestRemaining,
   formatScheduledDay,
@@ -35,5 +36,13 @@ describe('workout formatters', () => {
         notes: null,
       }),
     ).toBe('4 sets · 8–10 reps · 80 kg · 90s rest');
+  });
+});
+
+describe('formatElapsed', () => {
+  it('uses m:ss, then h:mm:ss, then days and hours', () => {
+    expect(formatElapsed(65)).toBe('1:05');
+    expect(formatElapsed(3 * 3600 + 7 * 60 + 9)).toBe('3:07:09');
+    expect(formatElapsed(2 * 86_400 + 5 * 3600 + 30)).toBe('2 d 5 h');
   });
 });

@@ -1,12 +1,15 @@
 import type { LucideIcon } from 'lucide-react';
 import {
   Apple,
+  Banknote,
   Bell,
+  Crown,
   ClipboardCheck,
   Dumbbell,
   Ellipsis,
   Home,
   LayoutDashboard,
+  LayoutList,
   Link2,
   PersonStanding,
   Ruler,
@@ -43,7 +46,13 @@ export type NavItem = {
   meta: RouteMeta;
 };
 
-const CLIENT_MORE_PATHS = ['/client/body', '/client/check-ins', '/client/notifications'] as const;
+const CLIENT_MORE_PATHS = [
+  '/client/body',
+  '/client/check-ins',
+  '/client/plan',
+  '/client/profile',
+  '/client/notifications',
+] as const;
 
 export function getClientPrimaryNav(): NavItem[] {
   return [
@@ -87,6 +96,18 @@ export function getClientMoreNav(): NavItem[] {
       label: clientCopy.checkIns.label,
       icon: ClipboardCheck,
       meta: getRouteMeta('/client/check-ins'),
+    },
+    {
+      to: '/client/plan',
+      label: clientCopy.plan.label,
+      icon: Crown,
+      meta: getRouteMeta('/client/plan'),
+    },
+    {
+      to: '/client/profile',
+      label: clientCopy.profile.label,
+      icon: UserRound,
+      meta: getRouteMeta('/client/profile'),
     },
     {
       to: '/client/notifications',
@@ -194,6 +215,18 @@ export function getAdminNav(): NavItem[] {
       label: adminCopy.foods.label,
       icon: Apple,
       meta: getRouteMeta('/admin/foods'),
+    },
+    {
+      to: '/admin/payments',
+      label: adminCopy.payments.label,
+      icon: Banknote,
+      meta: getRouteMeta('/admin/payments'),
+    },
+    {
+      to: '/admin/library',
+      label: 'Biblioteca de rutinas',
+      icon: LayoutList,
+      meta: getRouteMeta('/admin/library'),
     },
     {
       to: '/admin/notifications',

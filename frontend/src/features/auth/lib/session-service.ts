@@ -3,8 +3,9 @@ import {
   authLogout,
   authLogoutAll,
   authMe,
+  registrationRegister,
 } from '@/generated/auth/auth';
-import type { AuthUserResponseDto } from '@/generated/models';
+import type { AuthUserResponseDto, RegisterDto } from '@/generated/models';
 import { ApiError } from '@/shared/errors/api-error';
 import {
   clearAccessToken,
@@ -58,7 +59,20 @@ export async function loginWithPassword(
   password: string,
 ): Promise<AuthUserResponseDto> {
   const result = await authLogin({ email, password });
-  setAccessToken(result.accessToken);
+  return authenticateWithToken(result.accessToken);
+}
+
+export async function registerAccount(
+  input: RegisterDto,
+): Promise<AuthUserResponseDto> {
+  const result = await registrationRegister(input);
+  return authenticateWithToken(result.accessToken);
+}
+
+async function authenticateWithToken(
+  accessToken: string,
+): Promise<AuthUserResponseDto> {
+  setAccessToken(accessToken);
 
   try {
     const user = await authMe();

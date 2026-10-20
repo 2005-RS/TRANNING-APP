@@ -47,6 +47,15 @@ export function LoginPage() {
             </header>
             <LoginForm onLogin={handleLogin} />
             <ForgotPasswordLink />
+            <p className="text-center text-sm text-muted-foreground">
+              {authCopy.signUp.prompt}{' '}
+              <Link
+                to="/register"
+                className="font-medium text-primary underline-offset-4 hover:underline"
+              >
+                {authCopy.signUp.link}
+              </Link>
+            </p>
           </div>
         </div>
       </main>
